@@ -618,6 +618,7 @@ namespace GamesDock
                     }
                     UpdateOcultosMenu();
                 };
+                MenuGuard.Watch(_dockMenu);
                 return _dockMenu;
             }
         }
@@ -678,6 +679,7 @@ namespace GamesDock
             _itemMenu.Items.Add(new Separator());   // la accion destructiva, aparte
             _itemMenu.Items.Add(destructiva);
             _itemMenu.PlacementTarget = owner;
+            MenuGuard.Watch(_itemMenu);
             _itemMenu.IsOpen = true;
         }
 

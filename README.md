@@ -48,6 +48,7 @@ servicios, sin dependencias externas y sin usar la red.
 | Doble clic en el icono de la bandeja | Mostrar / ocultar la barra |
 | Clic derecho en el hueco libre de la píldora | Menú: Buscar…, Añadir app o juego…, Qué se ve, Tema, Restaurar ocultos, Reescanear, Ajustes, Ocultar, Salir |
 | Clic derecho sobre un icono | Favorito, Lanzar ahora, Abrir carpeta del juego, Renombrar, Quitar/Ocultar del dock |
+| Clic fuera del menú desplegado | Cierra el menú sin activar lo que haya debajo |
 | Clic central sobre un icono | Marcar o desmarcar como favorito |
 | Arrastrar un archivo hasta la píldora | Fijarlo en la barra |
 | Arrastrar un icono dentro de la barra | Reordenar la fila |
@@ -55,6 +56,10 @@ servicios, sin dependencias externas y sin usar la red.
 
 No hay cuadro de búsqueda, filtros ni engranajes a la vista: la barra es una píldora limpia y todas
 esas opciones entran por el menú del clic derecho o por la ventana de Ajustes.
+
+El desplegable se cierra con un clic en cualquier punto de la pantalla que no sea el propio menú —el
+escritorio, otro icono, otra ventana—, igual que cualquier menú de Windows. Y ese clic no llega a la
+ventana que hay debajo: se retira para que no dispare nada por accidente.
 
 ## Qué se puede personalizar
 
@@ -116,7 +121,7 @@ app/
   build.ps1          compilación de un solo fichero (la única herramienta necesaria)
   app.manifest       DPI PerMonitorV2 y asInvoker: se ejecuta sin elevación
   icon.ico           icono del programa, con todas sus variantes de tamaño
-  src/               18 ficheros .cs, todos en el namespace GamesDock
+  src/               19 ficheros .cs, todos en el namespace GamesDock
     Program.cs       arranque, instancia única, cableado de la ventana principal
     Foundation.cs    rutas, bitácora y recorte de memoria
     Config.cs        modelo de configuración y su persistencia JSON
@@ -124,6 +129,7 @@ app/
     Catalog.cs       detección e índice de juegos y aplicaciones
     Dock.cs          ventana píldora: tiles, temas y pintado
     Dock.Interact.cs hover, arrastre, menús contextuales y soltar archivos
+    MenuGuard.cs     que el desplegable se cierre al pinchar fuera
     Springs.cs       motor de muelles sincronizado con el compositor
     Layout.cs        toda la geometría de la píldora
     PillGeometry.cs  construcción del contorno de la píldora
@@ -133,7 +139,7 @@ app/
     Tray.cs          bandeja del sistema y atajo global
     Settings.cs      ventana de ajustes y absorción del escritorio
     Shell.cs         lanzar, minimizar todo, accesos .lnk y arranque con Windows
-    Native.cs        P/Invoke justos (hotkey y working set)
+    Native.cs        P/Invoke justos (atajo global, working set y gancho de ratón)
     XamlAssets.cs    carga de los XAML empotrados
   xaml/              diccionario de estilos y ventana, parseados en runtime
   GamesDock.exe      binario compilado (se versiona a propósito: es el producto)
@@ -171,6 +177,16 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
 - **Un tema son dieciséis brochas**, todas con alfa: cristal de arriba y abajo, contorno, tres brillos,
   hover, pulsado, insignia, letra, los cuatro colores del tooltip y los dos del campo de texto. Añadir
   un tema es añadir una entrada en `Themes.cs`; no hay código de pintado nuevo.
+- **El menú se cierra con un gancho que solo vive mientras el menú está abierto** (`MenuGuard.cs`).
+  WPF despacha el desplegable al perder la activación la ventana dueña, y la píldora es
+  `WS_EX_NOACTIVATE`: nunca la pierde, así que el menú se quedaba colgado hasta pincharla. El guard
+  engancha `WH_MOUSE_LL` en el `Opened` y lo suelta en el `Closed`; la primera pulsación que cae fuera
+  de todos los *popups* del proceso cierra el menú y se retira a sí misma. Detectar los *popups* es
+  trivial: son las ventanas `WS_EX_TOOLWINDOW` visibles del propio proceso —criterio que descarta tanto
+  la píldora como el fantasma del arrastre, que es *tool* pero lleva `WS_EX_TRANSPARENT`—. El coste en
+  reposo es exactamente cero porque con el menú cerrado no queda ni gancho ni temporizador; el único
+  reloj que hay (300 ms) solo lo armamos para el caso en que Windows no entregue la suelta que iba
+  pareada a una pulsación que nos acabamos de comer.
 
 ## Limitaciones conocidas
 
@@ -187,6 +203,10 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
 GamesDock no abre conexiones de red, no envía telemetría y no analiza nada fuera del perfil del
 usuario. Los iconos y la lista de juegos se quedan en tu carpeta de `%APPDATA%`.
 
+La única vez que mira fuera de sí mismo es con el desplegable abierto: para saber si el clic ha caído
+fuera instala un gancho de ratón global del que solo lee las coordenadas y el botón pulsado, y lo
+desengancha en cuanto el menú se cierra. Con el menú cerrado no escucha nada.
+
 ## Licencia
 
 MIT. Ver el fichero [`LICENSE`](LICENSE). Los iconos de los juegos y aplicaciones que la barra muestra
@@ -199,5 +219,6 @@ behind your windows, never stealing focus. It auto-detects installed games (Stea
 Menu, desktop shortcuts), lets you pin anything by dropping it on the bar, magnifies on hover with
 spring physics driven by the compositor clock, and idles at essentially zero CPU. The interface is
 bilingual (Spanish and English, switching live) and there are nine color themes, including Anime,
-Cyberpunk and UFO. No installer, no network, no telemetry: settings, icon cache and log live in
-`%APPDATA%\GamesDock`. MIT licensed.
+Cyberpunk and UFO. Right-click menus close on any click outside them — like any other Windows menu —
+and that closing click is swallowed, so nothing underneath reacts to it. No installer, no network, no
+telemetry: settings, icon cache and log live in `%APPDATA%\GamesDock`. MIT licensed.

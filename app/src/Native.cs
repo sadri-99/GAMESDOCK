@@ -22,6 +22,43 @@ namespace GamesDock
 
         [DllImport("user32.dll")]
         public static extern int SetWindowLong(IntPtr h, int idx, int val);
+
+        // ------------------------------------------------------------------------------------------
+        // lo que necesita MenuGuard para ver el raton mientras un menu esta abierto
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint threadId);
+
+        [DllImport("user32.dll")]
+        public static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern bool EnumWindows(EnumWindowsProc cb, IntPtr lp);
+
+        [DllImport("user32.dll")]
+        public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetWindowRect(IntPtr h, out RECT r);
+
+        [DllImport("user32.dll")]
+        public static extern bool IsWindowVisible(IntPtr h);
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetModuleHandle(string name);
+
+        public delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
+        public delegate bool EnumWindowsProc(IntPtr h, IntPtr lp);
+
+        public struct RECT
+        {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+        }
     }
 
     public static class IconExtract
