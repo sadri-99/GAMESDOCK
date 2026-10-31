@@ -62,8 +62,8 @@ namespace GamesDock
             Put(d, "Ajustes", "Settings");
             Put(d, "Salir", "Quit");
             Put(d, "Buscar...", "Search...");
-            Put(d, "Anadir app o juego...", "Add app or game...");
-            Put(d, "Que se ve", "What to show");
+            Put(d, "Añadir app o juego...", "Add app or game...");
+            Put(d, "Qué se ve", "What to show");
             Put(d, "Favoritos", "Favorites");
             Put(d, "Juegos detectados", "Detected games");
             Put(d, "Aplicaciones", "Applications");
@@ -85,28 +85,28 @@ namespace GamesDock
             // ------------------------------------------------------------ avisos
             Put(d, "El acceso directo no tiene destino.", "The shortcut has no target.");
             Put(d, "No se pudo lanzar:\n{0}\n\n{1}", "Could not launch:\n{0}\n\n{1}");
-            Put(d, "No se pudo anadir:", "Could not add:");
-            Put(d, "No se pudieron anadir:", "Could not add any of these:");
-            Put(d, "No se pudo anadir:\n{0}\n\n{1}", "Could not add:\n{0}\n\n{1}");
+            Put(d, "No se pudo añadir:", "Could not add:");
+            Put(d, "No se pudieron añadir:", "Could not add any of these:");
+            Put(d, "No se pudo añadir:\n{0}\n\n{1}", "Could not add:\n{0}\n\n{1}");
             Put(d, "No existe el destino: {0}", "Target does not exist: {0}");
-            Put(d, "Elige el juego o aplicacion", "Choose the game or app");
+            Put(d, "Elige el juego o aplicación", "Choose the game or app");
             Put(d, "Programas y accesos|*.exe;*.lnk;*.bat;*.cmd;*.url|Todos|*.*",
                  "Programs and shortcuts|*.exe;*.lnk;*.bat;*.cmd;*.url|All files|*.*");
             Put(d, "Dock de videojuegos", "Video game dock");
 
             // ------------------------------------------------------------ pildora
-            Put(d, "Clic derecho en el hueco para anadir o configurar.",
+            Put(d, "Clic derecho en el hueco para añadir o configurar.",
                  "Right-click the empty space to add or configure.");
             Put(d, "buscar...", "search...");
             Put(d, "Escritorio", "Desktop");
-            Put(d, "Menu Inicio", "Start Menu");
-            Put(d, "Anadido a mano", "Added by hand");
+            Put(d, "Menú Inicio", "Start Menu");
+            Put(d, "Añadido a mano", "Added by hand");
             Put(d, "usado {0} veces", "used {0} times");
-            Put(d, "sin usar todavia", "never used");
+            Put(d, "sin usar todavía", "never used");
 
             // ------------------------------------------------------------ ajustes
             Put(d, "Ajustes de GamesDock", "GamesDock settings");
-            Put(d, "clic derecho en la barra vacia - Esc para cerrar",
+            Put(d, "clic derecho en la barra vacía - Esc para cerrar",
                  "right-click on the empty bar - Esc to close");
             Put(d, "Aspecto", "Appearance");
             Put(d, "Comportamiento", "Behavior");
@@ -116,15 +116,15 @@ namespace GamesDock
             Put(d, "Izquierda", "Left");
             Put(d, "Derecha", "Right");
             Put(d, "Libre", "Free");
-            Put(d, "Posicion de la barra", "Bar position");
-            Put(d, "Tamano del icono", "Icon size");
+            Put(d, "Posición de la barra", "Bar position");
+            Put(d, "Tamaño del icono", "Icon size");
             Put(d, "Holgura alto/ancho", "Vertical/horizontal padding");
             Put(d, "Opacidad en reposo", "Idle opacity");
             Put(d, "Tema de la barra", "Bar theme");
             Put(d, "Idioma de la interfaz", "Interface language");
             Put(d, "Juegos", "Games");
             Put(d, "Apps", "Apps");
-            Put(d, "Agrandar los iconos al pasar el raton (efecto Mac)", "Enlarge icons on hover (Mac effect)");
+            Put(d, "Agrandar los iconos al pasar el ratón (efecto Mac)", "Enlarge icons on hover (Mac effect)");
             Put(d, "Vivir solo en el escritorio (nunca por encima de otras ventanas)",
                  "Stay on the desktop (never above other windows)");
             Put(d, "Minimizar todo al lanzar", "Minimize everything when launching");
@@ -134,7 +134,7 @@ namespace GamesDock
             Put(d, "Devolver al escritorio", "Put them back on the desktop");
             Put(d, "Todo devuelto", "Everything back");
             Put(d, "Reescaneados: {0}", "Rescanned: {0}");
-            Put(d, "Arranca con Windows: si", "Start with Windows: yes");
+            Put(d, "Arranca con Windows: sí", "Start with Windows: yes");
             Put(d, "Arranca con Windows: no", "Start with Windows: no");
             Put(d, "Abrir carpeta de ajustes", "Open settings folder");
             Put(d, "Arrastra un .lnk, .exe o un enlace steam:// sobre la barra para fijarlo. Arrastra un icono para ordenar la barra; soltarlo fuera del cristal lo quita y vuelve con \"Restaurar ocultos\" del clic derecho. Clic derecho en un icono: fijar, renombrar u ocultar. Clic central: favorito.",
@@ -147,7 +147,7 @@ namespace GamesDock
             Put(d, "Guardar", "Save");
 
             // ------------------------------------------------------------ absorcion del escritorio
-            Put(d, "Los accesos directos del escritorio se moveran a\n{0}\nSe mantienen intactos y puedes devolverlos con un boton.\n\nContinuar?",
+            Put(d, "Los accesos directos del escritorio se moverán a\n{0}\nSe mantienen intactos y puedes devolverlos con un botón.\n\nContinuar?",
                  "The desktop shortcuts will be moved to\n{0}\nThey stay untouched and one button puts them back.\n\nContinue?");
             Put(d, "Vaciar escritorio", "Empty the desktop");
             Put(d, "El escritorio original ya no existe.", "The original desktop no longer exists.");
@@ -155,9 +155,9 @@ namespace GamesDock
             // ------------------------------------------------------------ nombres de tema
             Put(d, "Noche", "Night");
             Put(d, "Niebla", "Fog");
-            Put(d, "Onix", "Onyx");
-            Put(d, "Neon", "Neon");
-            Put(d, "Ambar", "Amber");
+            Put(d, "Ónix", "Onyx");
+            Put(d, "Neón", "Neon");
+            Put(d, "Ámbar", "Amber");
             Put(d, "Bosque", "Forest");
             Put(d, "Anime", "Anime");
             Put(d, "Cyberpunk", "Cyberpunk");

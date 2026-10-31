@@ -42,7 +42,7 @@ namespace GamesDock
         {
             // el valor por defecto no puede ser la cadena traducida: un parametro opcional ha de ser
             // constante en tiempo de compilacion
-            if (subTxt == null) subTxt = Lang.T("clic derecho en la barra vacia - Esc para cerrar");
+            if (subTxt == null) subTxt = Lang.T("clic derecho en la barra vacía - Esc para cerrar");
             Win = new Window
             {
                 WindowStyle = WindowStyle.None,
@@ -228,9 +228,9 @@ namespace GamesDock
                 posRow.Children.Add(Chip(Lang.T(k), "posicion", id == cfg.Position,
                     delegate { cfg.Position = id; cfg.Save(); dock.ApplyLayout(); }));
             }
-            izq.Children.Add(Field(Lang.T("Posicion de la barra"), posRow, 13));
+            izq.Children.Add(Field(Lang.T("Posición de la barra"), posRow, 13));
 
-            izq.Children.Add(Field(Lang.T("Tamano del icono"),
+            izq.Children.Add(Field(Lang.T("Tamaño del icono"),
                 Stepper("iconSize", 28, 76, 2, cfg.IconSize, "px", v => { cfg.IconSize = v; cfg.Save(); dock.ApplyLayout(); dock.Refresh(false); }), 13));
 
             izq.Children.Add(Field(Lang.T("Holgura alto/ancho"),
@@ -243,10 +243,10 @@ namespace GamesDock
             foreach (var kv in Themes.All) temRow.Children.Add(ThemeChip(kv.Key, kv.Key == cfg.Theme, dock));
             izq.Children.Add(Field(Lang.T("Tema de la barra"), temRow, 4));
 
-            // cada idioma se escribe en su propio idioma: es la convencion de los selectores y evita
-            // que "Espanol" aparezca como "Spanish" cuando ya estas en ingles
+            // cada idioma se escribe en su propio idioma: es la convención de los selectores y evita
+            // que "Español" aparezca como "Spanish" cuando ya estás en inglés
             var langRow = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
-            foreach (var l in new[] { new[] { "auto", "Auto" }, new[] { "es", "Espanol" }, new[] { "en", "English" } })
+            foreach (var l in new[] { new[] { "auto", "Auto" }, new[] { "es", "Español" }, new[] { "en", "English" } })
             {
                 string id = l[0];
                 langRow.Children.Add(Chip(l[1], "idioma", id == (cfg.Language ?? "auto"),
@@ -255,7 +255,7 @@ namespace GamesDock
             izq.Children.Add(Field(Lang.T("Idioma de la interfaz"), langRow, 4));
 
             // --------------------------------------------------------- columna derecha
-            der.Children.Add(SecHead("Que se ve"));
+            der.Children.Add(SecHead("Qué se ve"));
             var secRow = new WrapPanel { Margin = new Thickness(0, 0, 0, 15) };
             var secMap = new[]
             {
@@ -270,7 +270,7 @@ namespace GamesDock
             der.Children.Add(secRow);
 
             der.Children.Add(SecHead("Comportamiento"));
-            der.Children.Add(Switch(Lang.T("Agrandar los iconos al pasar el raton (efecto Mac)"), cfg.Magnify,
+            der.Children.Add(Switch(Lang.T("Agrandar los iconos al pasar el ratón (efecto Mac)"), cfg.Magnify,
                 on => { cfg.Magnify = on; cfg.Save(); dock.ResetProximity(); dock.ApplyLayout(); }));
             der.Children.Add(Switch(Lang.T("Vivir solo en el escritorio (nunca por encima de otras ventanas)"), cfg.DesktopLevel,
                 on => { cfg.DesktopLevel = on; cfg.Save(); dock.AttachToDesktop(); dock.ApplyLayout(); }));
@@ -326,7 +326,7 @@ namespace GamesDock
 
         static string AutostartLabel(Config cfg)
         {
-            return Lang.T(cfg.Autostart ? "Arranca con Windows: si" : "Arranca con Windows: no");
+            return Lang.T(cfg.Autostart ? "Arranca con Windows: sí" : "Arranca con Windows: no");
         }
 
         // cambiar de idioma en caliente: los textos se resuelven al crearse el control, asi que lo que
@@ -580,7 +580,7 @@ namespace GamesDock
 
         public static bool Import(Config cfg)
         {
-            var r = MessageBox.Show(Lang.F("Los accesos directos del escritorio se moveran a\n{0}\nSe mantienen intactos y puedes devolverlos con un boton.\n\nContinuar?", Paths.DeskDir),
+            var r = MessageBox.Show(Lang.F("Los accesos directos del escritorio se moverán a\n{0}\nSe mantienen intactos y puedes devolverlos con un botón.\n\nContinuar?", Paths.DeskDir),
                                     Lang.T("Vaciar escritorio"), MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (r != MessageBoxResult.Yes) return false;
             int movidos = 0;

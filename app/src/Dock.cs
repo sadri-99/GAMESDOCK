@@ -74,7 +74,7 @@ namespace GamesDock
             // muelles fijos del dock: la pildora, la posicion del cursor (suavizada) y la entrada/salida
             // k manda lo TARDA en llegar (omega = sqrt(k), el 2 % se asienta en ~5,8/omega s) y zeta
             // cuanto rebota. El del cursor va a k=3200: con 900 la fila llegaba al agrandado ~190 ms
-            // despues, un retardo perceptible al pasar el raton.
+            // despues, un retardo perceptible al pasar el ratón.
             HoverSpr = Spring.Make("pill", 340.0, 0.92, null);
             PtrSpr = Spring.Make("ptr", 3200.0, 1.0, null);
             SlideSpr = Spring.Make("slide", 260.0, 1.0, null);
@@ -175,7 +175,7 @@ namespace GamesDock
                 // muelle de escala propio por tile. Con pop entran escalonados y con un asomo de
                 // rebote, que es como se ve una app cara al abrirse; sin pop nacen ya asentados.
                 // k=900 en lugar de 300: el tile es lo ultimo que queda entre el cursor y lo que se
-                // ve, y a omega 17 la fila llegaba al agrandado ~340 ms despues de pasar el raton.
+                // ve, y a omega 17 la fila llegaba al agrandado ~340 ms despues de pasar el ratón.
                 var sp = Spring.Make("tile", 900.0, 0.85, t);
                 var box = (Border)t.Content;
                 var st = (ScaleTransform)t.RenderTransform;
@@ -192,7 +192,7 @@ namespace GamesDock
             {
                 Strip.Children.Add(new TextBlock
                 {
-                    Text = Lang.T("Clic derecho en el hueco para anadir o configurar."),
+                    Text = Lang.T("Clic derecho en el hueco para añadir o configurar."),
                     Foreground = Themes.Br(_theme.C["fieldFg"]),
                     FontSize = 12,
                     VerticalAlignment = VerticalAlignment.Center,
@@ -288,10 +288,10 @@ namespace GamesDock
                 case "epic": origen = "Epic Games"; break;
                 case "gog": origen = "GOG"; break;
                 case "desktop": origen = Lang.T("Escritorio"); break;
-                case "start": origen = Lang.T("Menu Inicio"); break;
-                default: origen = Lang.T("Anadido a mano"); break;
+                case "start": origen = Lang.T("Menú Inicio"); break;
+                default: origen = Lang.T("Añadido a mano"); break;
             }
-            string uso = u != null ? Lang.F("usado {0} veces", u.N) : Lang.T("sin usar todavia");
+            string uso = u != null ? Lang.F("usado {0} veces", u.N) : Lang.T("sin usar todavía");
             string ruta = !string.IsNullOrEmpty(it.Target) ? it.Target : (it.Link ?? string.Empty);
             return it.Name + "\n" + origen + " · " + uso + "\n" + ruta;
         }
@@ -341,7 +341,7 @@ namespace GamesDock
             bd.Child = null;
             // Fant: el filtro bueno que WPF puede hacer POR HARDWARE. HighQualityCubic esta documentado
             // como solo-software y manda el tile a la via lenta: con 11 iconos reescalando cada cuadro
-            // eso es exactamente el corte que se nota al pasar el raton
+            // eso es exactamente el corte que se nota al pasar el ratón
             RenderOptions.SetBitmapScalingMode(bd, BitmapScalingMode.Fant);
             return true;
         }

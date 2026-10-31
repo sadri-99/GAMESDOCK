@@ -441,7 +441,7 @@ namespace GamesDock
             }
             if (_batchFail.Count > 0)
             {
-                string cabeza = _batchFail.Count == 1 ? Lang.T("No se pudo anadir:") : Lang.T("No se pudieron anadir:");
+                string cabeza = _batchFail.Count == 1 ? Lang.T("No se pudo añadir:") : Lang.T("No se pudieron añadir:");
                 MessageBox.Show(Win, cabeza + "\n" + string.Join("\n", _batchFail.ToArray()), "GamesDock");
             }
             _batchFail.Clear();
@@ -532,7 +532,7 @@ namespace GamesDock
             {
                 Log.Write("fijar fallida " + path + ": " + ex.Message);
                 if (Batch) _batchFail.Add(path);
-                else MessageBox.Show(Win, Lang.F("No se pudo anadir:\n{0}\n\n{1}", path, ex.Message), "GamesDock");
+                else MessageBox.Show(Win, Lang.F("No se pudo añadir:\n{0}\n\n{1}", path, ex.Message), "GamesDock");
                 return null;
             }
         }
@@ -549,7 +549,7 @@ namespace GamesDock
         {
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
-                Title = Lang.T("Elige el juego o aplicacion"),
+                Title = Lang.T("Elige el juego o aplicación"),
                 Filter = Lang.T("Programas y accesos|*.exe;*.lnk;*.bat;*.cmd;*.url|Todos|*.*"),
                 CheckFileExists = true,
                 Multiselect = true
@@ -568,9 +568,9 @@ namespace GamesDock
                 if (_dockMenu != null) return _dockMenu;
                 _dockMenu = new ContextMenu();
                 _dockMenu.Items.Add(MenuRow(Lang.T("Buscar..."), delegate { OpenSearch(); }));
-                _dockMenu.Items.Add(MenuRow(Lang.T("Anadir app o juego..."), delegate { ShowAddDialog(); }));
+                _dockMenu.Items.Add(MenuRow(Lang.T("Añadir app o juego..."), delegate { ShowAddDialog(); }));
 
-                _verMenu = new MenuItem { Header = Lang.T("Que se ve") };
+                _verMenu = new MenuItem { Header = Lang.T("Qué se ve") };
                 foreach (var s in new[]
                 {
                     new[] { "fav", "Favoritos" }, new[] { "games", "Juegos detectados" },
