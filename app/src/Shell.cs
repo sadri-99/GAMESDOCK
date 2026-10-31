@@ -111,7 +111,7 @@ namespace GamesDock
             }
 
             string file = !string.IsNullOrEmpty(it.Link) && File.Exists(it.Link) ? it.Link : it.Target;
-            if (string.IsNullOrEmpty(file) || !File.Exists(file)) throw new FileNotFoundException("No existe el destino: " + file);
+            if (string.IsNullOrEmpty(file) || !File.Exists(file)) throw new FileNotFoundException(Lang.F("No existe el destino: {0}", file));
 
             var info = new ProcessStartInfo(file)
             {
@@ -162,7 +162,7 @@ namespace GamesDock
                 {
                     string vbs = WriteLauncherVbs();
                     string wscript = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "wscript.exe");
-                    return ShellLink.Create(lnk, wscript, "\"" + vbs + "\"", null, "Dock de videojuegos");
+                    return ShellLink.Create(lnk, wscript, "\"" + vbs + "\"", null, Lang.T("Dock de videojuegos"));
                 }
                 if (File.Exists(lnk)) File.Delete(lnk);
                 return true;

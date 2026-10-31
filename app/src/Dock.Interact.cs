@@ -359,7 +359,7 @@ namespace GamesDock
             catch (Exception ex)
             {
                 Log.Write("ERROR al lanzar " + it.Name + ": " + ex.Message);
-                MessageBox.Show(Win, "No se pudo lanzar:\n" + it.Name + "\n\n" + ex.Message, "GamesDock",
+                MessageBox.Show(Win, Lang.F("No se pudo lanzar:\n{0}\n\n{1}", it.Name, ex.Message), "GamesDock",
                                 MessageBoxButton.OK, MessageBoxImage.Error);
                 ShowDock();
             }
@@ -441,7 +441,7 @@ namespace GamesDock
             }
             if (_batchFail.Count > 0)
             {
-                string cabeza = _batchFail.Count == 1 ? "No se pudo anadir:" : "No se pudieron anadir:";
+                string cabeza = _batchFail.Count == 1 ? Lang.T("No se pudo anadir:") : Lang.T("No se pudieron anadir:");
                 MessageBox.Show(Win, cabeza + "\n" + string.Join("\n", _batchFail.ToArray()), "GamesDock");
             }
             _batchFail.Clear();
@@ -470,7 +470,7 @@ namespace GamesDock
                 {
                     link = path;
                     var s = ShellLink.Resolve(path);
-                    if (s == null || string.IsNullOrEmpty(s.Target)) throw new Exception("El acceso directo no tiene destino.");
+                    if (s == null || string.IsNullOrEmpty(s.Target)) throw new Exception(Lang.T("El acceso directo no tiene destino."));
                     target = s.Target; argLine = s.Args; work = s.Work; hint = s.Target;
                     key = target.ToLowerInvariant() + "|" +
                           System.Text.RegularExpressions.Regex.Replace(argLine ?? string.Empty, @"\s+", " ").Trim().ToLowerInvariant();
@@ -532,7 +532,7 @@ namespace GamesDock
             {
                 Log.Write("fijar fallida " + path + ": " + ex.Message);
                 if (Batch) _batchFail.Add(path);
-                else MessageBox.Show(Win, "No se pudo anadir:\n" + path + "\n\n" + ex.Message, "GamesDock");
+                else MessageBox.Show(Win, Lang.F("No se pudo anadir:\n{0}\n\n{1}", path, ex.Message), "GamesDock");
                 return null;
             }
         }
@@ -549,8 +549,8 @@ namespace GamesDock
         {
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
-                Title = "Elige el juego o aplicacion",
-                Filter = "Programas y accesos|*.exe;*.lnk;*.bat;*.cmd;*.url|Todos|*.*",
+                Title = Lang.T("Elige el juego o aplicacion"),
+                Filter = Lang.T("Programas y accesos|*.exe;*.lnk;*.bat;*.cmd;*.url|Todos|*.*"),
                 CheckFileExists = true,
                 Multiselect = true
             };
@@ -567,10 +567,10 @@ namespace GamesDock
             {
                 if (_dockMenu != null) return _dockMenu;
                 _dockMenu = new ContextMenu();
-                _dockMenu.Items.Add(MenuRow("Buscar...", delegate { OpenSearch(); }));
-                _dockMenu.Items.Add(MenuRow("Anadir app o juego...", delegate { ShowAddDialog(); }));
+                _dockMenu.Items.Add(MenuRow(Lang.T("Buscar..."), delegate { OpenSearch(); }));
+                _dockMenu.Items.Add(MenuRow(Lang.T("Anadir app o juego..."), delegate { ShowAddDialog(); }));
 
-                _verMenu = new MenuItem { Header = "Que se ve" };
+                _verMenu = new MenuItem { Header = Lang.T("Que se ve") };
                 foreach (var s in new[]
                 {
                     new[] { "fav", "Favoritos" }, new[] { "games", "Juegos detectados" },
@@ -578,31 +578,31 @@ namespace GamesDock
                 })
                 {
                     string id = s[0];
-                    var mi = new MenuItem { Header = s[1], Tag = id, IsCheckable = true };
+                    var mi = new MenuItem { Header = Lang.T(s[1]), Tag = id, IsCheckable = true };
                     mi.Click += (a, e) => SetSection(id);
                     _verMenu.Items.Add(mi);
                 }
                 _dockMenu.Items.Add(_verMenu);
 
-                _temaMenu = new MenuItem { Header = "Tema" };
+                _temaMenu = new MenuItem { Header = Lang.T("Tema") };
                 foreach (var kv in Themes.All)
                 {
                     string id = kv.Key;
-                    var mi = new MenuItem { Header = kv.Value.Label, Tag = id, IsCheckable = true };
+                    var mi = new MenuItem { Header = Lang.T(kv.Value.Label), Tag = id, IsCheckable = true };
                     mi.Click += (a, e) => SetTheme(id);
                     _temaMenu.Items.Add(mi);
                 }
                 _dockMenu.Items.Add(_temaMenu);
 
                 // lo que se sacó arrastrando fuera (o con "quitar del dock") vuelve a entrar por aqui
-                _ocultosMenu = new MenuItem { Header = "Restaurar ocultos" };
+                _ocultosMenu = new MenuItem { Header = Lang.T("Restaurar ocultos") };
                 _dockMenu.Items.Add(_ocultosMenu);
 
-                _dockMenu.Items.Add(MenuRow("Reescanear", delegate { Rebuild(); }));
-                _dockMenu.Items.Add(MenuRow("Ajustes", delegate { Settings.Show(this); }));
+                _dockMenu.Items.Add(MenuRow(Lang.T("Reescanear"), delegate { Rebuild(); }));
+                _dockMenu.Items.Add(MenuRow(Lang.T("Ajustes"), delegate { Settings.Show(this); }));
                 _dockMenu.Items.Add(new Separator());
-                _dockMenu.Items.Add(MenuRow("Ocultar (Ctrl+Alt+D)", delegate { HideDock(); }));
-                _dockMenu.Items.Add(MenuRow("Salir", delegate { Exiting = true; Win.Close(); }));
+                _dockMenu.Items.Add(MenuRow(Lang.T("Ocultar (Ctrl+Alt+D)"), delegate { HideDock(); }));
+                _dockMenu.Items.Add(MenuRow(Lang.T("Salir"), delegate { Exiting = true; Win.Close(); }));
 
                 _dockMenu.Opened += (a, e) =>
                 {
@@ -622,6 +622,16 @@ namespace GamesDock
             }
         }
 
+        // el menu de la pildora se construye una vez y se guarda: al cambiar de idioma hay que tirar el
+        // cache, si no la bandeja se pone en ingles y el clic derecho sigue en castellano
+        public void InvalidateMenus()
+        {
+            _dockMenu = null;
+            _verMenu = null;
+            _temaMenu = null;
+            _ocultosMenu = null;
+        }
+
         MenuItem MenuRow(string header, Action accion)
         {
             var mi = new MenuItem { Header = header };
@@ -636,7 +646,7 @@ namespace GamesDock
             foreach (var p in Cfg.Pins) if (p.Hidden) ocultos.Add(p);
             if (ocultos.Count == 0)
             {
-                _ocultosMenu.Items.Add(new MenuItem { Header = "(nada oculto)", IsEnabled = false });
+                _ocultosMenu.Items.Add(new MenuItem { Header = Lang.T("(nada oculto)"), IsEnabled = false });
                 _ocultosMenu.IsEnabled = false;
                 return;
             }
@@ -657,12 +667,12 @@ namespace GamesDock
             _itemMenu = new ContextMenu();
             var acciones = new List<MenuItem>
             {
-                MenuRow(it.Fav ? "Quitar de favoritos" : "Fijar en favoritos", delegate { ToggleFav(it); }),
-                MenuRow("Lanzar ahora", delegate { StartEntry(it, "menu"); }),
-                MenuRow("Abrir carpeta del juego", delegate { OpenFolderOf(it); }),
-                MenuRow("Renombrar", delegate { Rename(it); })
+                MenuRow(it.Fav ? Lang.T("Quitar de favoritos") : Lang.T("Fijar en favoritos"), delegate { ToggleFav(it); }),
+                MenuRow(Lang.T("Lanzar ahora"), delegate { StartEntry(it, "menu"); }),
+                MenuRow(Lang.T("Abrir carpeta del juego"), delegate { OpenFolderOf(it); }),
+                MenuRow(Lang.T("Renombrar"), delegate { Rename(it); })
             };
-            var destructiva = MenuRow(it.Origin == "custom" ? "Quitar del dock" : "Ocultar del dock",
+            var destructiva = MenuRow(it.Origin == "custom" ? Lang.T("Quitar del dock") : Lang.T("Ocultar del dock"),
                                       delegate { HideFromDock(it); });
             foreach (var a in acciones) _itemMenu.Items.Add(a);
             _itemMenu.Items.Add(new Separator());   // la accion destructiva, aparte
@@ -677,7 +687,7 @@ namespace GamesDock
             if (!string.IsNullOrEmpty(t) && !System.Text.RegularExpressions.Regex.IsMatch(t, @"^\w+://") && File.Exists(t))
                 Launcher.SelectInExplorer(t);
             else
-                MessageBox.Show(Win, "Ese juego se lanza por el cliente (Steam/Epic) y no tiene carpeta directa.", "GamesDock");
+                MessageBox.Show(Win, Lang.T("Ese juego se lanza por el cliente (Steam/Epic) y no tiene carpeta directa."), "GamesDock");
         }
 
         void Rename(ItemSpec it)
@@ -712,12 +722,19 @@ namespace GamesDock
         {
             SearchPanel.Visibility = Visibility.Collapsed;
             AttachToDesktop();
-            if (SearchBox.Text != "buscar...")
+            if (Lang.IsSearch(SearchBox.Text))
             {
                 SearchBox.Foreground = Themes.Br(_theme.C["fieldFg"]);
-                SearchBox.Text = "buscar...";
+                SearchBox.Text = Lang.Search;
             }
             Refresh(false);
+        }
+
+        // el agua pintada es la del idioma con el que se escribio, asi que al cambiar de idioma en
+        // caliente hay que reescribirla: si no, ApplyFilter la leeria como busqueda y vaciaria la barra
+        public void SyncSearchWatermark()
+        {
+            if (Lang.IsSearch(SearchBox.Text)) SearchBox.Text = Lang.Search;
         }
 
         // ------------------------------------------------------------------ entrada y salida

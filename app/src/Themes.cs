@@ -57,7 +57,31 @@ namespace GamesDock
                 "sheenTop", "#3AA8F0D0", "sheenMid", "#0AFFFFFF", "sheenBot", "#267CE8B4",
                 "hover", "#8C2FAE7E", "press", "#A634C98F", "badge", "#337CE8B4", "letter", "#FFDCF5E8",
                 "tipBg", "#F207170F", "tipFg", "#FFDCF5E8", "tipEdge", "#667CE8B4",
-                "fieldBg", "#F207170F", "fieldFg", "#FF8FBFAC", "accent", "#FF3FC98F") }
+                "fieldBg", "#F207170F", "fieldFg", "#FF8FBFAC", "accent", "#FF3FC98F") },
+            // blanco y rosa: el cristal mas claro de la familia, asi que la letra y el halo dejan de ser
+            // blancos y pasan a ser tinta oscura y rosa para que el icono siga leyendose
+            { "anime", T("Anime",
+                "glass", "#99FFFFFF", "glassBot", "#B3FBD0E4", "edge", "#CCFFFFFF",
+                "sheenTop", "#FFFFFFFF", "sheenMid", "#14FFFFFF", "sheenBot", "#59F06AA8",
+                "hover", "#8CF06AA8", "press", "#B3FF3D8F", "badge", "#40F06AA8", "letter", "#FF3A2030",
+                "tipBg", "#F5FFEFF6", "tipFg", "#FF33202B", "tipEdge", "#B3FFC9E2",
+                "fieldBg", "#F5FFEFF6", "fieldFg", "#FF9A5C7C", "accent", "#FFFF4FA0") },
+            // rojo, negro y azul: el cristal casi negro deja brillar el azul del filo y el rojo del
+            // reguero inferior; el rojo manda ademas en el acento y en la pulsacion
+            { "cyber", T("Cyberpunk",
+                "glass", "#9905060A", "glassBot", "#A61A0508", "edge", "#592BD0FF",
+                "sheenTop", "#402BD0FF", "sheenMid", "#0AFFFFFF", "sheenBot", "#4DFF2D55",
+                "hover", "#8CFF2D55", "press", "#B3FF5C7A", "badge", "#332BD0FF", "letter", "#FFE8F4FF",
+                "tipBg", "#F0070A12", "tipFg", "#FFD6EEFF", "tipEdge", "#4D2BD0FF",
+                "fieldBg", "#F0070A12", "fieldFg", "#FF7FA8C9", "accent", "#FFFF2D55") },
+            // ovni: verde fosforito en el filo y las luces, amarillo en el reguero y en el acento,
+            // sobre un cristal de noche de campo
+            { "ovni", T("Ovni",
+                "glass", "#8004170C", "glassBot", "#8C141F06", "edge", "#59A8FF6A",
+                "sheenTop", "#40C8FF8A", "sheenMid", "#0AFFFFF0", "sheenBot", "#4DF5E663",
+                "hover", "#8C39D97A", "press", "#A6F5E663", "badge", "#33A8FF6A", "letter", "#FFEAFFE8",
+                "tipBg", "#F0051409", "tipFg", "#FFEAFFE8", "tipEdge", "#66A8FF6A",
+                "fieldBg", "#F0051409", "fieldFg", "#FF89C99B", "accent", "#FFF5E663") }
         };
 
         public const string Fallback = "noche";

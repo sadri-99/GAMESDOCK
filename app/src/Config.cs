@@ -51,6 +51,8 @@ namespace GamesDock
         [DataMember(Name = "desktopLevel")] public bool DesktopLevel = true;
         [DataMember(Name = "autostart")] public bool Autostart = false;
         [DataMember(Name = "section")] public string Section = "games";
+        // "auto" toma la cultura de interfaz de Windows; "es" y "en" fuerzan el idioma
+        [DataMember(Name = "language")] public string Language = "auto";
         [DataMember(Name = "order")] public List<string> Order = new List<string>();
         [DataMember(Name = "pins")] public List<PinDto> Pins = new List<PinDto>();
         [DataMember(Name = "usage")] public Dictionary<string, UsageDto> Usage = new Dictionary<string, UsageDto>();

@@ -4,7 +4,7 @@ Píldora translúcida al nivel del escritorio, para Windows, que sustituye a los
 la mesa de trabajo: lanza videojuegos y cualquier aplicación, detecta sola los juegos que ya tienes
 instalados y se aparta cuando no la usas.
 
-El producto completo es **un único `.exe`** (`app/GamesDock.exe`, ≈ 423 KiB): sin instalador, sin
+El producto completo es **un único `.exe`** (`app/GamesDock.exe`, ≈ 432 KiB): sin instalador, sin
 servicios, sin dependencias externas y sin usar la red.
 
 ## Qué hace
@@ -47,7 +47,10 @@ esas opciones entran por el menú del clic derecho o por la ventana de Ajustes.
 - **Tamaño del icono**: 28 – 76 px. **Holgura de la píldora**: 2 – 26 px.
 - **Opacidad en reposo**: 10 – 100 %, con la barra recuperando opacidad completa al hover.
 - **Sección visible**: Favoritos, Juegos detectados, Aplicaciones o Todo.
-- **Seis temas**: Noche, Niebla, Onix, Neón, Ámbar y Bosque.
+- **Nueve temas**: Noche, Niebla, Onix, Neón, Ámbar, Bosque, Anime (blanco y rosa), Cyberpunk (rojo,
+  negro y azul) y Ovni (verde y amarillo).
+- **Idioma de la interfaz**: automático —el del sistema—, español o inglés. Se cambia en caliente
+  desde los ajustes: menús, bandeja y ventana de ajustes se reescriben sin reiniciar.
 - **Comportamiento**: magnificado, vivir solo en el escritorio, minimizar todo al lanzar, ocultar al
   lanzar y arrancar con Windows.
 
@@ -57,7 +60,7 @@ Se queda íntegramente en el perfil de usuario. El registro solo se lee, nunca s
 
 | Ruta | Contenido |
 | --- | --- |
-| `%APPDATA%\GamesDock\config.json` | Ajustes, fijados, orden, favoritos, usos y mapa de accesos movidos |
+| `%APPDATA%\GamesDock\config.json` | Ajustes —incluido el idioma—, fijados, orden, favoritos, usos y mapa de accesos movidos |
 | `%APPDATA%\GamesDock\dock.log` | Bitácora de arranque, detección y errores; se vacía al superar 256 KiB |
 | `%APPDATA%\GamesDock\icons\` | Caché de iconos en PNG de 256 px |
 | `%APPDATA%\GamesDock\escritorio\` | Copias de los accesos movidos desde el escritorio |
@@ -98,10 +101,11 @@ app/
   build.ps1          compilación de un solo fichero (la única herramienta necesaria)
   app.manifest       DPI PerMonitorV2 y asInvoker: se ejecuta sin elevación
   icon.ico           icono del programa, con todas sus variantes de tamaño
-  src/               17 ficheros .cs, todos en el namespace GamesDock
+  src/               18 ficheros .cs, todos en el namespace GamesDock
     Program.cs       arranque, instancia única, cableado de la ventana principal
     Foundation.cs    rutas, bitácora y recorte de memoria
     Config.cs        modelo de configuración y su persistencia JSON
+    Lang.cs          tabla de traducción es → en y selección de idioma
     Catalog.cs       detección e índice de juegos y aplicaciones
     Dock.cs          ventana píldora: tiles, temas y pintado
     Dock.Interact.cs hover, arrastre, menús contextuales y soltar archivos
@@ -110,7 +114,7 @@ app/
     PillGeometry.cs  construcción del contorno de la píldora
     Ghost.cs         icono flotante que sigue al cursor durante el arrastre
     Icons.cs         extracción y caché de iconos
-    Themes.cs        definición de los seis temas
+    Themes.cs        definición de los nueve temas
     Tray.cs          bandeja del sistema y atajo global
     Settings.cs      ventana de ajustes y absorción del escritorio
     Shell.cs         lanzar, minimizar todo, accesos .lnk y arranque con Windows
@@ -142,6 +146,13 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
   descartada: la ventana con `AllowsTransparency` dejaba de pintar y de recibir clics.
 - **La config respeta el esquema de las versiones anteriores**, así que una instalación existente sigue
   funcionando sin migración; los campos ausentes conservan su valor por defecto.
+- **El idioma es una tabla, no recursos satélites.** La literal en castellano es la clave de búsqueda y
+  `Lang.cs` solo guarda las parejas al inglés, así que una cadena sin traducir se ve en castellano en
+  vez de en blanco. Los textos se resuelven al construir el control; cambiar de idioma en caliente
+  descarta los menús memorizados y reconstruye la fila.
+- **Un tema son dieciséis brochas**, todas con alfa: cristal de arriba y abajo, contorno, tres brillos,
+  hover, pulsado, insignia, letra, los cuatro colores del tooltip y los dos del campo de texto. Añadir
+  un tema es añadir una entrada en `Themes.cs`; no hay código de pintado nuevo.
 
 ## Limitaciones conocidas
 
@@ -168,5 +179,7 @@ son propiedad de sus respectivos autores; GamesDock solo los lee del sistema par
 GamesDock is a single small Windows `.exe` that puts a translucent macOS-style pill at desktop level —
 behind your windows, never stealing focus. It auto-detects installed games (Steam, Epic, GOG, Start
 Menu, desktop shortcuts), lets you pin anything by dropping it on the bar, magnifies on hover with
-spring physics driven by the compositor clock, and idles at essentially zero CPU. No installer, no
-network, no telemetry: settings, icon cache and log live in `%APPDATA%\GamesDock`. MIT licensed.
+spring physics driven by the compositor clock, and idles at essentially zero CPU. The interface is
+bilingual (Spanish and English, switching live) and there are nine color themes, including Anime,
+Cyberpunk and UFO. No installer, no network, no telemetry: settings, icon cache and log live in
+`%APPDATA%\GamesDock`. MIT licensed.

@@ -25,15 +25,28 @@ namespace GamesDock
                 Visible = true
             };
 
-            var menu = new Forms.ContextMenuStrip();
-            Row(menu, "Mostrar / ocultar   (Ctrl+Alt+D)", () => _dock.ToggleDock());
-            Row(menu, "Reescanear juegos", () => _dock.Rebuild());
-            Row(menu, "Ajustes", () => Settings.Show(_dock));
-            menu.Items.Add("-");
-            Row(menu, "Salir", () => { _dock.Exiting = true; _dock.Win.Close(); });
-            _ni.ContextMenuStrip = menu;
+            _ni.ContextMenuStrip = BuildMenu();
 
             _ni.MouseDoubleClick += delegate { OnUi(() => _dock.ToggleDock()); };
+        }
+
+        Forms.ContextMenuStrip BuildMenu()
+        {
+            var menu = new Forms.ContextMenuStrip();
+            Row(menu, Lang.T("Mostrar / ocultar   (Ctrl+Alt+D)"), () => _dock.ToggleDock());
+            Row(menu, Lang.T("Reescanear juegos"), () => _dock.Rebuild());
+            Row(menu, Lang.T("Ajustes"), () => Settings.Show(_dock));
+            menu.Items.Add("-");
+            Row(menu, Lang.T("Salir"), () => { _dock.Exiting = true; _dock.Win.Close(); });
+            return menu;
+        }
+
+        // las cadenas se resuelven al montar el menu, asi que cambiar de idioma en caliente pide
+        // reconstruirlo: si no, la bandeja se queda con el idioma con el que arranco el proceso
+        public void RebuildMenu()
+        {
+            try { _ni.ContextMenuStrip = BuildMenu(); }
+            catch (Exception ex) { Log.Write("bandeja: " + ex.Message); }
         }
 
         // El icono del exe no vale aqui: el shell solo extrae de el el tamano grande y la bandeja pide

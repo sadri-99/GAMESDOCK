@@ -62,6 +62,9 @@ namespace GamesDock
             StripScroll = (ScrollViewer)Win.FindName("StripScroll");
             SearchPanel = (Border)Win.FindName("SearchPanel");
             SearchBox = (TextBox)Win.FindName("SearchBox");
+            // el agua del .xaml esta escrita en castellano: se pinta en el idioma activo antes del
+            // primer pintado, si no el cuadro arrancaria con el texto equivocado en ingles
+            SearchBox.Text = Lang.Search;
 
             // la banda transparente que rodea la pildora va en el margen del Grid: el Padding de la
             // ventana no lo aplica su plantilla, y sin esa banda el cristal se estira hasta el borde y
@@ -147,7 +150,7 @@ namespace GamesDock
         {
             if (Cat == null) return;
             string q = SearchBox.Text;
-            if (string.IsNullOrEmpty(q) || q == "buscar...") q = null;
+            if (Lang.IsSearch(q)) q = null;
             Items = Cat.Visible(Cfg.Section, q);
         }
 
@@ -189,7 +192,7 @@ namespace GamesDock
             {
                 Strip.Children.Add(new TextBlock
                 {
-                    Text = "Clic derecho en el hueco para anadir o configurar.",
+                    Text = Lang.T("Clic derecho en el hueco para anadir o configurar."),
                     Foreground = Themes.Br(_theme.C["fieldFg"]),
                     FontSize = 12,
                     VerticalAlignment = VerticalAlignment.Center,
@@ -284,11 +287,11 @@ namespace GamesDock
                 case "steam": origen = "Steam"; break;
                 case "epic": origen = "Epic Games"; break;
                 case "gog": origen = "GOG"; break;
-                case "desktop": origen = "Escritorio"; break;
-                case "start": origen = "Menu Inicio"; break;
-                default: origen = "Anadido a mano"; break;
+                case "desktop": origen = Lang.T("Escritorio"); break;
+                case "start": origen = Lang.T("Menu Inicio"); break;
+                default: origen = Lang.T("Anadido a mano"); break;
             }
-            string uso = u != null ? "usado " + u.N + " veces" : "sin usar todavia";
+            string uso = u != null ? Lang.F("usado {0} veces", u.N) : Lang.T("sin usar todavia");
             string ruta = !string.IsNullOrEmpty(it.Target) ? it.Target : (it.Link ?? string.Empty);
             return it.Name + "\n" + origen + " · " + uso + "\n" + ruta;
         }
@@ -722,7 +725,7 @@ namespace GamesDock
             _searchTimer.Tick += delegate { _searchTimer.Stop(); Refresh(false); };
             SearchBox.TextChanged += delegate
             {
-                if (SearchBox.Text != "buscar...")
+                if (!Lang.IsSearch(SearchBox.Text))
                 {
                     _searchTimer.Stop();
                     _searchTimer.Start();
@@ -730,7 +733,7 @@ namespace GamesDock
             };
             SearchBox.GotKeyboardFocus += delegate
             {
-                if (SearchBox.Text == "buscar...")
+                if (Lang.IsSearch(SearchBox.Text))
                 {
                     SearchBox.Foreground = Themes.Br(_theme.C["letter"]);
                     SearchBox.Text = string.Empty;
@@ -741,7 +744,7 @@ namespace GamesDock
                 if (string.IsNullOrEmpty(SearchBox.Text))
                 {
                     SearchBox.Foreground = Themes.Br(_theme.C["fieldFg"]);
-                    SearchBox.Text = "buscar...";
+                    SearchBox.Text = Lang.Search;
                 }
             };
             SearchBox.KeyDown += (s, e) =>

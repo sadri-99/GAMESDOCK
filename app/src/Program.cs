@@ -26,6 +26,9 @@ namespace GamesDock
                           " (STA=" + Thread.CurrentThread.GetApartmentState() + ")");
 
                 var cfg = Config.Load();
+                // antes de construir ninguna ventana: los textos se traducen al crearse el control, no
+                // se reevaluan despues
+                Lang.Apply(cfg.Language);
 
                 var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
                 app.DispatcherUnhandledException += (s, e) =>

@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace GamesDock
 {
@@ -37,8 +38,11 @@ namespace GamesDock
         public StackPanel Body;
 
         public GlassPanel(string titleTxt, double width,
-                          string subTxt = "clic derecho en la barra vacia - Esc para cerrar")
+                          string subTxt = null)
         {
+            // el valor por defecto no puede ser la cadena traducida: un parametro opcional ha de ser
+            // constante en tiempo de compilacion
+            if (subTxt == null) subTxt = Lang.T("clic derecho en la barra vacia - Esc para cerrar");
             Win = new Window
             {
                 WindowStyle = WindowStyle.None,
@@ -198,7 +202,7 @@ namespace GamesDock
                 try { _open.Activate(); return; } catch { _open = null; }
             }
             var cfg = dock.Cfg;
-            var par = new GlassPanel("Ajustes de GamesDock", 790);
+            var par = new GlassPanel(Lang.T("Ajustes de GamesDock"), 790);
             var w = par.Win;
             Steppers.Clear();
 
@@ -221,23 +225,34 @@ namespace GamesDock
             foreach (var k in new[] { "Abajo", "Arriba", "Izquierda", "Derecha", "Libre" })
             {
                 string id = posMap[k];
-                posRow.Children.Add(Chip(k, "posicion", id == cfg.Position,
+                posRow.Children.Add(Chip(Lang.T(k), "posicion", id == cfg.Position,
                     delegate { cfg.Position = id; cfg.Save(); dock.ApplyLayout(); }));
             }
-            izq.Children.Add(Field("Posicion de la barra", posRow, 13));
+            izq.Children.Add(Field(Lang.T("Posicion de la barra"), posRow, 13));
 
-            izq.Children.Add(Field("Tamano del icono",
+            izq.Children.Add(Field(Lang.T("Tamano del icono"),
                 Stepper("iconSize", 28, 76, 2, cfg.IconSize, "px", v => { cfg.IconSize = v; cfg.Save(); dock.ApplyLayout(); dock.Refresh(false); }), 13));
 
-            izq.Children.Add(Field("Holgura alto/ancho",
+            izq.Children.Add(Field(Lang.T("Holgura alto/ancho"),
                 Stepper("pillPad", 2, 26, 2, cfg.PillPad, "px", v => { cfg.PillPad = v; cfg.Save(); dock.ApplyLayout(); }), 13));
 
-            izq.Children.Add(Field("Opacidad en reposo",
+            izq.Children.Add(Field(Lang.T("Opacidad en reposo"),
                 Stepper("idleOpacity", 10, 100, 5, cfg.IdleOpacity, "%", v => { cfg.IdleOpacity = v; cfg.Save(); dock.SetWindowOpacity(v / 100.0, 120); }), 13));
 
             var temRow = new WrapPanel();
             foreach (var kv in Themes.All) temRow.Children.Add(ThemeChip(kv.Key, kv.Key == cfg.Theme, dock));
-            izq.Children.Add(Field("Tema de la barra", temRow, 4));
+            izq.Children.Add(Field(Lang.T("Tema de la barra"), temRow, 4));
+
+            // cada idioma se escribe en su propio idioma: es la convencion de los selectores y evita
+            // que "Espanol" aparezca como "Spanish" cuando ya estas en ingles
+            var langRow = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+            foreach (var l in new[] { new[] { "auto", "Auto" }, new[] { "es", "Espanol" }, new[] { "en", "English" } })
+            {
+                string id = l[0];
+                langRow.Children.Add(Chip(l[1], "idioma", id == (cfg.Language ?? "auto"),
+                    delegate { SetLanguage(dock, cfg, id); }));
+            }
+            izq.Children.Add(Field(Lang.T("Idioma de la interfaz"), langRow, 4));
 
             // --------------------------------------------------------- columna derecha
             der.Children.Add(SecHead("Que se ve"));
@@ -250,52 +265,52 @@ namespace GamesDock
             foreach (var s in secMap)
             {
                 string id = s[1];
-                secRow.Children.Add(Chip(s[0], "seccion", id == cfg.Section, delegate { dock.SetSection(id); }));
+                secRow.Children.Add(Chip(Lang.T(s[0]), "seccion", id == cfg.Section, delegate { dock.SetSection(id); }));
             }
             der.Children.Add(secRow);
 
             der.Children.Add(SecHead("Comportamiento"));
-            der.Children.Add(Switch("Agrandar los iconos al pasar el raton (efecto Mac)", cfg.Magnify,
+            der.Children.Add(Switch(Lang.T("Agrandar los iconos al pasar el raton (efecto Mac)"), cfg.Magnify,
                 on => { cfg.Magnify = on; cfg.Save(); dock.ResetProximity(); dock.ApplyLayout(); }));
-            der.Children.Add(Switch("Vivir solo en el escritorio (nunca por encima de otras ventanas)", cfg.DesktopLevel,
+            der.Children.Add(Switch(Lang.T("Vivir solo en el escritorio (nunca por encima de otras ventanas)"), cfg.DesktopLevel,
                 on => { cfg.DesktopLevel = on; cfg.Save(); dock.AttachToDesktop(); dock.ApplyLayout(); }));
-            der.Children.Add(Switch("Minimizar todo al lanzar", cfg.MinimizeAll,
+            der.Children.Add(Switch(Lang.T("Minimizar todo al lanzar"), cfg.MinimizeAll,
                 on => { cfg.MinimizeAll = on; cfg.Save(); }));
-            der.Children.Add(Switch("Ocultar el dock al lanzar (Ctrl+Alt+D lo trae)", cfg.HideOnLaunch,
+            der.Children.Add(Switch(Lang.T("Ocultar el dock al lanzar (Ctrl+Alt+D lo trae)"), cfg.HideOnLaunch,
                 on => { cfg.HideOnLaunch = on; cfg.Save(); }));
 
             der.Children.Add(SecHead("Sistema"));
             var sysRow = new WrapPanel();
             Button b1 = null, b2 = null, b3 = null, b4 = null, b5 = null;
-            sysRow.Children.Add(b1 = Pill("Reescanear juegos", delegate { dock.Rebuild(); b1.Content = "Reescaneados: " + dock.Cat.Items.Count; }));
-            sysRow.Children.Add(b2 = Pill("Vaciar escritorio al dock", delegate
+            sysRow.Children.Add(b1 = Pill(Lang.T("Reescanear juegos"), delegate { dock.Rebuild(); b1.Content = Lang.F("Reescaneados: {0}", dock.Cat.Items.Count); }));
+            sysRow.Children.Add(b2 = Pill(Lang.T("Vaciar escritorio al dock"), delegate
             {
                 if (Desktop.Import(dock.Cfg))
                 {
                     dock.Rebuild();
-                    b3.Content = "Todo devuelto";
+                    b3.Content = Lang.T("Todo devuelto");
                 }
             }));
-            sysRow.Children.Add(b3 = Pill("Devolver al escritorio", delegate
+            sysRow.Children.Add(b3 = Pill(Lang.T("Devolver al escritorio"), delegate
             {
                 Desktop.Restore(dock.Cfg);
                 dock.Rebuild();
-                b2.Content = "Vaciar escritorio al dock";
+                b2.Content = Lang.T("Vaciar escritorio al dock");
             }));
             sysRow.Children.Add(b4 = Pill(AutostartLabel(cfg), delegate
             {
                 cfg.Autostart = !cfg.Autostart;
                 cfg.Save();
                 if (Autostart.Set(cfg.Autostart)) b4.Content = AutostartLabel(cfg);
-                else { cfg.Autostart = false; cfg.Save(); b4.Content = "Arranca con Windows: no"; }
+                else { cfg.Autostart = false; cfg.Save(); b4.Content = Lang.T("Arranca con Windows: no"); }
             }));
-            sysRow.Children.Add(b5 = Pill("Abrir carpeta de ajustes", delegate { Launcher.OpenFolder(Paths.Root); }));
+            sysRow.Children.Add(b5 = Pill(Lang.T("Abrir carpeta de ajustes"), delegate { Launcher.OpenFolder(Paths.Root); }));
             der.Children.Add(sysRow);
 
-            var note = Res.Label("Arrastra un .lnk, .exe o un enlace steam:// sobre la barra para fijarlo. " +
+            var note = Res.Label(Lang.T("Arrastra un .lnk, .exe o un enlace steam:// sobre la barra para fijarlo. " +
                                  "Arrastra un icono para ordenar la barra; soltarlo fuera del cristal lo quita y vuelve con " +
                                  "\"Restaurar ocultos\" del clic derecho. Clic derecho en un icono: fijar, renombrar u ocultar. " +
-                                 "Clic central: favorito.", 10.5, "PanelSub");
+                                 "Clic central: favorito."), 10.5, "PanelSub");
             note.TextWrapping = TextWrapping.Wrap;
             note.Margin = new Thickness(0, 6, 0, 0);
             der.Children.Add(note);
@@ -311,7 +326,27 @@ namespace GamesDock
 
         static string AutostartLabel(Config cfg)
         {
-            return cfg.Autostart ? "Arranca con Windows: si" : "Arranca con Windows: no";
+            return Lang.T(cfg.Autostart ? "Arranca con Windows: si" : "Arranca con Windows: no");
+        }
+
+        // cambiar de idioma en caliente: los textos se resuelven al crearse el control, asi que lo que
+        // ya esta construido (menu de la pildora, bandeja, tiles con su tooltip) se tira y se remonta.
+        // El panel abierto se cierra y se reabre desde el despachador, no desde dentro del dialogo que
+        // se estaba cerrando, para no anidar un modal dentro de otro.
+        static void SetLanguage(Dock dock, Config cfg, string id)
+        {
+            cfg.Language = id;
+            cfg.Save();
+            Lang.Apply(id);
+            dock.InvalidateMenus();
+            dock.SyncSearchWatermark();
+            if (dock.TrayIcon != null) dock.TrayIcon.RebuildMenu();
+            dock.Refresh(false);
+            var w = _open;
+            _open = null;
+            if (w == null) { Show(dock); return; }
+            w.Dispatcher.BeginInvoke(new Action(delegate { Show(dock); }), DispatcherPriority.Background);
+            try { w.Close(); } catch { }
         }
 
         static Button Pill(string text, Action onClick)
@@ -331,7 +366,7 @@ namespace GamesDock
                 CornerRadius = new CornerRadius(2)
             };
             bar.SetResourceReference(Border.BackgroundProperty, "MenuAccent");
-            var t = Res.Label(txt.ToUpperInvariant(), 10.5, "PanelSub");
+            var t = Res.Label(Lang.T(txt).ToUpperInvariant(), 10.5, "PanelSub");
             t.FontWeight = FontWeights.SemiBold;
             row.Children.Add(bar);
             row.Children.Add(t);
@@ -393,7 +428,7 @@ namespace GamesDock
             rb.IsChecked = on;
             // el chip va sin texto accesible (el nombre va debajo, en otro bloque): sin esto es un boton
             // vacio para un lector de pantalla y para cualquier prueba automatizada
-            rb.SetValue(AutomationProperties.NameProperty, t.Label);
+            rb.SetValue(AutomationProperties.NameProperty, Lang.T(t.Label));
 
             var sp = new StackPanel();
             var sw = new Border
@@ -426,7 +461,7 @@ namespace GamesDock
             sw.Child = dots;
             sp.Children.Add(sw);
 
-            var lb = Res.Label(t.Label, 10, "PanelSub");
+            var lb = Res.Label(Lang.T(t.Label), 10, "PanelSub");
             lb.Margin = new Thickness(0, 4, 0, 0);
             lb.HorizontalAlignment = HorizontalAlignment.Center;
             sp.Children.Add(lb);
@@ -499,11 +534,11 @@ namespace GamesDock
         // ------------------------------------------------------------------ prompt de nombre
         public static string ReadNamePrompt(Dock dock, string current)
         {
-            var par = new GlassPanel("Nombre en el dock", 400, "Enter para guardar - Esc para cancelar");
+            var par = new GlassPanel(Lang.T("Nombre en el dock"), 400, Lang.T("Enter para guardar - Esc para cancelar"));
             var w = par.Win;
             _promptValue = null;
 
-            var etq = Res.Label("Nombre visible", 11, "PanelSub");
+            var etq = Res.Label(Lang.T("Nombre visible"), 11, "PanelSub");
             etq.Margin = new Thickness(0, 0, 0, 6);
             par.Body.Children.Add(etq);
 
@@ -513,7 +548,7 @@ namespace GamesDock
             var ok = new Button
             {
                 Style = Res.Style("PillBtn"),
-                Content = "Guardar",
+                Content = Lang.T("Guardar"),
                 HorizontalAlignment = HorizontalAlignment.Right
             };
             ok.Click += delegate { _promptValue = box.Text; try { Window.GetWindow(ok).Close(); } catch { } };
@@ -545,9 +580,8 @@ namespace GamesDock
 
         public static bool Import(Config cfg)
         {
-            var r = MessageBox.Show("Los accesos directos del escritorio se moveran a\n" + Paths.DeskDir +
-                                    "\nSe mantienen intactos y puedes devolverlos con un boton.\n\nContinuar?",
-                                    "Vaciar escritorio", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var r = MessageBox.Show(Lang.F("Los accesos directos del escritorio se moveran a\n{0}\nSe mantienen intactos y puedes devolverlos con un boton.\n\nContinuar?", Paths.DeskDir),
+                                    Lang.T("Vaciar escritorio"), MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (r != MessageBoxResult.Yes) return false;
             int movidos = 0;
             foreach (var d in Catalog.DesktopDirs())
@@ -595,7 +629,7 @@ namespace GamesDock
                 try
                 {
                     string destDir = Catalog.DirOf(k);
-                    if (!Directory.Exists(destDir)) throw new Exception("El escritorio original ya no existe.");
+                    if (!Directory.Exists(destDir)) throw new Exception(Lang.T("El escritorio original ya no existe."));
                     System.IO.File.Move(from, k);
                     cfg.DesktopMoved.Remove(k);
                     devueltos++;
