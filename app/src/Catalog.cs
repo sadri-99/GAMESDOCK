@@ -20,6 +20,10 @@ namespace GamesDock
         public string Work;
         public string Icon;
         public string IconHint;
+        // lo que el escaneo habria puesto sin un icono propio del usuario: es a lo que se vuelve con
+        // "Quitar icono", y evita tener que reescanear el disco entero por un cambio de un tile
+        public string AutoIcon;
+        public string AutoIconHint;
         public string AppId;
 
         // el pin solo existe cuando el usuario tocó algo sobre este elemento (favorito, oculto,
@@ -29,11 +33,17 @@ namespace GamesDock
         // solo para los fijados que no salieron del escaneo: manda su posicion de insercion
         public int Orden;
 
+        // un spec de grupo (Kind == "group") no es un elemento detectado: es la carpeta que se monta
+        // sobre los miembros que hay dentro EN ESTE MOMENTO, por eso su mosaico y su contenedor cambian
+        // solos al ocultar, fijar o buscar
+        public string GroupId;
+        public List<ItemSpec> Members;
+
         public string Path => !string.IsNullOrEmpty(Target) ? Target : (Link ?? string.Empty);
 
         public static ItemSpec FromPin(PinDto p)
         {
-            return new ItemSpec
+            var it = new ItemSpec
             {
                 Key = p.Key,
                 Name = p.Name,
@@ -43,12 +53,21 @@ namespace GamesDock
                 Target = p.Target,
                 Arguments = p.Args,
                 Work = p.Work,
-                Icon = p.Icon,
-                IconHint = !string.IsNullOrEmpty(p.Icon) ? p.Icon
-                         : (!string.IsNullOrEmpty(p.Target) ? p.Target : p.Link),
                 Pin = p,
                 Fav = p.Fav
             };
+            it.AutoIconHint = !string.IsNullOrEmpty(p.Target) ? p.Target : p.Link;
+            // el "icon" de un fijado de Steam es el .url del escritorio, que no extrae nada: se tira y se
+            // pide el arte a la caché, si no el tile sale la inicial del nombre
+            if (it.Key != null && it.Key.StartsWith("steam:", StringComparison.Ordinal))
+            {
+                Catalog.SteamArtFor(it, it.Key.Substring(6));
+                it.AutoIcon = it.Icon;
+                it.AutoIconHint = it.IconHint;
+            }
+            it.Icon = Icons.IsCustom(p.Icon) ? p.Icon : it.AutoIcon;
+            it.IconHint = it.AutoIconHint;
+            return it;
         }
     }
 
@@ -120,6 +139,9 @@ namespace GamesDock
                 s.Pin = hay ? p : null;
                 s.Fav = hay && p.Fav;
                 if (hay && !string.IsNullOrEmpty(p.Name)) s.Name = p.Name;
+                s.AutoIcon = s.Icon;
+                s.AutoIconHint = s.IconHint;
+                if (hay && Icons.IsCustom(p.Icon)) s.Icon = p.Icon;
                 items.Add(s);
             }
 
@@ -147,6 +169,15 @@ namespace GamesDock
             var d = new Dictionary<string, PinDto>();
             foreach (var p in _cfg.Pins) if (!string.IsNullOrEmpty(p.Key) && !d.ContainsKey(p.Key)) d[p.Key] = p;
             return d;
+        }
+
+        // el indice completo, con lo que la seccion activa no deja ver: un grupo tiene que poder listar
+        // a todos sus miembros aunque ahora se esté viendo solo los favoritos
+        public ItemSpec Find(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return null;
+            foreach (var it in Items) if (it.Key == key) return it;
+            return null;
         }
 
         // lo sacado del dock se quita aqui, no en el indice: rehacer el indice cuesta un escaneo de
@@ -184,10 +215,82 @@ namespace GamesDock
                 if (string.IsNullOrEmpty(k) || !rank.ContainsKey(k)) { rank[k] = oi; oi++; }
             }
 
+            // buscando no se agrupa: quien escribe "witcher" quiere ver ese icono, no tener que abrir
+            // la carpeta donde lo metio
+            if (string.IsNullOrEmpty(query)) Agrupar(pool, rank);
+
             // el orden que eligio el usuario arrastrando manda sobre el resto; lo que no esta en la
             // lista (recien detectados) se coloca detras, por numero de usos y nombre
             pool.Sort((a, b) => OrderKey(a, rank).CompareTo(OrderKey(b, rank)));
             return pool;
+        }
+
+        // Los grupos se montan sobre la lista ya filtrada: la carpeta entra en el hueco del miembro que
+        // iba primero y los miembros salen de la fila. Si con la seccion elegida quedan menos de dos, el
+        // grupo no se dibuja y el config no se toca, que es un estado temporal.
+        void Agrupar(List<ItemSpec> pool, Dictionary<string, int> rank)
+        {
+            if (_cfg.Groups == null || _cfg.Groups.Count == 0) return;
+            var porClave = new Dictionary<string, ItemSpec>();
+            foreach (var it in pool)
+            {
+                string k = it.Key ?? string.Empty;
+                if (k.Length > 0 && !porClave.ContainsKey(k)) porClave[k] = it;
+            }
+
+            var fuera = new HashSet<string>();
+            var nuevos = new List<ItemSpec>();
+            foreach (var g in _cfg.Groups)
+            {
+                if (g == null || string.IsNullOrEmpty(g.Id) || g.Members == null) continue;
+                var ms = new List<ItemSpec>();
+                foreach (var k in g.Members)
+                {
+                    string k2 = k ?? string.Empty;
+                    ItemSpec m;
+                    if (k2.Length == 0 || fuera.Contains(k2)) continue;
+                    if (!porClave.TryGetValue(k2, out m) || m == null) continue;
+                    fuera.Add(k2);
+                    ms.Add(m);
+                }
+                if (ms.Count < 2) continue;
+
+                string gk = Groups.Key(g.Id);
+                int r;
+                if (!rank.TryGetValue(gk, out r))
+                {
+                    // sin puesto propio en el orden, la carpeta se sienta donde estaba su primer miembro
+                    r = int.MaxValue;
+                    foreach (var m in ms)
+                    {
+                        int mr;
+                        if (rank.TryGetValue(m.Key ?? string.Empty, out mr) && mr < r) r = mr;
+                    }
+                    rank[gk] = r;
+                }
+
+                nuevos.Add(new ItemSpec
+                {
+                    Key = gk,
+                    GroupId = g.Id,
+                    Name = GroupName(g, ms),
+                    Origin = "group",
+                    Kind = "group",
+                    Members = ms
+                });
+            }
+            if (nuevos.Count == 0) return;
+            pool.RemoveAll(it => fuera.Contains(it.Key ?? string.Empty));
+            pool.AddRange(nuevos);
+        }
+
+        // sin titulo escrito, la carpeta lleva el nombre de lo primero de dentro: un "Grupo" suelto no
+        // dice nada y el contenedor tiene que presentarse con algo
+        static string GroupName(GroupDto g, List<ItemSpec> ms)
+        {
+            if (!string.IsNullOrEmpty(g.Name)) return g.Name;
+            string n = ms.Count > 0 ? ms[0].Name : null;
+            return string.IsNullOrEmpty(n) ? Lang.T("Grupo") : n;
         }
 
         string OrderKey(ItemSpec x, Dictionary<string, int> rank)
@@ -203,22 +306,122 @@ namespace GamesDock
         }
 
         // ------------------------------------------------------------------ Steam
-        List<ItemSpec> FindSteamGames()
+        // Una sola lectura de registro para todo el proceso: los accesos .url del escritorio y los
+        // lanzadores con -appid tambien necesitan saber donde esta la caché de arte.
+        static bool _steamMirado;
+        static string _steamRoot, _steamCache, _steamExe;
+
+        static void EnsureSteamPaths()
         {
-            var outList = new List<ItemSpec>();
-            string root;
+            if (_steamMirado) return;
+            _steamMirado = true;
             try
             {
                 using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam"))
                 {
-                    if (k == null) return outList;
-                    root = k.GetValue("SteamPath") as string;
+                    if (k == null) return;
+                    string root = k.GetValue("SteamPath") as string;
+                    if (string.IsNullOrEmpty(root)) return;
+                    _steamRoot = new DirectoryInfo(root.Replace('/', '\\')).FullName;
+                    _steamCache = Path.Combine(_steamRoot, @"appcache\librarycache");
+                    _steamExe = Path.Combine(_steamRoot, "steam.exe");
                 }
-                if (string.IsNullOrEmpty(root)) return outList;
-                root = root.Replace('/', '\\');
-                root = new DirectoryInfo(root).FullName;
             }
-            catch { return outList; }
+            catch { _steamRoot = null; }
+        }
+
+        // El arte de cada juego vive en appcache\librarycache\<appid>\, pero el cliente nuevo lo mete
+        // dentro de subcarpetas con nombre-hash y a veces con otro nombre de fichero: el 292030 no tiene
+        // library_600x900.jpg, tiene dd1c19c4.../library_capsule.jpg. Buscar la ruta literal se queda en
+        // nada para media biblioteca y el tile cae al logo de steam.exe, que es lo que parece "un icono
+        // que no se reproduce como deberia". Se recorre un nivel de subcarpetas y se puntua por nombre.
+        static readonly string[] SteamArtNombres =
+        {
+            "library_600x900.jpg", "library_capsule.jpg", "library.jpg", "capsule_600x350.jpg",
+            "library_header.jpg", "header.jpg", "logo.png"
+        };
+
+        static string SteamArtEn(string dir)
+        {
+            var cand = new List<string>();
+            try
+            {
+                foreach (var f in Directory.GetFiles(dir)) cand.Add(f);
+                foreach (var sub in Directory.GetDirectories(dir))
+                    foreach (var f in Directory.GetFiles(sub)) cand.Add(f);
+            }
+            catch { return null; }
+
+            foreach (var want in SteamArtNombres)
+            {
+                string mejor = null;
+                long bytes = 0;
+                foreach (var f in cand)
+                {
+                    if (!string.Equals(Path.GetFileName(f), want, StringComparison.OrdinalIgnoreCase)) continue;
+                    long len = SizeOf(f);
+                    if (len > bytes) { bytes = len; mejor = f; }
+                }
+                if (mejor != null && bytes >= 4000) return mejor;
+            }
+
+            // nada reconocible por nombre: el bicho mas pesado que no sea el desenfoque del hero. Los
+            // iconitos de 32x32 que Steam deja sueltos no llegan al medio kB
+            string art = null;
+            long artBytes = 4000;
+            foreach (var f in cand)
+            {
+                string n = Path.GetFileName(f);
+                if (n.IndexOf("blur", StringComparison.OrdinalIgnoreCase) >= 0) continue;
+                if (!IsImageName(n)) continue;
+                long len = SizeOf(f);
+                if (len <= artBytes) continue;
+                artBytes = len;
+                art = f;
+            }
+            return art;
+        }
+
+        static bool IsImageName(string n)
+        {
+            return n.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                || n.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                || n.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase);
+        }
+
+        static long SizeOf(string f)
+        {
+            try { return new FileInfo(f).Length; } catch { return 0; }
+        }
+
+        // el arte en bruto de una clave de Steam, o null si la caché aun no lo tiene
+        public static string SteamArt(string appid)
+        {
+            if (string.IsNullOrEmpty(appid)) return null;
+            EnsureSteamPaths();
+            if (string.IsNullOrEmpty(_steamCache)) return null;
+            return SteamArtEn(Path.Combine(_steamCache, appid));
+        }
+
+        // se llama por la ruta ya resuelta del juego y por la clave steam:<appid> de los accesos del
+        // escritorio; deja el icono de la pila de Steam como ultimo recurso
+        internal static void SteamArtFor(ItemSpec it, string appid)
+        {
+            if (string.IsNullOrEmpty(it.Icon)) it.Icon = SteamArt(appid);
+            if (string.IsNullOrEmpty(it.IconHint))
+            {
+                EnsureSteamPaths();
+                if (!string.IsNullOrEmpty(_steamExe) && File.Exists(_steamExe)) it.IconHint = _steamExe;
+            }
+            if (string.IsNullOrEmpty(it.AppId)) it.AppId = appid;
+        }
+
+        List<ItemSpec> FindSteamGames()
+        {
+            var outList = new List<ItemSpec>();
+            EnsureSteamPaths();
+            string root = _steamRoot;
+            if (string.IsNullOrEmpty(root)) return outList;
 
             var libs = new List<string> { root };
             string vdf = Path.Combine(root, @"config\libraryfolders.vdf");
@@ -233,7 +436,6 @@ namespace GamesDock
                 }
             }
 
-            string cache = Path.Combine(root, @"appcache\librarycache");
             foreach (var lib in libs)
             {
                 string sa = Path.Combine(lib, "steamapps");
@@ -253,12 +455,7 @@ namespace GamesDock
                     if (string.IsNullOrEmpty(appid) || string.IsNullOrEmpty(name)) continue;
                     if (Regex.IsMatch(name, @"(?i)dedicated server|source sdk|common redistributables|proton|beta")) continue;
 
-                    string icon = null;
-                    foreach (var c in new[] { "library_600x900.jpg", "header.jpg", "logo.png" })
-                    {
-                        string p = Path.Combine(Path.Combine(cache, appid), c);
-                        if (File.Exists(p)) { icon = p; break; }
-                    }
+                    string icon = SteamArtEn(Path.Combine(_steamCache, appid));
                     outList.Add(new ItemSpec
                     {
                         Key = "steam:" + appid,
@@ -267,7 +464,7 @@ namespace GamesDock
                         Kind = "game",
                         Target = Path.Combine(Path.Combine(sa, "common"), installdir ?? string.Empty),
                         Icon = icon,
-                        IconHint = Path.Combine(root, "steam.exe"),
+                        IconHint = _steamExe,
                         AppId = appid
                     });
                 }
@@ -511,15 +708,18 @@ namespace GamesDock
                                 var sm = Regex.Match(url, @"(?i)^steam://rungameid/(\d+)");
                                 if (sm.Success)
                                 {
-                                    outList.Add(new ItemSpec
+                                    // un acceso .url de Steam no trae ninguna ruta jugable: sin pasarle por
+                                    // el resolutor de la caché se queda sin icono y el tile sale la inicial
+                                    var si = new ItemSpec
                                     {
                                         Key = "steam:" + sm.Groups[1].Value,
                                         Name = name,
                                         Origin = "steam",
                                         Kind = "game",
-                                        Link = f.FullName,
-                                        AppId = sm.Groups[1].Value
-                                    });
+                                        Link = f.FullName
+                                    };
+                                    SteamArtFor(si, sm.Groups[1].Value);
+                                    outList.Add(si);
                                     continue;
                                 }
                                 link = url; target = f.FullName; hint = f.FullName;
@@ -533,7 +733,7 @@ namespace GamesDock
                             var am = argLine != null ? Regex.Match(argLine, @"-appid\s*(\d+)") : null;
                             if (am != null && am.Success)
                             {
-                                outList.Add(new ItemSpec
+                                var ai = new ItemSpec
                                 {
                                     Key = "steam:" + am.Groups[1].Value,
                                     Name = name,
@@ -541,7 +741,9 @@ namespace GamesDock
                                     Kind = "game",
                                     Link = link,
                                     Target = target
-                                });
+                                };
+                                SteamArtFor(ai, am.Groups[1].Value);
+                                outList.Add(ai);
                                 continue;
                             }
                             if (link != null && Regex.IsMatch(target, @"(?i)\\steam\.exe$") && argLine != null && argLine.Contains("-exec")) continue;

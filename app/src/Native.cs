@@ -18,6 +18,9 @@ namespace GamesDock
         public static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
 
         [DllImport("user32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr h);
+
+        [DllImport("user32.dll")]
         public static extern int GetWindowLong(IntPtr h, int idx);
 
         [DllImport("user32.dll")]
@@ -45,6 +48,9 @@ namespace GamesDock
 
         [DllImport("user32.dll")]
         public static extern bool IsWindowVisible(IntPtr h);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern int GetWindowText(IntPtr h, System.Text.StringBuilder s, int max);
 
         [DllImport("kernel32.dll")]
         public static extern IntPtr GetModuleHandle(string name);

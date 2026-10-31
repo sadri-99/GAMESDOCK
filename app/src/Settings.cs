@@ -36,6 +36,8 @@ namespace GamesDock
     {
         public Window Win;
         public StackPanel Body;
+        public TextBlock Tit;
+        bool _veilo;
 
         public GlassPanel(string titleTxt, double width,
                           string subTxt = null)
@@ -55,9 +57,13 @@ namespace GamesDock
                 Title = titleTxt,
                 Background = Brushes.Transparent,
                 UseLayoutRounding = true,
-                ShowActivated = true
+                ShowActivated = true,
+                // es un emergente modal: mientras este abierto nada de atras se puede tocar, asi que
+                // tampoco tiene sentido que una ventana normal lo tape
+                Topmost = true
             };
             Win.KeyUp += (s, e) => { if (e.Key == System.Windows.Input.Key.Escape) try { Win.Close(); } catch { } };
+            Win.Closed += delegate { if (_veilo) { _veilo = false; Veil.Pop(); } };
 
             var shell = new Border
             {
@@ -84,6 +90,7 @@ namespace GamesDock
             var tit = Res.Label(titleTxt, 15, "PanelFg");
             tit.FontWeight = FontWeights.SemiBold;
             tit.VerticalAlignment = VerticalAlignment.Center;
+            Tit = tit;
             var sub = Res.Label(subTxt, 10.5, "PanelSub");
             sub.Margin = new Thickness(0, 3, 0, 0);
             var headsp = new StackPanel();
@@ -148,6 +155,16 @@ namespace GamesDock
                 Add(st, "(UIElement.RenderTransform).(ScaleTransform.ScaleY)", 0.93, 1.0, 360, el);
                 st.Begin(el, true);   // Begin(FrameworkElement, bool esControllable)
             };
+        }
+
+        // el panel es modal de verdad: velo a pantalla completa mientras esta abierto, y el velo se
+        // quita solo cuando se cierra (Guardar, Enter, Esc o la cruz)
+        public void ShowModal()
+        {
+            _veilo = true;
+            Veil.Push();
+            PlayIn();
+            Win.ShowDialog();
         }
 
         static void Add(Storyboard st, string path, double from, double to, int ms, DependencyObject target)
@@ -317,11 +334,10 @@ namespace GamesDock
 
             _open = w;
             w.Closed += delegate { _open = null; cfg.Save(); };
-            par.PlayIn();
             // ShowDialog y no Show: el proceso del dock esta en segundo plano y Windows no le deja traer
             // una ventana modal-less al frente; el dialogo modal si (y el bucle anidado del dispatcher
             // no para las animaciones de la barra)
-            w.ShowDialog();
+            par.ShowModal();
         }
 
         static string AutostartLabel(Config cfg)
@@ -566,8 +582,7 @@ namespace GamesDock
             box.SelectAll();
             // el foco solo se puede pedir con la ventana ya creada
             w.ContentRendered += delegate { box.Focus(); box.SelectAll(); };
-            par.PlayIn();
-            w.ShowDialog();
+            par.ShowModal();
             return _promptValue;
         }
     }
@@ -580,8 +595,8 @@ namespace GamesDock
 
         public static bool Import(Config cfg)
         {
-            var r = MessageBox.Show(Lang.F("Los accesos directos del escritorio se moverán a\n{0}\nSe mantienen intactos y puedes devolverlos con un botón.\n\nContinuar?", Paths.DeskDir),
-                                    Lang.T("Vaciar escritorio"), MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var r = Veil.Ask(null, Lang.F("Los accesos directos del escritorio se moverán a\n{0}\nSe mantienen intactos y puedes devolverlos con un botón.\n\nContinuar?", Paths.DeskDir),
+                             Lang.T("Vaciar escritorio"), MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (r != MessageBoxResult.Yes) return false;
             int movidos = 0;
             foreach (var d in Catalog.DesktopDirs())

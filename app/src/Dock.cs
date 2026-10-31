@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -241,22 +242,19 @@ namespace GamesDock
                 Background = Themes.Br(_theme.C["badge"]),
                 ClipToBounds = true
             };
-            bd.Child = new TextBlock
-            {
-                Text = string.IsNullOrEmpty(it.Name) ? "?" : it.Name.Substring(0, 1).ToUpperInvariant(),
-                FontSize = sz * 0.44,
-                Foreground = Themes.Br(_theme.C["letter"]),
-                FontFamily = new FontFamily("Segoe UI"),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            };
+            bd.Child = Letra(it.Name, sz);
             btn.Content = bd;
 
             // el icono no se extrae aqui: un .exe sin cache cuesta decenas de ms y la fila entera se
             // congelaria. Se encola y baja de cuatro en cuatro cuando el dispatcher esta libre.
             EnqueueIcon(btn, it);
 
-            btn.Click += (s, e) => StartEntry((ItemSpec)((Button)s).Tag, "click");
+            btn.Click += (s, e) =>
+            {
+                var g = (ItemSpec)((Button)s).Tag;
+                // una carpeta no se lanza: se abre
+                if (Groups.IsGroup(g)) OpenGroup(g, (Button)s); else StartEntry(g, "click");
+            };
             btn.MouseRightButtonUp += (s, e) => { ShowItemMenu((ItemSpec)((Button)s).Tag, (Button)s); e.Handled = true; };
             // WPF no tiene evento de boton central: se caza en PreviewMouseDown, que es lo que deja el
             // favorito de en medio funcionando
@@ -277,8 +275,27 @@ namespace GamesDock
             return btn;
         }
 
+        // la letra de respaldo: lo que se ve cuando un icono no se puede extraer
+        TextBlock Letra(string nombre, double lado)
+        {
+            return new TextBlock
+            {
+                Text = string.IsNullOrEmpty(nombre) ? "?" : nombre.Substring(0, 1).ToUpperInvariant(),
+                FontSize = lado * 0.44,
+                Foreground = Themes.Br(_theme.C["letter"]),
+                FontFamily = new FontFamily("Segoe UI"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+        }
+
         string TooltipFor(ItemSpec it)
         {
+            if (Groups.IsGroup(it))
+            {
+                int n = it.Members != null ? it.Members.Count : 0;
+                return it.Name + "\n" + Lang.F("Grupo de {0} iconos", n) + "\n" + Lang.T("Clic para abrirlo");
+            }
             UsageDto u;
             Cfg.Usage.TryGetValue(it.Key ?? string.Empty, out u);
             string origen;
@@ -342,6 +359,46 @@ namespace GamesDock
             // Fant: el filtro bueno que WPF puede hacer POR HARDWARE. HighQualityCubic esta documentado
             // como solo-software y manda el tile a la via lenta: con 11 iconos reescalando cada cuadro
             // eso es exactamente el corte que se nota al pasar el ratón
+            RenderOptions.SetBitmapScalingMode(bd, BitmapScalingMode.Fant);
+            return true;
+        }
+
+        // Mosaico de la carpeta: las iconos que hay DENTRO en este momento, en 1/2/4 celdas. Es lo que
+        // hace reconocible un grupo sin abrirlo, y por eso se rehace cada vez que cambia la fila.
+        UniformGrid BuildMosaic(ItemSpec it)
+        {
+            var ms = it.Members;
+            if (ms == null || ms.Count == 0) return null;
+            int n = Math.Min(4, ms.Count);
+            var g = new UniformGrid { Columns = n <= 1 ? 1 : 2, Rows = n <= 2 ? 1 : 2 };
+            double lado = Cfg.IconSize / Math.Max(1, g.Columns);
+            for (int i = 0; i < n; i++)
+            {
+                var m = ms[i];
+                var c = new Border { Margin = new Thickness(1.2), ClipToBounds = true };
+                string png = Icons.Resolve(m);
+                if (png != null) m.Icon = png;
+                var br = png != null ? GetBrush(png) : null;
+                if (br != null)
+                {
+                    c.Background = br;
+                    RenderOptions.SetBitmapScalingMode(c, BitmapScalingMode.Fant);
+                }
+                else c.Child = Letra(m.Name, lado);
+                g.Children.Add(c);
+            }
+            return g;
+        }
+
+        bool SetMosaicNow(Button btn, ItemSpec it)
+        {
+            var bd = (Border)btn.Content;
+            var g = BuildMosaic(it);
+            if (g == null) return false;
+            // esquinas de carpeta, no circulo: es la senal de que esto no es una app sino un contenedor
+            bd.CornerRadius = new CornerRadius(Math.Max(6.0, bd.Width * 0.22));
+            bd.Background = Themes.Br(_theme.C["badge"]);
+            bd.Child = g;
             RenderOptions.SetBitmapScalingMode(bd, BitmapScalingMode.Fant);
             return true;
         }
@@ -488,15 +545,36 @@ namespace GamesDock
         {
             double inset = Lay.RowInset;
             double ovr = Math.Ceiling(Lay.MagOverrun);
-            string sig = string.Format("{0}|{1}|{2}", Cfg.Position, inset, ovr);
+            bool fits = RowFits();
+            string sig = string.Format("{0}|{1}|{2}|{3}", Cfg.Position, inset, ovr, fits);
             if (sig == _barSig) return;
             _barSig = sig;
             // el margen solo abre el hueco ESTATICO para que el icono agrandado desborde el cristal;
             // lo que se mueve cuadro a cuadro va por SetRowShift
             double gap = -ovr;
+            // por el eje de la fila hace falta el mismo truco: si no, el recorte del ScrollViewer cae
+            // justo sobre el borde del icono del extremo y lo corta en seco cuando mas se agranda. La
+            // ventana del viewport sale ovr hacia fuera y Strip vuelve a entrar el mismo ovr, asi que
+            // el icono sigue empezando a inset del borde de la pildora pero puede desbordarse.
+            // Solo cuando la fila cabe entera: si desborda y se puede desplazar, recortar en el borde
+            // del cristal es lo correcto, abrirlo dejaria trozos de icono flotando fuera de la pildora.
+            double ext = fits ? ovr : 0.0;
             Bar.Margin = Lay.Vert
-                ? new Thickness(gap, inset, gap, inset)
-                : new Thickness(inset, gap, inset, gap);
+                ? new Thickness(gap, inset - ext, gap, inset - ext)
+                : new Thickness(inset - ext, gap, inset - ext, gap);
+            Strip.Margin = Lay.Vert
+                ? new Thickness(0, ext, 0, ext)
+                : new Thickness(ext, 0, ext, 0);
+        }
+
+        // cuantos iconos caben en la pildora sin necesidad de desplazar la fila: el mismo limite que
+        // usa FitPill para el eje principal
+        bool RowFits()
+        {
+            var wa = SystemParameters.WorkArea;
+            double m = Layout.Margin;
+            double avail = (Lay.Vert ? wa.Height : wa.Width) - 2 * m - 30;
+            return Tiles.Count * Lay.Pitch <= avail;
         }
 
         void SetRowShift(double s)

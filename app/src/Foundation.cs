@@ -9,6 +9,9 @@ namespace GamesDock
     {
         public static readonly string Root    = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GamesDock");
         public static readonly string IconDir = Path.Combine(Root, "icons");
+        // los iconos elegidos por el usuario se copian aqui; la carpeta es el marcador de "personalizado",
+        // porque el cache de extraccion vive justo al lado y no hay que confundirlo
+        public static readonly string CustomDir = Path.Combine(Root, "icons", "custom");
         public static readonly string DeskDir = Path.Combine(Root, "escritorio");
         public static readonly string CfgFile = Path.Combine(Root, "config.json");
         public static readonly string LogFile = Path.Combine(Root, "dock.log");
@@ -17,6 +20,7 @@ namespace GamesDock
         {
             Directory.CreateDirectory(Root);
             Directory.CreateDirectory(IconDir);
+            Directory.CreateDirectory(CustomDir);
             Directory.CreateDirectory(DeskDir);
         }
     }

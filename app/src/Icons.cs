@@ -19,6 +19,73 @@ namespace GamesDock
             return !string.IsNullOrEmpty(path) && IsImageRe.IsMatch(path);
         }
 
+        // un "icon" del config solo manda cuando es un archivo colocado por InstallCustom: los valores
+        // heredados (el .url de Steam, un .lnk, el png del cache) son pistas del escaneo y hay que
+        // volver a resolverlas en cada arranque, si no se quedan clavados aunque Steam mueva la cache
+        public static bool IsCustom(string path)
+        {
+            if (!IsImage(path) || !File.Exists(path)) return false;
+            string dir;
+            try { dir = Path.GetDirectoryName(path); }
+            catch { return false; }
+            return string.Equals(dir, Paths.CustomDir, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Elige y guarda el icono propio de un fijado. La copia vive dentro de la carpeta de la app: si
+        // el usuario borra o mueve el original, el tile no se queda sin nada.
+        public static string InstallCustom(string key, string src)
+        {
+            string name = Md5Hex(key ?? string.Empty).Substring(0, 16);
+            string ext = Path.GetExtension(src) ?? string.Empty;
+            try
+            {
+                Directory.CreateDirectory(Paths.CustomDir);
+                string dest = Path.Combine(Paths.CustomDir, name + ext);
+                if (IsImage(dest))
+                {
+                    CleanCustom(name, ext);
+                    File.Copy(src, dest, true);
+                    return dest;
+                }
+                // binario (exe, dll, lnk): se guarda el png ya extraido, copiar un .exe entero seria
+                // llenar el disco de copias que nadie mira
+                string png = Path.Combine(Paths.CustomDir, name + ".png");
+                CleanCustom(name, ".png");
+                if (Extract256(src, png) || ExtractFallback(src, png)) return png;
+                TryDelete(png);
+            }
+            catch (Exception ex)
+            {
+                Log.Write("icono personalizado fallido para " + src + ": " + ex.Message);
+            }
+            return null;
+        }
+
+        public static void ForgetCustom(string key)
+        {
+            string name = Md5Hex(key ?? string.Empty).Substring(0, 16);
+            try { foreach (var f in Directory.GetFiles(Paths.CustomDir, name + ".*")) TryDelete(f); }
+            catch { }
+        }
+
+        static void CleanCustom(string name, string keep)
+        {
+            foreach (var f in Directory.GetFiles(Paths.CustomDir, name + ".*"))
+                if (!string.Equals(Path.GetExtension(f), keep, StringComparison.OrdinalIgnoreCase)) TryDelete(f);
+        }
+
+        static void TryDelete(string f)
+        {
+            try { File.Delete(f); } catch { }
+        }
+
+        static string Md5Hex(string s)
+        {
+            byte[] hash;
+            using (var md5 = MD5.Create()) hash = md5.ComputeHash(Encoding.UTF8.GetBytes(s));
+            return BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
+        }
+
         public static string Resolve(ItemSpec it)
         {
             if (IsImage(it.Icon) && File.Exists(it.Icon)) return it.Icon;
@@ -44,10 +111,7 @@ namespace GamesDock
         static string CachePathFor(string hint, FileInfo fi)
         {
             string seed = hint.ToLowerInvariant() + "|" + fi.LastWriteTimeUtc.Ticks + "|256";
-            byte[] hash;
-            using (var md5 = MD5.Create()) hash = md5.ComputeHash(Encoding.UTF8.GetBytes(seed));
-            string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
-            return Path.Combine(Paths.IconDir, hex.Substring(0, 24).ToLowerInvariant() + ".png");
+            return Path.Combine(Paths.IconDir, Md5Hex(seed).Substring(0, 24) + ".png");
         }
 
         static bool Extract256(string hint, string png)

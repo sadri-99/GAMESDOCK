@@ -42,6 +42,10 @@ namespace GamesDock
             menu.Closed += delegate { Apartar(); };
         }
 
+        // si hay un desplegable abierto: lo usa el contenedor de un grupo para no cerrarse el solo
+        // cuando lo que ha pasado es que se ha abierto su menu
+        public static bool Abierto { get { return _menu != null; } }
+
         static void Instalar(ContextMenu menu)
         {
             _menu = menu;

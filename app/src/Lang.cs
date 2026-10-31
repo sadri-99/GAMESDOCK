@@ -77,6 +77,13 @@ namespace GamesDock
             Put(d, "Lanzar ahora", "Launch now");
             Put(d, "Abrir carpeta del juego", "Open game folder");
             Put(d, "Renombrar", "Rename");
+            Put(d, "Cambiar icono...", "Change icon...");
+            Put(d, "Quitar icono personalizado", "Remove custom icon");
+            Put(d, "Elige el icono del acceso", "Choose the shortcut icon");
+            Put(d, "Imagenes e iconos|*.png;*.jpg;*.jpeg;*.ico|Programas|*.exe;*.dll;*.lnk|Todos|*.*",
+                 "Images and icons|*.png;*.jpg;*.jpeg;*.ico|Programs|*.exe;*.dll;*.lnk|All files|*.*");
+            Put(d, "Ese archivo no tiene un icono que se pueda extraer:\n{0}",
+                 "That file has no icon that can be extracted:\n{0}");
             Put(d, "Quitar del dock", "Remove from dock");
             Put(d, "Ocultar del dock", "Hide from dock");
             Put(d, "Ese juego se lanza por el cliente (Steam/Epic) y no tiene carpeta directa.",
@@ -145,6 +152,15 @@ namespace GamesDock
             Put(d, "Enter para guardar - Esc para cancelar", "Enter to save - Esc to cancel");
             Put(d, "Nombre visible", "Display name");
             Put(d, "Guardar", "Save");
+
+            // ------------------------------------------------------------ grupos (carpetas de iOS)
+            Put(d, "Grupo", "Group");
+            Put(d, "Grupo de {0} iconos", "Group of {0} icons");
+            Put(d, "Clic para abrirlo", "Click to open it");
+            Put(d, "clic en un icono para lanzarlo", "click an icon to launch it");
+            Put(d, "Abrir el grupo", "Open group");
+            Put(d, "Desagrupar", "Ungroup");
+            Put(d, "Quitar del grupo", "Remove from group");
 
             // ------------------------------------------------------------ absorcion del escritorio
             Put(d, "Los accesos directos del escritorio se moverán a\n{0}\nSe mantienen intactos y puedes devolverlos con un botón.\n\nContinuar?",

@@ -31,6 +31,16 @@ namespace GamesDock
         [DataMember(Name = "d")] public string D;
     }
 
+    // Un grupo es solo una lista de claves de fijados con un titulo: los miembros siguen siendo pins
+    // normales, asi que desarmar el grupo no pierde nada y un config sin "groups" se lee igual.
+    [DataContract]
+    public class GroupDto
+    {
+        [DataMember(Name = "id")] public string Id;
+        [DataMember(Name = "name")] public string Name;
+        [DataMember(Name = "members")] public List<string> Members = new List<string>();
+    }
+
     // El esquema de json es el de las versiones anteriores: el exe tiene que leer la config que ya
     // existe en la maquina sin migrarla. Los campos que no estan en el json conservan su valor por defecto.
     [DataContract]
@@ -55,6 +65,7 @@ namespace GamesDock
         [DataMember(Name = "language")] public string Language = "auto";
         [DataMember(Name = "order")] public List<string> Order = new List<string>();
         [DataMember(Name = "pins")] public List<PinDto> Pins = new List<PinDto>();
+        [DataMember(Name = "groups")] public List<GroupDto> Groups = new List<GroupDto>();
         [DataMember(Name = "usage")] public Dictionary<string, UsageDto> Usage = new Dictionary<string, UsageDto>();
         [DataMember(Name = "desktopMoved")] public Dictionary<string, string> DesktopMoved = new Dictionary<string, string>();
 
@@ -82,12 +93,13 @@ namespace GamesDock
             }
             if (cfg.Order == null) cfg.Order = new List<string>();
             if (cfg.Pins == null) cfg.Pins = new List<PinDto>();
+            if (cfg.Groups == null) cfg.Groups = new List<GroupDto>();
             if (cfg.Usage == null) cfg.Usage = new Dictionary<string, UsageDto>();
             if (cfg.DesktopMoved == null) cfg.DesktopMoved = new Dictionary<string, string>();
             int fus = MergePins(cfg);
-            Log.Write(string.Format("Config leida: {0} fijados, {1} usos{2}", cfg.Pins.Count, cfg.Usage.Count,
-                fus > 0 ? ", " + fus + " duplicados fusionados" : "."));
-            return cfg;
+            Log.Write(string.Format("Config leida: {0} fijados, {1} usos, {2} grupos{3}", cfg.Pins.Count, cfg.Usage.Count,
+                cfg.Groups.Count, fus > 0 ? ", " + fus + " duplicados fusionados" : "."));
+return cfg;
         }
 
         // las versiones anteriores guardaban los fijados en un hashtable por clave, asi que volver a

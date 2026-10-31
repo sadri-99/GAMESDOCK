@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -35,6 +36,14 @@ namespace GamesDock
             while (_iconQueue.Count > 0 && n < 4)
             {
                 var job = _iconQueue.Dequeue();
+                // una carpeta no tiene icono propio: se pinta el mosaico de lo que hay dentro, y eso
+                // tambien pasa por la cola porque extraer los iconos de los miembros cuesta disco
+                if (job.It != null && Groups.IsGroup(job.It))
+                {
+                    if (job.Btn != null) SetMosaicNow(job.Btn, job.It);
+                    n++;
+                    continue;
+                }
                 // siempre pasa por Resolve: el config puede traer un .exe, un .lnk o un .url en "icon"
                 // (heredados de versiones anteriores) y pintarlos tal cual deja el tile en negro
                 if (job.It != null)
@@ -114,6 +123,13 @@ namespace GamesDock
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center
                 };
+            }
+            else
+            {
+                // arrastrar una carpeta lleva el mosaico detras: un cuadro vacio no dice que se esta
+                // moviendo un grupo
+                var g = bd.Child as UniformGrid;
+                if (g != null) _ghost.Box.Child = BuildMosaic((ItemSpec)btn.Tag);
             }
             MoveGhost(p);
             if (!_ghost.Win.IsVisible) _ghost.Win.Show();
@@ -196,30 +212,71 @@ namespace GamesDock
             if (DragMoved && ReferenceEquals(DragBtn, btn))
             {
                 btn.Opacity = 1.0;
+                if (_grupoBtn != null) { _grupoBtn.Opacity = 1.0; Panel.SetZIndex(_grupoBtn, 0); _grupoBtn = null; }
                 EndGhost(Mouse.GetPosition(RootGrid));
                 DragBtn = null; DragMoved = false; _dragHasStart = false;
                 Panel.SetZIndex(btn, 0);
             }
         }
 
-        int SlotAt(Point p)
+        // posicion del cursor en unidades de hueco: 0 es el borde interior de la pildora y cada unidad
+        // vale un icono, asi que el centro del hueco j cae en j + 0.5
+        double SlotU(Point p)
         {
-            int n = Tiles.Count;
-            if (n <= 0) return -1;
             double u = Lay.Vert ? p.Y : p.X;
             double off = Lay.Vert ? StripScroll.VerticalOffset : StripScroll.HorizontalOffset;
-            int k = (int)Math.Floor((u - Lay.RowInset + off) / Lay.Pitch);
-            return Math.Max(0, Math.Min(n - 1, k));
+            return (u - Lay.RowInset + off) / Lay.Pitch;
+        }
+
+        // vecino marcado durante el arrastre: soltar el tile de encima mete uno dentro del otro
+        Button _grupoBtn;
+
+        void MarcarGrupo(Button b)
+        {
+            if (ReferenceEquals(b, _grupoBtn)) return;
+            if (_grupoBtn != null) _grupoBtn.Opacity = 1.0;
+            _grupoBtn = b;
+            if (b == null) return;
+            // la misma senal de fundido que el tile que se arrastra: los dos se apagan
+            b.Opacity = 0.55;
+            Panel.SetZIndex(b, 20);
         }
 
         void MoveDraggedTile(Point p)
         {
             if (DragBtn == null) return;
+            int n = Tiles.Count;
+            if (n <= 0) return;
             int cur = Tiles.IndexOf(DragBtn);
-            int k = SlotAt(p);
-            if (k < 0 || k == cur) { UpdateProximity(p); return; }
+            double x = SlotU(p);
+            int j = Math.Max(0, Math.Min(n - 1, (int)Math.Floor(x)));
+            Button vecino = j != cur ? Tiles[j] : null;
+
+            // distancia con signo al centro del hueco del vecino: positiva cuando el cursor ya lo dejo
+            // atras en la direccion del arrastre
+            double pasado = (j > cur ? 1.0 : -1.0) * (x - (j + 0.5)) * Lay.Pitch;
+
+            // el cambio de sitio se pide al DESPEGARSE del icono del vecino, no al cruzar la raya de su
+            // hueco: la franja que ocupa ese icono, centrada en su hueco, es la de agrupar. Mientras el
+            // cursor esta encima, el vecino se apaga y soltar mete un icono dentro del otro; en cuanto
+            // lo suelta por el lado del arrastre, los dos cambian de puesto como siempre.
+            if (vecino != null)
+            {
+                if (Math.Abs(pasado) <= 0.5 * Cfg.IconSize)
+                {
+                    MarcarGrupo(vecino);
+                    UpdateProximity(p);
+                    return;
+                }
+                MarcarGrupo(null);
+                // zona muerta: entre el borde del hueco y el borde del icono, por el lado del que viene
+                if (pasado < 0.0) { UpdateProximity(p); return; }
+            }
+            else { MarcarGrupo(null); }
+
+            if (vecino == null) { UpdateProximity(p); return; }
             Strip.Children.Remove(DragBtn);
-            Strip.Children.Insert(k, DragBtn);
+            Strip.Children.Insert(j, DragBtn);
             Tiles.Clear();
             foreach (var c in Strip.Children) { var b = c as Button; if (b != null) Tiles.Add(b); }
             FitPill();
@@ -229,9 +286,11 @@ namespace GamesDock
         void EndTileDrag(Point p)
         {
             var b = DragBtn;
-            DragBtn = null; DragMoved = false; _dragHasStart = false;
+            var objetivo = _grupoBtn;
+            DragBtn = null; DragMoved = false; _dragHasStart = false; _grupoBtn = null;
             if (b == null) return;
             b.Opacity = 1.0;
+            if (objetivo != null) { objetivo.Opacity = 1.0; Panel.SetZIndex(objetivo, 0); }
             EndGhost(p);
             try { b.ReleaseMouseCapture(); } catch { }
             Panel.SetZIndex(b, 0);
@@ -241,6 +300,16 @@ namespace GamesDock
             {
                 DropFromDock((ItemSpec)b.Tag);
                 return;
+            }
+            if (objetivo != null && !ReferenceEquals(objetivo, b))
+            {
+                var destino = objetivo.Tag as ItemSpec;
+                if (destino != null)
+                {
+                    GroupInto((ItemSpec)b.Tag, destino);
+                    ResetProximity();
+                    return;
+                }
             }
             CommitOrder();
             ResetProximity();
@@ -263,6 +332,8 @@ namespace GamesDock
         void DropFromDock(ItemSpec it)
         {
             if (it == null) return;
+            // soltar una carpeta fuera saca de la barra todo lo que hay dentro
+            if (Groups.IsGroup(it)) { HideGroup(it); return; }
             string k = it.Key ?? string.Empty;
             Cfg.Order.RemoveAll(x => k == x);
             Log.Write("sacado del dock: " + it.Name);
@@ -302,6 +373,8 @@ namespace GamesDock
 
         public void ToggleFav(ItemSpec it)
         {
+            // una carpeta no se fija ni se des fija: lo que cuenta son sus miembros
+            if (Groups.IsGroup(it)) return;
             var p = EnsurePin(it);
             p.Fav = !p.Fav;
             it.Fav = p.Fav;
@@ -359,7 +432,7 @@ namespace GamesDock
             catch (Exception ex)
             {
                 Log.Write("ERROR al lanzar " + it.Name + ": " + ex.Message);
-                MessageBox.Show(Win, Lang.F("No se pudo lanzar:\n{0}\n\n{1}", it.Name, ex.Message), "GamesDock",
+                Veil.Say(Win, Lang.F("No se pudo lanzar:\n{0}\n\n{1}", it.Name, ex.Message), "GamesDock",
                                 MessageBoxButton.OK, MessageBoxImage.Error);
                 ShowDock();
             }
@@ -442,7 +515,7 @@ namespace GamesDock
             if (_batchFail.Count > 0)
             {
                 string cabeza = _batchFail.Count == 1 ? Lang.T("No se pudo añadir:") : Lang.T("No se pudieron añadir:");
-                MessageBox.Show(Win, cabeza + "\n" + string.Join("\n", _batchFail.ToArray()), "GamesDock");
+                Veil.Say(Win, cabeza + "\n" + string.Join("\n", _batchFail.ToArray()), "GamesDock");
             }
             _batchFail.Clear();
         }
@@ -478,7 +551,8 @@ namespace GamesDock
                 }
                 else if (sid != null && sid.Success)
                 {
-                    link = path; target = url; hint = path;
+                    // el .url no extrae icono ninguno: se guarda directamente el arte de la caché de Steam
+                    link = path; target = url; hint = Catalog.SteamArt(sid.Groups[1].Value);
                     key = "steam:" + sid.Groups[1].Value;
                     name = !string.IsNullOrEmpty(nameHint) ? nameHint : Catalog.CleanName(Path.GetFileName(path));
                 }
@@ -532,7 +606,7 @@ namespace GamesDock
             {
                 Log.Write("fijar fallida " + path + ": " + ex.Message);
                 if (Batch) _batchFail.Add(path);
-                else MessageBox.Show(Win, Lang.F("No se pudo añadir:\n{0}\n\n{1}", path, ex.Message), "GamesDock");
+                else Veil.Say(Win, Lang.F("No se pudo añadir:\n{0}\n\n{1}", path, ex.Message), "GamesDock");
                 return null;
             }
         }
@@ -665,19 +739,39 @@ namespace GamesDock
         public void ShowItemMenu(ItemSpec it, Button owner)
         {
             if (it == null) return;
+            if (Groups.IsGroup(it)) { GrupoMenu(it, owner); return; }
             _itemMenu = new ContextMenu();
             var acciones = new List<MenuItem>
             {
                 MenuRow(it.Fav ? Lang.T("Quitar de favoritos") : Lang.T("Fijar en favoritos"), delegate { ToggleFav(it); }),
                 MenuRow(Lang.T("Lanzar ahora"), delegate { StartEntry(it, "menu"); }),
                 MenuRow(Lang.T("Abrir carpeta del juego"), delegate { OpenFolderOf(it); }),
-                MenuRow(Lang.T("Renombrar"), delegate { Rename(it); })
+                MenuRow(Lang.T("Renombrar"), delegate { Rename(it); }),
+                MenuRow(Lang.T("Cambiar icono..."), delegate { ChangeIcon(it); })
             };
+            // la opcion de deshacer solo tiene sentido mientras el fijado guarde un icono propio
+            if (it.Pin != null && Icons.IsCustom(it.Pin.Icon))
+                acciones.Add(MenuRow(Lang.T("Quitar icono personalizado"), delegate { RestoreIcon(it); }));
             var destructiva = MenuRow(it.Origin == "custom" ? Lang.T("Quitar del dock") : Lang.T("Ocultar del dock"),
                                       delegate { HideFromDock(it); });
             foreach (var a in acciones) _itemMenu.Items.Add(a);
             _itemMenu.Items.Add(new Separator());   // la accion destructiva, aparte
             _itemMenu.Items.Add(destructiva);
+            _itemMenu.PlacementTarget = owner;
+            MenuGuard.Watch(_itemMenu);
+            _itemMenu.IsOpen = true;
+        }
+
+        // el menu de una carpeta: lo de dentro no se ve desde la barra, asi que aqui no hay lanzar ni
+        // icono propio; se abre, se le cambia el titulo, se desarma o se saca del dock entera
+        void GrupoMenu(ItemSpec it, Button owner)
+        {
+            _itemMenu = new ContextMenu();
+            _itemMenu.Items.Add(MenuRow(Lang.T("Abrir el grupo"), delegate { OpenGroup(it, owner); }));
+            _itemMenu.Items.Add(MenuRow(Lang.T("Renombrar"), delegate { RenameGroup(it); }));
+            _itemMenu.Items.Add(MenuRow(Lang.T("Desagrupar"), delegate { UnGroup(GroupOfSpec(it)); }));
+            _itemMenu.Items.Add(new Separator());
+            _itemMenu.Items.Add(MenuRow(Lang.T("Ocultar del dock"), delegate { HideGroup(it); }));
             _itemMenu.PlacementTarget = owner;
             MenuGuard.Watch(_itemMenu);
             _itemMenu.IsOpen = true;
@@ -689,15 +783,52 @@ namespace GamesDock
             if (!string.IsNullOrEmpty(t) && !System.Text.RegularExpressions.Regex.IsMatch(t, @"^\w+://") && File.Exists(t))
                 Launcher.SelectInExplorer(t);
             else
-                MessageBox.Show(Win, Lang.T("Ese juego se lanza por el cliente (Steam/Epic) y no tiene carpeta directa."), "GamesDock");
+                Veil.Say(Win, Lang.T("Ese juego se lanza por el cliente (Steam/Epic) y no tiene carpeta directa."), "GamesDock");
         }
 
-        void Rename(ItemSpec it)
+        public void Rename(ItemSpec it)
         {
             string n = Settings.ReadNamePrompt(this, it.Name);
             if (string.IsNullOrEmpty(n) || n == it.Name) return;
             SetPinOverride(it, p => p.Name = n);
             it.Name = n;
+            Cfg.Save();
+            Refresh(false);
+        }
+
+        // ------------------------------------------------------------------ icono propio
+        void ChangeIcon(ItemSpec it)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = Lang.T("Elige el icono del acceso"),
+                Filter = Lang.T("Imagenes e iconos|*.png;*.jpg;*.jpeg;*.ico|Programas|*.exe;*.dll;*.lnk|Todos|*.*"),
+                CheckFileExists = true
+            };
+            // el dialogo de elegir archivo es del sistema y no es topmost: el velo lo taparia, asi que
+            // Veil lo remonta el solo en cuanto existe
+            bool? elegido = null;
+            Veil.Around(delegate { elegido = dlg.ShowDialog(Win); });
+            if (elegido != true) return;
+            string dest = Icons.InstallCustom(it.Key, dlg.FileName);
+            if (dest == null)
+            {
+                Veil.Say(Win, Lang.F("Ese archivo no tiene un icono que se pueda extraer:\n{0}", dlg.FileName), "GamesDock");
+                return;
+            }
+            SetPinOverride(it, p => p.Icon = dest);
+            it.Icon = dest;
+            Cfg.Save();
+            Refresh(false);
+            Log.Write("icono propio: " + it.Name + " <- " + dest);
+        }
+
+        void RestoreIcon(ItemSpec it)
+        {
+            SetPinOverride(it, p => p.Icon = null);
+            Icons.ForgetCustom(it.Key);
+            it.Icon = it.AutoIcon;
+            it.IconHint = it.AutoIconHint;
             Cfg.Save();
             Refresh(false);
         }
@@ -787,6 +918,8 @@ namespace GamesDock
         public void HideDock()
         {
             if (_hidden) return;
+            // la carpeta abierta vive pegada a la barra: si la barra se va, se va con ella
+            GroupPanel.Cerrar();
             _hidden = true;
             ReadSlideOut();
             SlideSpr.Owner = _slideAxis;
