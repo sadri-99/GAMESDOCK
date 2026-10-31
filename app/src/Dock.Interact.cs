@@ -36,7 +36,7 @@ namespace GamesDock
             {
                 var job = _iconQueue.Dequeue();
                 // siempre pasa por Resolve: el config puede traer un .exe, un .lnk o un .url en "icon"
-                // (los escribio la version PowerShell) y pintarlos tal cual deja el tile en negro
+                // (heredados de versiones anteriores) y pintarlos tal cual deja el tile en negro
                 if (job.It != null)
                 {
                     string png = Icons.Resolve(job.It);
@@ -50,8 +50,6 @@ namespace GamesDock
                 Win.Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(PumpIcons));
             else if (_trimArmed) { _trimArmed = false; Memory.Trim(); }
         }
-
-        public void ArmTrim() { _trimArmed = true; }
 
         // ------------------------------------------------------------------ arrastre del tile
         Point _dragStart;

@@ -37,7 +37,8 @@ namespace GamesDock
         }
 
         // El icono del exe no vale aqui: el shell solo extrae de el el tamano grande y la bandeja pide
-        // 16 px (24 con el DPI agrandado), que es la variante con placa del mismo .ico empotrado.
+        // 16 px (24 con el DPI agrandado), asi que se le pide al .ico empotrado la variante pequena,
+        // que se dibuja con el contorno claro y se lee sobre cualquier barra de tareas.
         static Drawing.Icon AppTrayIcon()
         {
             var sz = Forms.SystemInformation.SmallIconSize;

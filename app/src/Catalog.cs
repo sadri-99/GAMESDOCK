@@ -276,6 +276,9 @@ namespace GamesDock
         }
 
         // ------------------------------------------------------------------ Epic
+        // DataContractJsonSerializer rellena estos campos por reflexion al deserializar el manifest de
+        // Epic; csc no lo ve y los declararia "nunca asignados" (CS0649).
+#pragma warning disable 0649
         [DataContract] class EpicItem
         {
             [DataMember(Name = "AppName")] public string AppName;
@@ -294,6 +297,7 @@ namespace GamesDock
         {
             [DataMember(Name = "InstallationList")] public List<EpicEntry> InstallationList;
         }
+#pragma warning restore 0649
 
         List<ItemSpec> FindEpicGames()
         {
@@ -672,7 +676,7 @@ namespace GamesDock
             return outList;
         }
 
-        // depth < 0 = sin tope; el .ps1 usa -Recurse para el menu Inicio y -Depth 2 para Epic
+        // depth < 0 = sin tope: el menu Inicio se recorre entero y el arbol de Epic se corta a dos niveles
         static IEnumerable<FileInfo> SafeFilesRagged(string dir, string pattern, int depth)
         {
             var outList = new List<FileInfo>();

@@ -31,8 +31,8 @@ namespace GamesDock
         [DataMember(Name = "d")] public string D;
     }
 
-    // El esquema es el que ya escribe GamesDock.ps1: el exe tiene que leer la config que existe en
-    // la maquina sin migrarla. Los campos que no estan en el json conservan su valor por defecto.
+    // El esquema de json es el de las versiones anteriores: el exe tiene que leer la config que ya
+    // existe en la maquina sin migrarla. Los campos que no estan en el json conservan su valor por defecto.
     [DataContract]
     public class Config
     {
@@ -65,7 +65,8 @@ namespace GamesDock
                 byte[] raw = File.ReadAllBytes(Paths.CfgFile);
                 int off = 0;
                 if (raw.Length >= 3 && raw[0] == 0xEF && raw[1] == 0xBB && raw[2] == 0xBF) off = 3;
-                // ReadObject(Stream) usa las cuotas por defecto: basta con saltar el BOM que escribe el .ps1
+                // ReadObject(Stream) usa las cuotas por defecto: basta con saltar el BOM que escribieron
+                // las versiones anteriores
                 using (var ms = new MemoryStream(raw, off, raw.Length - off, false))
                 {
                     var dcs = new DataContractJsonSerializer(typeof(Config));
@@ -87,9 +88,9 @@ namespace GamesDock
             return cfg;
         }
 
-        // el .ps1 guardaba los fijados en un hashtable por clave, asi que volver a fijar sobrescribia el
-        // antiguo. Aqui es una lista: si no se fusiona quedan dos entradas para la misma clave y la
-        // primera (la oculta al soltar el tile fuera) tapa al tile nuevo.
+        // las versiones anteriores guardaban los fijados en un hashtable por clave, asi que volver a
+        // fijar sobrescribia el antiguo. Aqui es una lista: si no se fusiona quedan dos entradas para
+        // la misma clave y la primera (la oculta al soltar el tile fuera) tapa al tile nuevo.
         static int MergePins(Config cfg)
         {
             var pos = new Dictionary<string, int>();

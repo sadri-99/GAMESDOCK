@@ -2,8 +2,7 @@ using System;
 
 namespace GamesDock
 {
-    // Toda la medida de la pildora sale de aqui. Los nombres calcan los de GamesDock.ps1 para que
-    // la comparacion de paridad entre las dos implementaciones sea directa.
+    // Toda la medida de la pildora sale de aqui: ancho, alto, radios y posiciones de la fila.
     public class Layout
     {
         public const double Margin = 34.0;    // banda transparente que rodea la pildora

@@ -13,8 +13,8 @@ namespace GamesDock
         public double K, C;
         public double Eps, VEps;
 
-        // que se escribe cada cuadro. En el .ps1 esto era un switch sobre Kind; aqui cada dueño
-        // engancha su lambda al crear el muelle y asi el motor no necesita conocer la UI.
+        // que se escribe cada cuadro: cada dueño engancha su lambda al crear el muelle, asi que el motor
+        // no necesita conocer la UI.
         public Action<Spring> Apply;
         public Action Settled;
 

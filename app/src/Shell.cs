@@ -173,14 +173,5 @@ namespace GamesDock
                 return false;
             }
         }
-
-        public static bool IsOn()
-        {
-            try
-            {
-                return File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), "GamesDock.lnk"));
-            }
-            catch { return false; }
-        }
     }
 }

@@ -1,3 +1,24 @@
+# Los guiones de PowerShell y VBScript se guardan y restauran byte a byte: PowerShell 5.1 necesita el
+# BOM para leerlos como UTF-8 y un renormalizado de lineas le corromperia los acentos. Lo mismo aplica
+# al config.json que escribe y lee la aplicacion.
 *.ps1 -text
 *.vbs -text
 *.json -text
+
+# Todo lo demas se normaliza a LF en el repositorio, sea cual sea la configuracion global de core.autocrlf
+# de quien clone. El compilador de C# y el lector de XAML admiten cualquier final de linea.
+*.cs text eol=lf
+*.xaml text eol=lf
+*.manifest text eol=lf
+*.md text eol=lf
+
+# Binarios: git no debe intentar tocarlos nunca.
+*.ico binary
+*.exe binary
+*.png binary
+*.jpg binary
+
+# Los ficheros sin extension tambien son texto del repositorio.
+LICENSE text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf

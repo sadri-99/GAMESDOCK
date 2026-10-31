@@ -142,8 +142,7 @@ namespace GamesDock
                 Add(st, "Opacity", 0.0, 1.0, 170, el);
                 Add(st, "(UIElement.RenderTransform).(ScaleTransform.ScaleX)", 0.955, 1.0, 300, el);
                 Add(st, "(UIElement.RenderTransform).(ScaleTransform.ScaleY)", 0.93, 1.0, 360, el);
-                // Begin(FrameworkElement, bool esControllable), la misma que usa el .ps1
-                st.Begin(el, true);
+                st.Begin(el, true);   // Begin(FrameworkElement, bool esControllable)
             };
         }
 

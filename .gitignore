@@ -1,1 +1,26 @@
+# Herramientas locales de verificacion (harness, capturas, generador del icono). Son de quien
+# desarrolla, no forman parte del producto ni de su build.
 _dev/
+
+# Intermedios y salidas de compilacion que no estan versionados: el unico binario del proyecto es
+# app/GamesDock.exe, que si se versiona a proposito.
+obj/
+bin/
+*.obj
+*.pdb
+
+# Copias y artefactos que dejan los scripts de prueba
+*.bak
+*.tmp
+*.out.txt
+*.err.txt
+*.png
+
+# Basura del shell de Windows
+Thumbs.db
+desktop.ini
+
+# Visual Studio / Rider
+.vs/
+*.user
+*.suo
