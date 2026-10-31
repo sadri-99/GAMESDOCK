@@ -51,7 +51,9 @@ namespace GamesDock
         [DataMember(Name = "left")] public double? Left;
         [DataMember(Name = "top")] public double? Top;
         [DataMember(Name = "iconSize")] public int IconSize = 46;
-        [DataMember(Name = "pillPad")] public int PillPad = 2;
+        // como se recorta el icono dentro de su hueco: "defecto" (el cuadrado de siempre), "ios" o
+        // "esfera". No cambia el png, solo el recorte con el que se pinta.
+        [DataMember(Name = "iconShape")] public string IconShape = "defecto";
         [DataMember(Name = "theme")] public string Theme = "noche";
         [DataMember(Name = "magnify")] public bool Magnify = true;
         [DataMember(Name = "idleOpacity")] public int IdleOpacity = 45;
@@ -96,10 +98,13 @@ namespace GamesDock
             if (cfg.Groups == null) cfg.Groups = new List<GroupDto>();
             if (cfg.Usage == null) cfg.Usage = new Dictionary<string, UsageDto>();
             if (cfg.DesktopMoved == null) cfg.DesktopMoved = new Dictionary<string, string>();
+            // el json viejo no trae "iconShape" y cualquiera que no sea de las tres conocido vale tanto
+            // como no tenerlo: el cuadrado de siempre
+            if (cfg.IconShape != "ios" && cfg.IconShape != "esfera") cfg.IconShape = "defecto";
             int fus = MergePins(cfg);
             Log.Write(string.Format("Config leida: {0} fijados, {1} usos, {2} grupos{3}", cfg.Pins.Count, cfg.Usage.Count,
                 cfg.Groups.Count, fus > 0 ? ", " + fus + " duplicados fusionados" : "."));
-return cfg;
+            return cfg;
         }
 
         // las versiones anteriores guardaban los fijados en un hashtable por clave, asi que volver a

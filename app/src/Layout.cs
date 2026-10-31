@@ -15,8 +15,54 @@ namespace GamesDock
         public bool Vert { get { return Cfg.Position == "left" || Cfg.Position == "right"; } }
         public int IconSize { get { return Cfg.IconSize; } }
 
-        public double PadV { get { return Math.Max(2, Cfg.PillPad); } }
+        // la holgura de la pildora ya no se ajusta: 4 px era el punto donde la fila se ve asentada sin
+        // que el cristal coma halo, y dejarla fija quita un ajuste cuyo efecto casi nadie veia
+        public const double PadFix = 4.0;
+
+        public double PadV { get { return PadFix; } }
         public double PadH { get { return PadV + 6; } }
+
+        // Las tres formas de Ajustes son solo el recorte con el que se pinta el hueco del icono: el png
+        // no se toca. "defecto" es lo que la barra ha hecho siempre.
+        public double TileRadius(double lado)
+        {
+            switch (Cfg.IconShape)
+            {
+                case "ios": return Math.Max(6.0, lado * 0.22);
+                case "esfera": return 999.0;
+                default: return 0.0;
+            }
+        }
+
+        // la letra de respaldo: en "defecto" va en circulo, que es como se ha visto siempre
+        public double BadgeRadius(double lado)
+        {
+            double r = TileRadius(lado);
+            return r <= 0 ? 999.0 : r;
+        }
+
+        // la carpeta ya venia con la esquina suavizada, asi que en "defecto" la conserva
+        public double FolderRadius(double lado)
+        {
+            double r = TileRadius(lado);
+            return r <= 0 ? Math.Max(6.0, lado * 0.22) : r;
+        }
+
+        // El mosaico se redondea celda a celda. WPF recorta el fondo de un Border a su CornerRadius,
+        // pero al hijo no lo recorta: si el radio solo va en el borde de fuera, las imagenes del grupo
+        // salen cuadradas por encima de la forma. Y un Clip geometrico en el contenedor manda el tile
+        // a la via lenta justo cuando el magnes lo esta moviendo cuadro a cuadro, asi que se recorta
+        // desde dentro: cada celda de una esquina lleva el radio en SU esquina de fuera.
+        //   esfera: el radio de medio tile puesto en la esquina de la celda sale justo el arco del
+        //           circulo, y las cuatro esquineras cierran la esfera entera.
+        //   ios y defecto: la misma curva del contenedor, para que la carpeta no se lea un cuadrado
+        //           metido dentro de un redondeado.
+        public double MosaicRadius(double ladoTile, double margen)
+        {
+            double r = Cfg.IconShape == "esfera" ? ladoTile / 2.0 : FolderRadius(ladoTile);
+            r -= margen;
+            return r > 0.0 ? r : 0.0;
+        }
 
         // el hueco del tile tiene dos medidas: a lo largo de la fila separa iconos y da sitio al halo,
         // y en transversal es lo que manda en el grosor de la pildora, asi que va apretado

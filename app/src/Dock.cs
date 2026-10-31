@@ -238,7 +238,7 @@ namespace GamesDock
             {
                 Width = sz,
                 Height = sz,
-                CornerRadius = new CornerRadius(999),
+                CornerRadius = new CornerRadius(Lay.BadgeRadius(sz)),
                 Background = Themes.Br(_theme.C["badge"]),
                 ClipToBounds = true
             };
@@ -352,8 +352,9 @@ namespace GamesDock
             if (string.IsNullOrEmpty(path) || !File.Exists(path)) return false;
             var brush = GetBrush(path);
             if (brush == null) return false;
-            // la imagen pisa el circulo de respaldo: sin recorte redondeado, solo el icono en si
-            bd.CornerRadius = new CornerRadius(0);
+            // la imagen pisa el circulo de respaldo y se recorta con la forma de Ajustes: en "defecto"
+            // radio 0, o sea el cuadrado entero de siempre
+            bd.CornerRadius = new CornerRadius(Lay.TileRadius(bd.Width));
             bd.Background = brush;
             bd.Child = null;
             // Fant: el filtro bueno que WPF puede hacer POR HARDWARE. HighQualityCubic esta documentado
@@ -370,12 +371,26 @@ namespace GamesDock
             var ms = it.Members;
             if (ms == null || ms.Count == 0) return null;
             int n = Math.Min(4, ms.Count);
-            var g = new UniformGrid { Columns = n <= 1 ? 1 : 2, Rows = n <= 2 ? 1 : 2 };
+            int cols = n <= 1 ? 1 : 2;
+            int filas = n <= 2 ? 1 : 2;
+            var g = new UniformGrid { Columns = cols, Rows = filas };
             double lado = Cfg.IconSize / Math.Max(1, g.Columns);
+            double r = Lay.MosaicRadius(Cfg.IconSize, 1.2);
             for (int i = 0; i < n; i++)
             {
                 var m = ms[i];
-                var c = new Border { Margin = new Thickness(1.2), ClipToBounds = true };
+                int col = i % cols, fila = i / cols;
+                var c = new Border
+                {
+                    Margin = new Thickness(1.2),
+                    ClipToBounds = true,
+                    // solo la esquina de fuera del tile: las juntas entre celdas tienen que seguir rectas
+                    CornerRadius = new CornerRadius(
+                        fila == 0 && col == 0 ? r : 0.0,
+                        fila == 0 && col == cols - 1 ? r : 0.0,
+                        fila == filas - 1 && col == cols - 1 ? r : 0.0,
+                        fila == filas - 1 && col == 0 ? r : 0.0)
+                };
                 string png = Icons.Resolve(m);
                 if (png != null) m.Icon = png;
                 var br = png != null ? GetBrush(png) : null;
@@ -395,8 +410,9 @@ namespace GamesDock
             var bd = (Border)btn.Content;
             var g = BuildMosaic(it);
             if (g == null) return false;
-            // esquinas de carpeta, no circulo: es la senal de que esto no es una app sino un contenedor
-            bd.CornerRadius = new CornerRadius(Math.Max(6.0, bd.Width * 0.22));
+            // en "defecto" conserva su esquina suavizada de siempre; con forma, la carpeta se recorta
+            // igual que las apps para que la fila se lea entera en el mismo molde
+            bd.CornerRadius = new CornerRadius(Lay.FolderRadius(bd.Width));
             bd.Background = Themes.Br(_theme.C["badge"]);
             bd.Child = g;
             RenderOptions.SetBitmapScalingMode(bd, BitmapScalingMode.Fant);

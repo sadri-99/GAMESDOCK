@@ -21,7 +21,8 @@ servicios, sin dependencias externas y sin usar la red.
 | ![Menú del clic derecho](docs/screenshots/dock-menu.png) | **Todo por el clic derecho.** Buscar, añadir, elegir qué se ve, el tema, restaurar ocultos, reescanear y ajustes —en las dos puntas vacías de la barra, no en los iconos—. Sin cuadros ni engranajes a la vista. |
 | ![La carpeta en la barra: un mosaico con los iconos de dentro](docs/screenshots/dock-carpeta.png) | **Carpetas como en iOS.** Se suelta un icono encima de otro y en ese hueco queda un mosaico con lo que hay dentro —aquí, Cyberpunk 2077 y The Witcher 3—, no un dibujo de carpeta. |
 | ![El contenedor abierto, con el título del grupo y el nombre de cada icono](docs/screenshots/carpeta-abierta.png) | **Al pincharla sale el contenedor**, pegado a la barra y centrado en su hueco: el título del grupo arriba —que solo se ve ahí—, los iconos con su nombre debajo, y un clic en cualquiera lo lanza y cierra el contenedor. |
-| ![Ajustes en español](docs/screenshots/ajustes.png) | **Ajustes.** Posición, tamaño, holgura, opacidad en reposo, los nueve temas con su muestra de color y el idioma de la interfaz. |
+| ![La misma fila de la barra con las tres formas de icono: cuadrada, iOS y esfera](docs/screenshots/dock-formas.png) | **La forma del icono.** La misma fila, la misma config y los mismos PNG recortados de tres maneras: cuadrada por defecto, cuadrado suavizado tipo iOS, o esfera. Se cambia en los ajustes y se aplica a todo, carpetas incluidas. |
+| ![Ajustes en español](docs/screenshots/ajustes.png) | **Ajustes.** Posición, tamaño y forma del icono, opacidad en reposo, los nueve temas con su muestra de color y el idioma de la interfaz. |
 | ![Ajustes en inglés](docs/screenshots/ajustes-en.png) | **Y en inglés**, cambiándolo en caliente: la ventana se reescribe sin reiniciar la barra. |
 
 ## Qué hace
@@ -86,7 +87,10 @@ cruz. El contenedor de una carpeta no es modal: se cierra pinchando fuera o con 
 ## Qué se puede personalizar
 
 - **Posición**: abajo, arriba, izquierda, derecha o libre en cualquier punto de la pantalla.
-- **Tamaño del icono**: 28 – 76 px. **Holgura de la píldora**: 2 – 26 px.
+- **Tamaño del icono**: 28 – 76 px.
+- **Forma del icono**: por defecto (el cuadrado de siempre), iOS (cuadrado con la esquina suavizada)
+  o esfera. Es solo el recorte con el que se pinta: el PNG no se sustituye ni se reescala, y las
+  carpetas entran en el mismo molde que las apps.
 - **Opacidad en reposo**: 10 – 100 %, con la barra recuperando opacidad completa al hover.
 - **Sección visible**: Favoritos, Juegos detectados, Aplicaciones o Todo.
 - **Icono propio**: cualquier fijado puede llevar un PNG, JPG, ICO o EXE que elijas, y se vuelve al
@@ -208,6 +212,21 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
   cambio sin tocar el catálogo. El mosaico se compone en `Groups.cs`, que es el único sitio donde se
   mutan los grupos; toda operación termina en `Save + Refresh`, así que lo que se ve en la barra es
   siempre lo que hay dentro en ese momento.
+- **La forma del icono es un recorte, no un icono nuevo.** `Layout.cs` guarda las tres curvas
+  (`TileRadius`, `BadgeRadius`, `FolderRadius`) a partir de `config.iconShape`, y el PNG se sigue
+  cargando entero: cambiar de forma no toca ni un archivo de `icons\`. Con «esfera» el radio se manda
+  a tope y WPF lo ajusta solo a media casilla. El detalle que no era evidente: WPF recorta el
+  `Background` de un `Border` a su `CornerRadius`, pero **no recorta a su hijo** —por eso el mosaico de
+  una carpeta se redondea celda a celda (`MosaicRadius`, que pone el radio en la esquina de fuera de
+  cada celda) en vez de confiar en el borde contenedor, y por eso no se usó un `Clip` geométrico: un
+  clip de geometría manda el tile a la vía lenta de render justo cuando el magnificado lo está moviendo
+  cuadro a cuadro—.
+- **Dos valores que dejaron de ser ajuste.** La holgura de la píldora queda fija en 4 px
+  (`Layout.PadFix`): era el punto donde la fila se ve asentada sin que el cristal coma halo, y su
+  efecto apenas se apreciaba. Y una config escrita por versiones anteriores puede traer `pillPad`: se
+  ignora al leer y deja de escribirse en el primer guardado, sin migración. `iconShape` es opcional
+  igual que `groups` —cualquier valor que no sea `ios` o `esfera` vale tanto como no tenerlo: el
+  cuadrado de siempre—.
 - **Agrupar y reordenar se distinguen por una banda de tres zonas** alrededor del icono vecino, medida
   sobre su centro real (`Dock.Interact.cs`): ±mitad del icono → se marca la carpeta; el hueco entre ese
   límite y el borde del slot → zona muerta, no hace nada, que es lo que antes convertía cualquier roce
@@ -293,7 +312,9 @@ Menu, desktop shortcuts), pulls each game's artwork out of Steam's `librarycache
 hides it inside a hashed subfolder, lets you pin anything by dropping it on the bar —with any icon you
 like—, and magnifies on hover with spring physics driven by the compositor clock, idling at essentially
 zero CPU. Dropping one tile on another builds an iOS-style folder: a mosaic on the bar, a container
-with names on click, and a title that only shows inside. The interface is bilingual (Spanish and
+with names on click, and a title that only shows inside. Every icon can be masked three ways —plain
+square, iOS-rounded corners or full circle—, folder mosaics included; the mask is only how the tile is
+clipped, never a replacement for the icon. The interface is bilingual (Spanish and
 English, switching live) and there are nine color themes, including Anime, Cyberpunk and UFO.
 Right-click menus close on any click outside them — like any other Windows menu — and that closing
 click is swallowed, so nothing underneath reacts to it; while one of the app's own windows is open a

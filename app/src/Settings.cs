@@ -250,8 +250,19 @@ namespace GamesDock
             izq.Children.Add(Field(Lang.T("Tamaño del icono"),
                 Stepper("iconSize", 28, 76, 2, cfg.IconSize, "px", v => { cfg.IconSize = v; cfg.Save(); dock.ApplyLayout(); dock.Refresh(false); }), 13));
 
-            izq.Children.Add(Field(Lang.T("Holgura alto/ancho"),
-                Stepper("pillPad", 2, 26, 2, cfg.PillPad, "px", v => { cfg.PillPad = v; cfg.Save(); dock.ApplyLayout(); }), 13));
+            // la forma es el recorte, no el icono: las tres chips repintan la misma fila de pngs
+            var formaRow = new WrapPanel();
+            var formaMap = new[]
+            {
+                new[] { "Por defecto", "defecto" }, new[] { "iOS", "ios" }, new[] { "Esfera", "esfera" }
+            };
+            foreach (var f in formaMap)
+            {
+                string id = f[1];
+                formaRow.Children.Add(Chip(Lang.T(f[0]), "forma", id == (cfg.IconShape ?? "defecto"),
+                    delegate { cfg.IconShape = id; cfg.Save(); dock.Refresh(false); }));
+            }
+            izq.Children.Add(Field(Lang.T("Forma del icono"), formaRow, 13));
 
             izq.Children.Add(Field(Lang.T("Opacidad en reposo"),
                 Stepper("idleOpacity", 10, 100, 5, cfg.IdleOpacity, "%", v => { cfg.IdleOpacity = v; cfg.Save(); dock.SetWindowOpacity(v / 100.0, 120); }), 13));

@@ -125,7 +125,9 @@ namespace GamesDock
             Put(d, "Libre", "Free");
             Put(d, "Posición de la barra", "Bar position");
             Put(d, "Tamaño del icono", "Icon size");
-            Put(d, "Holgura alto/ancho", "Vertical/horizontal padding");
+            Put(d, "Forma del icono", "Icon shape");
+            Put(d, "Por defecto", "Default");
+            Put(d, "Esfera", "Sphere");
             Put(d, "Opacidad en reposo", "Idle opacity");
             Put(d, "Tema de la barra", "Bar theme");
             Put(d, "Idioma de la interfaz", "Interface language");

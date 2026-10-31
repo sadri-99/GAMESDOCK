@@ -185,7 +185,7 @@ namespace GamesDock
             {
                 Width = _lado,
                 Height = _lado,
-                CornerRadius = new CornerRadius(_lado * 0.22),
+                CornerRadius = new CornerRadius(_dock.Lay.FolderRadius(_lado)),
                 ClipToBounds = true
             };
             var br = _dock.MemberBrush(m);
