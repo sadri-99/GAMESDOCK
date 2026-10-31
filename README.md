@@ -7,6 +7,17 @@ instalados y se aparta cuando no la usas.
 El producto completo es **un único `.exe`** (`app/GamesDock.exe`, ≈ 432 KiB): sin instalador, sin
 servicios, sin dependencias externas y sin usar la red.
 
+![La píldora en reposo, al nivel del escritorio](docs/screenshots/dock-reposo.png)
+
+## Capturas
+
+| | |
+| --- | --- |
+| ![Magnificado al pasar el ratón, con el tooltip del juego](docs/screenshots/dock-hover.png) | **Magnificado estilo macOS.** El icono bajo el cursor crece y sus vecinos lo hacen de forma decreciente; la píldora se estira con él. El tooltip dice de dónde salió el acceso, cuántas veces se ha lanzado y dónde está. |
+| ![Menú del clic derecho](docs/screenshots/dock-menu.png) | **Todo por el clic derecho.** Buscar, añadir, elegir qué se ve, el tema, restaurar ocultos, reescanear y ajustes —en las dos puntas vacías de la barra, no en los iconos—. Sin cuadros ni engranajes a la vista. |
+| ![Ajustes en español](docs/screenshots/ajustes.png) | **Ajustes.** Posición, tamaño, holgura, opacidad en reposo, los nueve temas con su muestra de color y el idioma de la interfaz. |
+| ![Ajustes en inglés](docs/screenshots/ajustes-en.png) | **Y en inglés**, cambiándolo en caliente: la ventana se reescribe sin reiniciar la barra. |
+
 ## Qué hace
 
 - **Detecta los juegos sin que muevas un dedo**: Steam (biblioteca y atajos), Epic Games (manifiestos
@@ -122,6 +133,8 @@ app/
     XamlAssets.cs    carga de los XAML empotrados
   xaml/              diccionario de estilos y ventana, parseados en runtime
   GamesDock.exe      binario compilado (se versiona a propósito: es el producto)
+docs/
+  screenshots/       las capturas de arriba, tomadas de la barra real
 LICENSE, README.md, .gitattributes, .gitignore
 ```
 

@@ -16,6 +16,9 @@ bin/
 *.err.txt
 *.png
 
+# Las capturas que se ensenan en el README no son un artefacto de prueba: son parte del repo.
+!docs/screenshots/*.png
+
 # Basura del shell de Windows
 Thumbs.db
 desktop.ini
