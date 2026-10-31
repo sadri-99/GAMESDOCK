@@ -1,0 +1,84 @@
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="GamesDock" WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False"
+        AllowsTransparency="True" Background="Transparent" Topmost="False"
+        UseLayoutRounding="True" SnapsToDevicePixels="True" Width="1000" Height="70">
+  <Window.Resources>
+    <Style x:Key="Tile" TargetType="Button">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="#FFF0F3FA"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="SnapsToDevicePixels" Value="True"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Grid>
+              <!-- halo circular al pasar el raton: en reposo es invisible, solo se ve el icono.
+                   tiene que caber dentro del propio boton: el ScrollViewer recorta todo lo que sobresalga -->
+              <Border x:Name="Glow" Background="Transparent" CornerRadius="999"/>
+              <ContentPresenter x:Name="Art" Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                RenderTransformOrigin="0.5,0.5"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <!-- el agrandado lo lleva el magnes de Update-Proximity sobre todo el boton: aqui no se
+                   toca RenderTransform o los dos efectos se multiplicarian -->
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Glow" Property="Background" Value="{DynamicResource TileHover}"/>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Glow" Property="Background" Value="{DynamicResource TilePress}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="Tip" TargetType="ToolTip">
+      <Setter Property="HasDropShadow" Value="False"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Padding" Value="9,6"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="MaxWidth" Value="380"/>
+    </Style>
+  </Window.Resources>
+  <!-- La pildora la dibuja una Geometry calculada (dos Path con el mismo contorno): un Border
+       redondeado no puede hincharse solo en la zona donde el raton agranda los iconos. La fila va
+       encima, fuera del relleno, para que el icono del magnes se desborde sin que recorte nadie.
+       Los Path van dentro de un Canvas A PROPOSITO: WPF recorta un elemento al hueco que le da el
+       layout cuando su DesiredSize lo desborda, y aqui ese hueco es el grosor de reposo de la pildora
+       (Root lleva el margen de la banda transparente), asi que dentro de una Grid el cristal jamas
+       llegaria a hincharse por fuera de ese grosor mientras los iconos si lo hacen. El Canvas coloca a
+       (0,0) sin recortar: las coordenadas de la geometria son las mismas de siempre. -->
+  <Grid x:Name="Root">
+    <Canvas x:Name="PillLayer" Panel.ZIndex="0">
+      <Path x:Name="Glass" Fill="#660A1018" Stretch="None" Canvas.Left="0" Canvas.Top="0"/>
+      <Path x:Name="Edge" Stroke="#42FFFFFF" StrokeThickness="1" Stretch="None"
+            Canvas.Left="0" Canvas.Top="0">
+        <Path.Fill>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#3AFFFFFF" Offset="0"/>
+            <GradientStop Color="#0AFFFFFF" Offset="0.5"/>
+            <GradientStop Color="#14FFFFFF" Offset="1"/>
+          </LinearGradientBrush>
+        </Path.Fill>
+      </Path>
+    </Canvas>
+    <StackPanel x:Name="Bar" Orientation="Horizontal" Panel.ZIndex="2">
+      <ScrollViewer x:Name="StripScroll" HorizontalScrollBarVisibility="Hidden"
+                    VerticalScrollBarVisibility="Disabled" Focusable="False">
+        <StackPanel x:Name="Strip" Orientation="Horizontal"/>
+      </ScrollViewer>
+    </StackPanel>
+    <Border x:Name="SearchPanel" Visibility="Collapsed" CornerRadius="15" Padding="8,4"
+            Background="#F0131822" BorderBrush="#4DFFFFFF" BorderThickness="1"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+      <TextBox x:Name="SearchBox" Text="buscar..." Foreground="#FF9AA3B4" Background="Transparent"
+               BorderThickness="0" CaretBrush="#FFE6E9F2" FontSize="13" Width="190"
+               Padding="2,3" VerticalContentAlignment="Center"/>
+    </Border>
+  </Grid>
+</Window>
