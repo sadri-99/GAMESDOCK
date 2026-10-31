@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.png" width="148" height="148" alt="Logotipo de GamesDock: las letras D y G entrelazadas en negro y blanco, con un arco amarillo">
+</p>
+
 # GamesDock
 
 Píldora translúcida al nivel del escritorio, para Windows, que sustituye a los accesos directos de
@@ -134,6 +138,7 @@ app/
   xaml/              diccionario de estilos y ventana, parseados en runtime
   GamesDock.exe      binario compilado (se versiona a propósito: es el producto)
 docs/
+  logo.png           el logotipo de arriba, cortado del fotograma PNG de 256 px que lleva icon.ico
   screenshots/       las capturas de arriba, tomadas de la barra real
 LICENSE, README.md, .gitattributes, .gitignore
 ```

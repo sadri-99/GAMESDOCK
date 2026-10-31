@@ -16,8 +16,9 @@ bin/
 *.err.txt
 *.png
 
-# Las capturas que se ensenan en el README no son un artefacto de prueba: son parte del repo.
+# Las capturas y el logotipo que se ensenan en el README no son un artefacto de prueba: son parte del repo.
 !docs/screenshots/*.png
+!docs/logo.png
 
 # Basura del shell de Windows
 Thumbs.db
