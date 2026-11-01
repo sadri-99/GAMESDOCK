@@ -12,6 +12,19 @@ namespace GamesDock
 
         public Layout(Config cfg) { Cfg = cfg; }
 
+        // escala de la pantalla donde vive la pildora. WPF redondea cada elemento al pixel FISICO
+        // (UseLayoutRounding en window.xaml), asi que una medida que no cae justo en pixel entero se
+        // come medio pixel por un lado y medio por el otro: a 125 % los 9+9 de halo salen 84 px en vez
+        // de 85 y la fila entera se va 1 px por tile. Lo que manda en la colocacion se cuantiza aqui
+        // para que la cuenta de la pildora y la del colocador sean la misma.
+        public double Scale = 1.0;
+
+        public double Snap(double v)
+        {
+            if (Scale <= 0.0) return v;
+            return Math.Round(v * Scale, MidpointRounding.ToEven) / Scale;
+        }
+
         public bool Vert { get { return Cfg.Position == "left" || Cfg.Position == "right"; } }
         public int IconSize { get { return Cfg.IconSize; } }
 
@@ -68,13 +81,64 @@ namespace GamesDock
         // y en transversal es lo que manda en el grosor de la pildora, asi que va apretado
         public double RingMain { get { return Math.Max(7, (int)(IconSize * 0.18)); } }
         public double RingCross { get { return Math.Max(4, (int)(IconSize * 0.09)); } }
-        public double TileBox { get { return IconSize + 2 * RingCross; } }
+        // Las dos medidas del hueco van cuantizadas al pixel fisico: son las que fijan el grosor de la
+        // pildora por el eje transversal, y si caen a medio pixel el sobrante se va entero para abajo.
+        public double TileBox { get { return Snap(IconSize + 2 * RingCross); } }
         public double Pitch { get { return IconSize + 2 * RingMain; } }
 
-        // separacion de la fila respecto al borde de la pildora a lo largo de la fila: es lo que evita
-        // que el primer icono se salga por la izquierda y define el ancho junto con la cantidad de
-        // iconos. El colchon extra es el "espacio vacio" donde dar click derecho para abrir el menu.
-        public double RowInset { get { return PadH + 10; } }
+        // separacion de la fila respecto al borde de la pildora a lo largo de la fila: es el colchon de
+        // "clic derecho en el hueco libre". Antes era PadH + 10 y, como cada tile pagaba ademas su halo
+        // de RingMain por fuera, el primer y ultimo icono quedaban a 29 px del cristal contra 8 px por
+        // arriba y por abajo: la fila se veia metida con calzos dentro de la pildora.
+        public double RowInset { get { return Snap(PadH); } }
+
+        // lo que se quita de halo en la cara de fuera de los dos tiles del extremo. RingMain existe para
+        // separar iconos entre si; en la punta no hay vecino, y era padding transparente que solo hacia
+        // de cristal de sobra. Se saca del ancho de la pildora (RowLen) y del centro de cada tile.
+        public double EndTrim { get { return Math.Max(0.0, RingMain - RingCross); } }
+
+        // largo de la fila: n huecos de Pitch menos el halo recortado por los dos extremos
+        public double RowLen(int n) { return n <= 0 ? 0.0 : n * Pitch - 2 * EndTrim; }
+
+        // centro del tile i dentro de la fila. En la rejilla uniforme seria inset + (i+0.5)*Pitch; con
+        // las puntas recortadas el primero cae d/2 antes, los del medio d antes y el ultimo 3d/2. Sin
+        // esto el magnes de una punta se encoge en el punto equivocado y el indice de reordenamiento
+        // se desplaza al arrastrar contra el extremo.
+        public double TileCenter(int i, int n, double off)
+        {
+            double d = EndTrim;
+            double c = RowInset + (i + 0.5) * Pitch - off;
+            if (n == 1) return c - d;
+            if (i == 0) return c - d / 2.0;
+            if (i == n - 1) return c - 1.5 * d;
+            return c - d;
+        }
+
+        // el halo del tile: RingMain a lo largo de la fila (separa vecinos) y RingCross en transversal,
+        // y RingCross tambien en la cara de fuera de los dos de extremo.
+        public System.Windows.Thickness TilePadding(int i, int n)
+        {
+            double a = RingMain, c = RingCross;
+            double l = a, r = a, t = c, b = c;
+            if (Vert) { l = c; r = c; t = a; b = a; }
+            if (n <= 1) { if (Vert) { t = c; b = c; } else { l = c; r = c; } }
+            else if (i == 0) { if (Vert) t = c; else l = c; }
+            else if (i == n - 1) { if (Vert) b = c; else r = c; }
+            return new System.Windows.Thickness(l, t, r, b);
+        }
+
+        // La longitud del hueco A LO LARGO de la fila hay que imponerla, no dejarla salir de medir el
+        // contenido: el icono son 50 DIP que a 125 % valen 62,5 px y WPF los deja en 62, asi que cada
+        // tile salia 84 px en vez de 85 y la fila real se iba desviando de la rejilla ideal que usan el
+        // magnes (Lay.TileCenter) y el indice de reordenamiento (SlotU). En una fila de 8 el ultimo
+        // icono se magnificaba 7 px a la izquierda de su centro verdadero.
+        public double TileMain(int i, int n)
+        {
+            if (n <= 1) return Snap(Pitch - 2 * EndTrim);
+            if (i == 0 || i == n - 1) return Snap(Pitch - EndTrim);
+            return Snap(Pitch);
+        }
+
 
         // medio grosor de la pildora en reposo y con el raton encima
         public double HalfIdle { get { return (TileBox + 2 * PadV) / 2.0; } }

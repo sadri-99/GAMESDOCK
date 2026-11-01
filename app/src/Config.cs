@@ -56,6 +56,14 @@ namespace GamesDock
         [DataMember(Name = "iconShape")] public string IconShape = "defecto";
         [DataMember(Name = "theme")] public string Theme = "noche";
         [DataMember(Name = "magnify")] public bool Magnify = true;
+        // la ficha de hover: banner del juego y sus datos basicos al posar el cursor, en vez del globo
+        // de texto. Se apaga aqui y el globo de toda la vida vuelve tal cual estaba.
+        //
+        // Va nullable a proposito: el serializador no pasa por el constructor cuando la clave no esta en
+        // el json, asi que un config de ayer la devolveria false y la novedad naceria apagada en las
+        // maquinas que ya tienen GamesDock. Sin valor = encendida.
+        [DataMember(Name = "hoverCard")] public bool? HoverCard;
+        public bool Ficha { get { return !HoverCard.HasValue || HoverCard.Value; } }
         [DataMember(Name = "idleOpacity")] public int IdleOpacity = 45;
         [DataMember(Name = "minimizeAll")] public bool MinimizeAll = true;
         [DataMember(Name = "hideOnLaunch")] public bool HideOnLaunch = true;

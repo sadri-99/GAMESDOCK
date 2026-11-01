@@ -157,6 +157,19 @@ namespace GamesDock
             return IconosDe("/icons/steam/" + steamAppId, clave, ct);
         }
 
+        // Los "heroes" son los banners horizontales que usa la ficha de hover. Mismo envoltorio y mismo
+        // filtro que los iconos; lo que cambia es el contenido: ~850x380 y el "thumb" ya es un JPEG de
+        // unos 120 KB listo para pintar, asi que la ficha no baja nunca el original de 3000 px.
+        public static Task<SgdRespuesta<List<SgdIcono>>> HeroesDeJuegoAsync(int id, string clave, CancellationToken ct)
+        {
+            return IconosDe("/heroes/game/" + id, clave, ct);
+        }
+
+        public static Task<SgdRespuesta<List<SgdIcono>>> HeroesDeSteamAsync(int steamAppId, string clave, CancellationToken ct)
+        {
+            return IconosDe("/heroes/steam/" + steamAppId, clave, ct);
+        }
+
         static async Task<SgdRespuesta<List<SgdIcono>>> IconosDe(string ruta, string clave, CancellationToken ct)
         {
             var bruto = await PedirAsync(ruta, clave, ct);

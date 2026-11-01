@@ -78,6 +78,10 @@ namespace GamesDock
                 // nota en el gesto
                 win.Dispatcher.BeginInvoke(new Action(dock.EnsureGhost), DispatcherPriority.ContextIdle);
 
+                // igual que el fantasma: la ventana de la ficha se monta por adelantado, porque el primer
+                // hover no puede pagar crear una HWND y decodificar un banner de golpe
+                win.Dispatcher.BeginInvoke(new Action(dock.EnsureCard), DispatcherPriority.ContextIdle);
+
                 dock.TrayIcon = new Tray(dock);
                 dock.InstallHotkey();
 

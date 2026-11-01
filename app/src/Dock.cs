@@ -48,10 +48,15 @@ namespace GamesDock
         public Tray TrayIcon;
         DispatcherTimer _searchTimer;
 
+        // solo hay una barra en el proceso (la instancia unica lo garantiza) y hay cosas que viven fuera
+        // de ella pero necesitan sus datos: GameInfo pregunta aqui por la clave de SteamGridDB
+        public static Dock Activa;
+
         public Dock(Window w, Config cfg)
         {
             Win = w;
             Cfg = cfg;
+            Activa = this;
             Lay = new Layout(cfg);
 
             RootGrid = (Grid)Win.FindName("Root");
@@ -170,7 +175,7 @@ namespace GamesDock
 
             for (int i = 0; i < Items.Count; i++)
             {
-                var t = NewTile(Items[i]);
+                var t = NewTile(Items[i], i, Items.Count);
                 Strip.Children.Add(t);
                 Tiles.Add(t);
                 // muelle de escala propio por tile. Con pop entran escalonados y con un asomo de
@@ -188,6 +193,8 @@ namespace GamesDock
             }
 
             if (pop && Items.Count > 0) Anim.Start();
+
+            ApplyTileSizes();
 
             if (Items.Count == 0)
             {
@@ -207,7 +214,22 @@ namespace GamesDock
             RefreshPill();
         }
 
-        Button NewTile(ItemSpec it)
+        // la longitud del hueco a lo largo de la fila la impone Layout en vez de dejar que salga de
+        // medir el contenido; sin esto la rejilla real se descuadra 1 px por tile respecto a la que
+        // usan el magnes y el reordenamiento. Ver Layout.TileMain.
+        void ApplyTileSizes()
+        {
+            int n = Tiles.Count;
+            for (int i = 0; i < n; i++)
+            {
+                double largo = Lay.TileMain(i, n);
+                var b = Tiles[i];
+                if (Lay.Vert) { b.Width = double.NaN; b.Height = largo; }
+                else { b.Height = double.NaN; b.Width = largo; }
+            }
+        }
+
+        Button NewTile(ItemSpec it, int i, int n)
         {
             int sz = Cfg.IconSize;
             var btn = new Button
@@ -219,9 +241,7 @@ namespace GamesDock
                 RenderTransformOrigin = new Point(0.5, 0.5),
                 RenderTransform = new ScaleTransform()
             };
-            btn.Padding = Lay.Vert
-                ? new Thickness(Lay.RingCross, Lay.RingMain, Lay.RingCross, Lay.RingMain)
-                : new Thickness(Lay.RingMain, Lay.RingCross, Lay.RingMain, Lay.RingCross);
+            btn.Padding = Lay.TilePadding(i, n);
 
             var tt = new ToolTip
             {
@@ -232,6 +252,7 @@ namespace GamesDock
                 BorderBrush = Themes.Br(_theme.C["tipEdge"])
             };
             btn.ToolTip = tt;
+            ToolTipService.SetIsEnabled(btn, !UsaFicha(it));
 
             // sin cuadro: el mosaico va transparente y solo se pinta el circulo de la letra cuando no hay icono
             var bd = new Border
@@ -252,6 +273,7 @@ namespace GamesDock
             btn.Click += (s, e) =>
             {
                 var g = (ItemSpec)((Button)s).Tag;
+                OcultarFicha();
                 // una carpeta no se lanza: se abre
                 if (Groups.IsGroup(g)) OpenGroup(g, (Button)s); else StartEntry(g, "click");
             };
@@ -272,6 +294,11 @@ namespace GamesDock
             btn.PreviewMouseMove += TileMove;
             btn.PreviewMouseLeftButtonUp += TileUp;
             btn.LostMouseCapture += TileLostCapture;
+            // la ficha de hover se arma al posarse el cursor sobre el tile y se apaga al salir de el;
+            // el retardo lo lleva HoverCard, no ToolTipService, porque aqui lo que se espera no es un
+            // globo de texto sino una ventana con su hueco
+            btn.MouseEnter += (s, e) => { EnsureCard(); _card.Sobreviene(it, btn); };
+            btn.MouseLeave += (s, e) => { if (_card != null) _card.Salir(); };
             return btn;
         }
 
@@ -296,21 +323,53 @@ namespace GamesDock
                 int n = it.Members != null ? it.Members.Count : 0;
                 return it.Name + "\n" + Lang.F("Grupo de {0} iconos", n) + "\n" + Lang.T("Clic para abrirlo");
             }
+            return it.Name + "\n" + PieFicha(it) + "\n" + RutaCorta(it);
+        }
+
+        // el pie de la ficha y la ultima linea del globo son lo mismo: de donde salio el icono y cuantas
+        // veces se ha usado
+        public string PieFicha(ItemSpec it)
+        {
             UsageDto u;
             Cfg.Usage.TryGetValue(it.Key ?? string.Empty, out u);
-            string origen;
+            string uso = u != null ? Lang.F("usado {0} veces", u.N) : Lang.T("sin usar todavía");
+            return OrigenDe(it) + " · " + uso;
+        }
+
+        string OrigenDe(ItemSpec it)
+        {
             switch (it.Origin)
             {
-                case "steam": origen = "Steam"; break;
-                case "epic": origen = "Epic Games"; break;
-                case "gog": origen = "GOG"; break;
-                case "desktop": origen = Lang.T("Escritorio"); break;
-                case "start": origen = Lang.T("Menú Inicio"); break;
-                default: origen = Lang.T("Añadido a mano"); break;
+                case "steam": return "Steam";
+                case "epic": return "Epic Games";
+                case "gog": return "GOG";
+                case "desktop": return Lang.T("Escritorio");
+                case "start": return Lang.T("Menú Inicio");
+                default: return Lang.T("Añadido a mano");
             }
-            string uso = u != null ? Lang.F("usado {0} veces", u.N) : Lang.T("sin usar todavía");
-            string ruta = !string.IsNullOrEmpty(it.Target) ? it.Target : (it.Link ?? string.Empty);
-            return it.Name + "\n" + origen + " · " + uso + "\n" + ruta;
+        }
+
+        public string RutaCorta(ItemSpec it)
+        {
+            return !string.IsNullOrEmpty(it.Target) ? it.Target : (it.Link ?? string.Empty);
+        }
+
+        // con la ficha de hover encendida el globo de texto estorba: las dos cosas salen sobre el mismo
+        // icono y se montan una encima de otra. La excepcion son las carpetas, que no son un juego y no
+        // tienen ficha, asi que conservan su globo.
+        public bool UsaFicha(ItemSpec it)
+        {
+            return Cfg.Ficha && !Groups.IsGroup(it);
+        }
+
+        public void ActualizarGlobos()
+        {
+            for (int i = 0; i < Tiles.Count; i++)
+            {
+                var it = (ItemSpec)Tiles[i].Tag;
+                ToolTipService.SetIsEnabled(Tiles[i], !UsaFicha(it));
+            }
+            if (_card != null) _card.Salir();
         }
 
         // el icono propio de un fijado se sobrescribe SIEMPRE en la misma ruta (Icons.RutaPropia parte
@@ -440,16 +499,15 @@ namespace GamesDock
             if (!_ptrInside) return;
             if (Tiles.Count != MagSpr.Count) return;
 
-            double pitch = Lay.Pitch;
             double off = Lay.Vert ? StripScroll.VerticalOffset : StripScroll.HorizontalOffset;
-            double inset = Lay.RowInset;
+            int n = Tiles.Count;
             double r = Lay.MagRadius;
             double best = 1.0;
             int bestIx = -1;
 
             for (int i = 0; i < Tiles.Count; i++)
             {
-                double centro = inset + (i + 0.5) * pitch - off;
+                double centro = Lay.TileCenter(i, n, off);
                 double s = Lay.MagScale(_ptrLive - centro, r);
                 if (Tiles[i] == DragBtn) s = 0.86;
                 else if (Tiles[i] == _pressBtn) s *= 0.9;
@@ -572,7 +630,7 @@ namespace GamesDock
         void SetBarMargins()
         {
             double inset = Lay.RowInset;
-            double ovr = Math.Ceiling(Lay.MagOverrun);
+            double ovr = Lay.Snap(Math.Ceiling(Lay.MagOverrun));
             bool fits = RowFits();
             string sig = string.Format("{0}|{1}|{2}|{3}", Cfg.Position, inset, ovr, fits);
             if (sig == _barSig) return;
@@ -602,7 +660,7 @@ namespace GamesDock
             var wa = SystemParameters.WorkArea;
             double m = Layout.Margin;
             double avail = (Lay.Vert ? wa.Height : wa.Width) - 2 * m - 30;
-            return Tiles.Count * Lay.Pitch <= avail;
+            return Lay.RowLen(Tiles.Count) <= avail;
         }
 
         void SetRowShift(double s)
@@ -623,19 +681,39 @@ namespace GamesDock
         public void FitPill()
         {
             var wa = SystemParameters.WorkArea;
-            double m = Layout.Margin;
             bool vert = Lay.Vert;
+            // la escala manda en como se cuantizan las medidas de colocacion, y tiene que estar bien
+            // antes del UpdateLayout de abajo o la fila se redibuja con la cuenta vieja
+            Lay.Scale = DipScale(Win);
+            // la banda transparente que rodea la pildora es el origen de todo lo que se dibuja dentro.
+            // A 125 % son 42,5 px: el cristal se lo puede permitir (el Path se pinta con alisado) pero
+            // los tiles no, que se redondean al pixel fisico, y de ahi que la fila quedase medio px
+            // mas pegada a un borde que al otro. Tambien se cuantiza.
+            double m = Lay.Snap(Layout.Margin);
+            if (Math.Abs(RootGrid.Margin.Left - m) > 0.01) RootGrid.Margin = new Thickness(m);
 
             Win.UpdateLayout();
             var d = Strip.DesiredSize;
             double box = Lay.TileBox;
 
-            // el largo del eje principal lo manda la cantidad de iconos, no el DesiredSize: al quitar
-            // o mover un tile la medida vieja sigue ahi hasta el siguiente arrange
+            // el largo del eje principal lo manda la fila de iconos. No se toma el DesiredSize (incluye
+            // el margen con el que la fila se sale del cristal para que el agrandado desborde) ni el
+            // ideal de Layout: con UseLayoutRounding cada hueco se redondea al pixel fisico y a 125 %
+            // pierde 1 px por tile, que al final de la fila son media docena de px de cristal de sobra
+            // por la derecha. Sumando lo que cada tile ocupa de verdad la pildora abraza la fila que se
+            // ha dibujado y los dos cabquetes salen iguales a cualquier escala.
+            double real = 0;
+            foreach (var t in Tiles) real += vert ? t.ActualHeight : t.ActualWidth;
             double mainLen;
-            if (Tiles.Count > 0) mainLen = Tiles.Count * Lay.Pitch;
+            if (Tiles.Count > 0) mainLen = real > 1 ? real : Lay.RowLen(Tiles.Count);
             else if (vert) mainLen = d.Height;
             else mainLen = d.Width;
+
+            // y el colchon de los extremos lo pone Layout, ya cuantizado al pixel: la fila entra en el
+            // cristal con un margen NEGATIVO (el truco que deja al icono agrandado desbordar la pildora)
+            // y otro positivo por dentro, y los dos se redondean por separado; mientras no caigan en
+            // pixel entero la izquierda de la fila sale un par de px mas apretada que la derecha.
+            double inset = Lay.RowInset;
 
             double pillW, pillH;
             if (vert)
@@ -644,24 +722,27 @@ namespace GamesDock
                 StripScroll.MaxHeight = Math.Max(40, maxH);
                 StripScroll.MaxWidth = 6000;
                 pillW = box + 2 * Lay.PadV;
-                pillH = Math.Min(mainLen, maxH) + 2 * Lay.RowInset;
+                pillH = Math.Min(mainLen, maxH) + 2 * inset;
             }
             else
             {
                 double maxW = wa.Width - 2 * m - 30;
                 StripScroll.MaxWidth = Math.Max(80, maxW);
                 StripScroll.MaxHeight = 6000;
-                pillW = Math.Min(mainLen, maxW) + 2 * Lay.RowInset;
+                pillW = Math.Min(mainLen, maxW) + 2 * inset;
                 pillH = box + 2 * Lay.PadV;
             }
 
-            Win.Width = Math.Ceiling(pillW + 2 * m);
-            Win.Height = Math.Ceiling(pillH + 2 * m);
+            // al pixel entero, no al DIP de arriba: redondear hacia arriba dejaba medio px de ventana
+            // que la fila no reclama, y ese medio px se acumulaba siempre en el extremo derecho
+            Win.Width = Lay.Snap(pillW + 2 * m);
+            Win.Height = Lay.Snap(pillH + 2 * m);
             PlaceDock();
         }
 
         public void ApplyLayout()
         {
+            Lay.Scale = DipScale(Win);
             bool vert = Lay.Vert;
             Bar.Orientation = vert ? Orientation.Vertical : Orientation.Horizontal;
             Strip.Orientation = vert ? Orientation.Vertical : Orientation.Horizontal;
@@ -678,6 +759,8 @@ namespace GamesDock
                 StripScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
             }
 
+            // al cambiar de lado el hueco largo pasa al otro eje: hay que re-imponer las medidas
+            ApplyTileSizes();
             FitPill();
             _rowShift = 0.0;
             SetBarMargins();

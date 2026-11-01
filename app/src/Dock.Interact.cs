@@ -86,7 +86,7 @@ namespace GamesDock
             Anim.Add(_ghostFade);
         }
 
-        static double DipScale(Visual v)
+        public static double DipScale(Visual v)
         {
             try
             {
@@ -95,6 +95,20 @@ namespace GamesDock
             }
             catch { }
             return 1.0;
+        }
+
+        // ------------------------------------------------------------------ ficha de hover
+        HoverCard _card;
+
+        public void EnsureCard()
+        {
+            if (_card != null) return;
+            _card = new HoverCard(this);
+        }
+
+        public void OcultarFicha()
+        {
+            if (_card != null) _card.Salir();
         }
 
         void MoveGhost(Point p)
@@ -170,6 +184,8 @@ namespace GamesDock
             // el boton se hunde bajo el dedo antes de lanzar nada: es el detalle que hace que el dock
             // se sienta fisico en lugar de un mapa de bits que cambia de tamano
             _pressBtn = btn;
+            // pulsar es intentar algo (lanzar o arrastrar), no quedarse leyendo: la ficha estorba
+            OcultarFicha();
             SetTileTargets();
         }
 
@@ -740,6 +756,8 @@ namespace GamesDock
         public void ShowItemMenu(ItemSpec it, Button owner)
         {
             if (it == null) return;
+            // el menu y la ficha no van juntos: los dos salen encima del mismo icono y se taparian
+            OcultarFicha();
             if (Groups.IsGroup(it)) { GrupoMenu(it, owner); return; }
             _itemMenu = new ContextMenu();
             var acciones = new List<MenuItem>
@@ -912,7 +930,7 @@ namespace GamesDock
         // La clave no va escrita dentro del programa: la pega el usuario en Ajustes y se queda en su
         // config.json. La variable de entorno la usa unicamente el harness, que levanta un servidor local
         // con el mismo formato de respuestas.
-        string ClaveSgd()
+        public string ClaveSgd()
         {
             string k = (Environment.GetEnvironmentVariable("STEAMGRIDDB_KEY") ?? string.Empty).Trim();
             if (k.Length == 0) k = (Cfg.SteamGridKey ?? string.Empty).Trim();
@@ -1032,6 +1050,7 @@ namespace GamesDock
             if (_hidden) return;
             // la carpeta abierta vive pegada a la barra: si la barra se va, se va con ella
             GroupPanel.Cerrar();
+            OcultarFicha();
             _hidden = true;
             ReadSlideOut();
             SlideSpr.Owner = _slideAxis;

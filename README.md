@@ -8,11 +8,13 @@ Píldora translúcida al nivel del escritorio, para Windows, que sustituye a los
 la mesa de trabajo: lanza videojuegos y cualquier aplicación, detecta sola los juegos que ya tienes
 instalados y se aparta cuando no la usas.
 
-El producto completo es **un único `.exe`** (`app/GamesDock.exe`, ≈ 503 KiB): sin instalador, sin
-servicios y sin dependencias externas. Solo dos cosas sacan la barra a internet, y ninguna manda datos
-de tu equipo ni de tus juegos: la comprobación de si hay versión nueva —una petición a la API pública
-de releases de GitHub al arrancar, y otra cuando tú pulsas **Buscar actualizaciones**— y, solo si tú has
-pegado tu clave, los iconos de la comunidad de SteamGridDB.
+El producto completo es **un único `.exe`** (`app/GamesDock.exe`, ≈ 525 KiB): sin instalador, sin
+servicios y sin dependencias externas. Cuatro cosas sacan la barra a internet, y ninguna manda datos de
+tu equipo ni de tu lista de juegos: la comprobación de si hay versión nueva —una petición a la API pública
+de releases de GitHub al arrancar, y otra cuando tú pulsas **Buscar actualizaciones**—, la
+[ficha del juego](#la-ficha-del-juego) que sale al pasar el ratón —los datos los pide a la tienda de Steam
+y el banner al CDN público de SteamGridDB, siempre por el app id o el nombre que ya estaba en el tile—,
+y los iconos de la comunidad, que son lo único que necesita que tú pegues una clave.
 
 ![La píldora en reposo, al nivel del escritorio](docs/screenshots/dock-reposo.png)
 
@@ -20,14 +22,15 @@ pegado tu clave, los iconos de la comunidad de SteamGridDB.
 
 | | |
 | --- | --- |
-| ![Magnificado al pasar el ratón, con el tooltip del juego](docs/screenshots/dock-hover.png) | **Magnificado estilo macOS.** El icono bajo el cursor crece y sus vecinos lo hacen de forma decreciente; la píldora se estira con él. El tooltip dice de dónde salió el acceso, cuántas veces se ha lanzado y dónde está. |
+| ![La píldora con su ficha de hover encima del icono](docs/screenshots/dock-hover.png) | **Magnificado estilo macOS con la ficha del juego.** El icono bajo el cursor crece y sus vecinos lo hacen de forma decreciente; la píldora se estira con él. Encima del hueco sale la ficha: un banner del juego y debajo sus datos. |
+| ![La ficha de hover sola: banner, género, autor, fecha y sinopsis](docs/screenshots/ficha-hover.png) | **La ficha, de cerca.** Banner elegido al azar entre los que hay para ese juego, nombre, géneros · desarrollador · fecha de lanzamiento, la sinopsis de la tienda y un pie que dice de dónde salió el acceso y cuántas veces se ha lanzado. Se apaga al sacar el cursor y se cambia por el globo de texto de siempre en Ajustes. |
 | ![Menú del clic derecho](docs/screenshots/dock-menu.png) | **Todo por el clic derecho.** Buscar, añadir, elegir qué se ve, el tema, restaurar ocultos, reescanear y ajustes —en las dos puntas vacías de la barra, no en los iconos—. Sin cuadros ni engranajes a la vista. |
 | ![La carpeta en la barra: un mosaico con los iconos de dentro](docs/screenshots/dock-carpeta.png) | **Carpetas como en iOS.** Se suelta un icono encima de otro y en ese hueco queda un mosaico con lo que hay dentro —aquí, Cyberpunk 2077 y The Witcher 3—, no un dibujo de carpeta. |
 | ![El contenedor abierto, con el título del grupo y el nombre de cada icono](docs/screenshots/carpeta-abierta.png) | **Al pincharla sale el contenedor**, pegado a la barra y centrado en su hueco: el título del grupo arriba —que solo se ve ahí—, los iconos con su nombre debajo, y un clic en cualquiera lo lanza y cierra el contenedor. |
 | ![La misma fila de la barra con las tres formas de icono: cuadrada, iOS y esfera](docs/screenshots/dock-formas.png) | **La forma del icono.** La misma fila, la misma config y los mismos PNG recortados de tres maneras: cuadrada por defecto, cuadrado suavizado tipo iOS, o esfera. Se cambia en los ajustes y se aplica a todo, carpetas incluidas. |
 | ![El selector de iconos de la comunidad, con dieciséis versiones de un mismo juego](docs/screenshots/iconos-selector.png) | **Iconos de la comunidad.** Clic derecho sobre un tile → *Iconos de la comunidad*: la rejilla con las miniaturas que la gente subió a SteamGridDB, ordenadas por la puntuación que le da quien las usa. Un clic en cualquiera la baja, la guarda y pinta ese dibujo en el hueco del juego. |
 | ![La píldora con los iconos de la comunidad puestos](docs/screenshots/iconos-barra.png) | **Y así queda la barra** —la misma fila, con los dibujos elegidos en su hueco; el PNG se recorta con la forma que esté puesta en Ajustes—. |
-| ![Ajustes en español](docs/screenshots/ajustes.png) | **Ajustes.** Posición, tamaño y forma del icono, opacidad en reposo, los nueve temas con su muestra de color, el idioma de la interfaz, el campo donde se pega la clave de SteamGridDB, las filas de sistema —con **Buscar actualizaciones**— y, abajo del todo, la fila para dejar una estrella en el repositorio. |
+| ![Ajustes en español](docs/screenshots/ajustes.png) | **Ajustes.** Posición, tamaño y forma del icono, opacidad en reposo, los nueve temas con su muestra de color, el idioma de la interfaz, el campo donde se pega la clave de SteamGridDB, las cinco palancas de comportamiento —con la ficha del juego al pasar el ratón—, las filas de sistema —con **Buscar actualizaciones**— y, abajo del todo, la fila para dejar una estrella en el repositorio. |
 | ![Ajustes en inglés](docs/screenshots/ajustes-en.png) | **Y en inglés**, cambiándolo en caliente: la ventana se reescribe sin reiniciar la barra. |
 | ![El panel de actualización disponible](docs/screenshots/actualizacion.png) | **Cuando hay versión nueva.** Un panel de cristal con el título del release, cuándo se publicó, lo que ocupa y la fecha de la compilación que tienes delante. Da a **Actualizar** y se cambia él solo, sin que guardes ni muevas nada. *(La captura es contra el servidor de pruebas del arnés, por eso ofrece una `v.9.9.9`.)* |
 
@@ -55,7 +58,15 @@ pegado tu clave, los iconos de la comunidad de SteamGridDB.
   el mosaico.
 - **Magnificado estilo macOS** al pasar el ratón, con caída suave hacia los vecinos y la píldora
   creciendo al ritmo del icono agrandado. Los iconos de las puntas se agrandan enteros: el cristal se
-  recorta en el momento, no por un margen fijo que los cortaba.
+  recorta en el momento, no por un margen fijo que los cortaba. Y la fila va **centrada en el cristal**,
+  con el mismo hueco a cada lado de los dos iconos de las puntas que por arriba y por abajo —antes las
+  puntas pagaban el halo de separación de los vecinos también por fuera, así que el primer y el último
+  icono quedaban visiblemente metidos hacia dentro—.
+- **Ficha del juego al pasar el ratón**: en vez del globo de texto sale una ficha encima del icono, con un
+  banner del juego y debajo sus datos —título, géneros, desarrollador, fecha de lanzamiento y la sinopsis
+  de la tienda—, más un pie que dice de dónde salió el acceso y cuántas veces lo has lanzado. Se apaga sola
+  al sacar el cursor, no se puede pinchar y no roba el foco. Se quita en Ajustes y vuelve el globo de
+  siempre. Se explica en [La ficha del juego](#la-ficha-del-juego).
 - **Se comporta como parte del escritorio**: ventana `WS_EX_NOACTIVATE` colocada al fondo de la
   z-order, de modo que cualquier ventana —incluso a pantalla completa— la tapa y nunca le roba el foco
   a lo que estés usando.
@@ -82,6 +93,7 @@ pegado tu clave, los iconos de la comunidad de SteamGridDB.
 | Clic derecho sobre una carpeta | Abrir el grupo, Renombrar, Desagrupar, Ocultar del dock |
 | Clic fuera del menú desplegado | Cierra el menú sin activar lo que haya debajo |
 | Clic central sobre un icono | Marcar o desmarcar como favorito |
+| Dejar el cursor sobre un icono | Sale la **ficha del juego** por encima de la píldora —banner, géneros, autor, fecha y sinopsis—, y se apaga al sacar el cursor. Con la ficha apagada en Ajustes vuelve el globo de texto de siempre |
 | Arrastrar la píldora por su cristal —el trozo que no tiene iconos— | Al soltarla se ancla al borde más cercano: abajo, arriba, izquierda o derecha. En posición «Libre» no hay imán y se queda donde la sueltes |
 | Arrastrar un archivo hasta la píldora | Fijarlo en la barra |
 | Arrastrar un icono dentro de la barra | Reordenar la fila |
@@ -144,7 +156,8 @@ cruz. El contenedor de una carpeta no es modal: se cierra pinchando fuera o con 
   negro y azul) y Ovni (verde y amarillo).
 - **Idioma de la interfaz**: automático —el del sistema—, español o inglés. Se cambia en caliente
   desde los ajustes: menús, bandeja y ventana de ajustes se reescriben sin reiniciar.
-- **Comportamiento**: magnificado, vivir solo en el escritorio, minimizar todo al lanzar, ocultar al
+- **Comportamiento**: la ficha del juego al pasar el ratón —con la palanca apagada vuelve el globo de
+  texto de siempre—, el magnificado, vivir solo en el escritorio, minimizar todo al lanzar, ocultar al
   lanzar y arrancar con Windows.
 
 ## Iconos de la comunidad (SteamGridDB)
@@ -216,6 +229,74 @@ sacarla y dónde se pega, con un botón «Abrir ajustes» que deja el panel dela
 resto de la barra no se entera: fuera de esta función y de la comprobación de versiones no hay ninguna ruta
 del programa que toque la red.
 
+## La ficha del juego
+
+Dejar el cursor sobre un icono enseña una **ficha** por encima de la píldora —no un globo de texto—: un
+banner del juego y, debajo, el título, los géneros · el desarrollador · la fecha de lanzamiento, la sinopsis
+corta de la tienda y un pie que dice de dónde salió el acceso y cuántas veces lo has lanzado. Se apaga sola
+al sacar el cursor, se puede pasar el ratón por encima sin tocarla —es *click-through* y nunca pide el
+foco—, y sale siempre **hacia el lado de dentro** de la barra: encima del icono cuando la píldora está
+abajo, debajo si está arriba, y a un lado si la barra vive en un canto.
+
+### Qué se ve y cuándo
+
+- Entra a los **380 ms** de tener el cursor quieto sobre el icono: lo que tarda el globo de siempre
+  (500 ms) sin dar tiempo a que salte sola con solo barrer la fila. Si ya había una ficha abierta y pasas
+  a otro icono, la espera baja a **140 ms** —ya estás mirando, no hay que volver a ganarse la
+  atención—.
+- El banner se elige **al azar entre los que ya están bajados** para ese juego, así que dos pasadas
+  seguidas por el mismo icono suelen enseñar dibujos distintos. Son los *heroes* de SteamGridDB —los
+  banners horizontales que sube la comunidad—, el mismo arte del selector de iconos pero en su versión
+  ancha.
+- Si la tienda no conoce el juego la ficha no sale en blanco: sale con el nombre, la ruta de instalación y
+  el pie, que es justo lo que decía el globo viejo.
+- Las **carpetas** no sacan ficha nunca: su hueco es un mosaico y el contenedor ya enseña los nombres.
+
+### De dónde sale cada dato
+
+| Parte | Origen |
+| --- | --- |
+| Título, sinopsis, géneros, desarrollador y fecha | `GET https://store.steampowered.com/api/appdetails?appids=<id>&l=<idioma>` —la API pública de la tienda, sin cuenta ni clave— |
+| El app id cuando la barra no lo trae | `GET .../api/storesearch/?term=<nombre del tile>`: se queda con el primer resultado. Se busca con el nombre tal y como lo enseña la barra y **sin** `l`, porque con `l=es` «Counter-Strike 2» sale como «Contragolpe 2» y ahí ya no hay app id que valga |
+| Banner | `/heroes/steam/<appid>` o `/heroes/game/<id>` de SteamGridDB para **listarlos**, y la imagen del CDN público `cdn2.steamgriddb.com` para **bajarla** |
+| Banner sin clave | `header_image` de la propia tienda —la cápsula ancha de la página del juego—, que también es un banner y no pide ninguna credencial |
+| El pie («Steam · sin usar todavía», «Añadido a mano · 3 veces») | Lo que la barra ya sabe de sí misma: el origen del acceso y su contador de lanzamientos |
+
+Los textos salen **en el idioma de la interfaz**: la ficha pide `l=spanish` o `l=english` según lo que
+tengas puesto en Ajustes. No vale el código de dos letras —`l=es` la tienda lo ignora y devuelve la
+descripción en inglés—, y la fecha llega ya escrita como la escribe Steam («13 DIC 2018»), así que no se
+formatea.
+
+### Una vez por juego, y ya no se vuelve a pedir
+
+Todo se guarda en `%APPDATA%\GamesDock\cards\`: la ficha en `steam-<appid>.json` —o `n-<hash>` cuando el
+acceso no sale de Steam, para que dos tiles que apuntan al mismo juego compartan ficha y banners—, y cada
+banner en `b-<hash de la url>.img`. A partir de ahí la ficha sale **sin red**. La primera pasada de un
+juego nuevo dispara la petición y puede enseñar solo los textos —el banner entra en la siguiente pasada,
+que es cuando ya está en disco—; las siguientes salen completas al instante. Se guarda también el «lo busqué
+y no había nada», que es lo que evita que el cursor toque la red en cada pasada de una app que la tienda no
+conoce. Los banners se podan a los 60 más recientes para que la función no se coma la caché de los iconos.
+
+### Apagarla
+
+Ajustes → *Comportamiento* → **«Ficha del juego al pasar el ratón (banner y descripción)»**. Al apagarla
+vuelve el globo de tres líneas de siempre —nombre, de dónde salió y ruta de instalación— y la barra deja de
+pedir fichas: con la palanca abajo no hay ninguna salida a internet por ese lado. La palanca se nota al
+momento, sin reiniciar.
+
+### Verificado
+
+`_dev/cs-ficha.ps1` deja el cursor sobre un icono de verdad y mide: que sale **una sola** ventana nueva del
+proceso —la de la ficha, que el globo viejo está callado—, que va anclada al tile con el hueco de 12 DIP
+(15 px al 125 %) y sin solaparse con él, que el banner pinta más de la mitad de la carta, que al sacar el
+cursor no queda ninguna ficha visible, que la ficha y su banner han caído en `cards\` y que dos pasadas por
+el mismo icono enseñan banners distintos. `_dev/cs-ficha-toggle.ps1` hace el recorrido de la palanca: abre
+Ajustes por el menú de la barra, la apaga, comprueba que la ficha desaparece y que **vuelve el globo con
+las tres líneas** —y que la tercera es una ruta, con su barra invertida—, la vuelve a encender y comprueba
+que la ficha regresa; al terminar exige que el config vuelva a su hash original.
+`_dev/cs-ficha-net.ps1` y `_dev/cs-ficha-json.ps1` comprueban las tres rutas de red y el idioma fuera de la
+app, sin imprimir nunca la clave.
+
 ## Actualizaciones
 
 GamesDock se distribuye como un único `.exe`, así que actualizarse es cambiar ese archivo. La barra lo hace
@@ -280,10 +361,11 @@ Se queda íntegramente en el perfil de usuario. El registro solo se lee, nunca s
 
 | Ruta | Contenido |
 | --- | --- |
-| `%APPDATA%\GamesDock\config.json` | Ajustes —incluido el idioma, la clave de SteamGridDB y la versión de actualización que has rechazado—, fijados, orden, favoritos, usos, grupos y mapa de accesos movidos |
+| `%APPDATA%\GamesDock\config.json` | Ajustes —incluido el idioma, la palanca de la ficha de hover, la clave de SteamGridDB y la versión de actualización que has rechazado—, fijados, orden, favoritos, usos, grupos y mapa de accesos movidos |
 | `%APPDATA%\GamesDock\dock.log` | Bitácora de arranque, detección, actualizaciones y errores; se vacía al superar 256 KiB. Nunca guarda la clave: dice si se guardó, no cuál es |
 | `%APPDATA%\GamesDock\icons\` | Caché de iconos en PNG de 256 px |
 | `%APPDATA%\GamesDock\icons\custom\` | Copia del icono propio de cada fijado, con nombre-hash; aquí cae también el PNG que baja «Iconos de la comunidad». Si borras el original, el tile no se queda vacío |
+| `%APPDATA%\GamesDock\cards\` | La ficha de hover: `steam-<appid>.json` (o `n-<hash>` para lo que no sale de Steam) con los datos del juego, y `b-<hash>.img` con cada banner bajado. Se poda a los 60 banners más recientes. Borrar la carpeta solo cuesta volver a pedir los juegos que se vuelvan a pasar por encima |
 | `%APPDATA%\GamesDock\escritorio\` | Copias de los accesos movidos desde el escritorio |
 | `%APPDATA%\GamesDock\update\` | Solo durante una actualización: el ejecutable bajado mientras espera a poder sustituir el viejo. Se borra entera al terminar, así que en una barra sin actualizar ni siquiera existe |
 | `%APPDATA%\GamesDock\GamesDock.lanzador.vbs` | Solo si activas «Arranca con Windows» |
@@ -325,7 +407,7 @@ app/
   build.ps1          compilación de un solo fichero (la única herramienta necesaria)
   app.manifest       DPI PerMonitorV2 y asInvoker: se ejecuta sin elevación
   icon.ico           icono del programa, con todas sus variantes de tamaño
-  src/               27 ficheros .cs, todos en el namespace GamesDock
+  src/               29 ficheros .cs, todos en el namespace GamesDock
     Program.cs       arranque, instancia única, cableado de la ventana principal
     Foundation.cs    rutas, bitácora, TLS y recorte de memoria
     Config.cs        modelo de configuración y su persistencia JSON
@@ -342,8 +424,10 @@ app/
     Layout.cs        toda la geometría de la píldora
     PillGeometry.cs  construcción del contorno de la píldora
     Ghost.cs         icono flotante que sigue al cursor durante el arrastre
+    HoverCard.cs     la ficha que sale al dejar el cursor sobre un icono: banner, datos y sinopsis
     Icons.cs         extracción y caché de iconos, incluidos los propios
-    SteamGrid.cs     cliente del API v2 de SteamGridDB: buscar el juego, listar iconos y bajarlos
+    SteamGrid.cs     cliente del API v2 de SteamGridDB: buscar el juego, listar iconos y banners y bajarlos
+    GameInfo.cs      lo que la barra sabe de un juego: la tienda de Steam, los banners y su caché en disco
     IconPicker.cs    la rejilla de miniaturas con la que se elige el icono de la comunidad
     Themes.cs        definición de los nueve temas
     Tray.cs          bandeja del sistema y atajo global
@@ -458,7 +542,13 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
   cortaba y, como la barra de desplazamiento va oculta a propósito, no había ninguna pista de que
   debajo hubiera algo. Ahora el máximo sale de `SystemParameters.WorkArea`, acotado entre 420 y 760 DIP
   para que un portátil pequeño no saque una ventana kilométrica ni un monitor grande estire el aviso de
-  dos líneas.
+  dos líneas. Y el techo de 760 **no es un margen que se pueda subir**: en un 1080p al 125 % es justo lo
+  que deja el área de trabajo. Con la fila de la ficha, el panel en inglés se pasó por 30 DIP y el pie
+  volvió a desaparecer —la rejilla de botones de *Sistema* pedía una fila más porque las dos etiquetas
+  inglesas de los botones del escritorio eran más largas que las suyas en castellano—. La salida fue
+  acortar esas dos etiquetas, no tocar el techo, y la comprobación es mirar la captura de los ajustes
+  **en los dos idiomas**: la sonda `_dev/cs-ajustes-altura.ps1` vuelca el fondo de cada columna contra el
+  fondo del panel, y lo que delata el desborde es la segunda línea del pie fuera de rectángulo.
 - **El icono propio se copia, no se referencia.** `Icons.InstallCustom` guarda un PNG de 256 px en
   `icons\custom` con nombre derivado de la clave del fijado, así que borrar o mover el archivo original
   no deja el tile vacío; si lo que se eligió era un binario, se guarda la extracción y no una copia del
@@ -552,10 +642,12 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
   crear un canal seguro SSL/TLS» antes de salir de casa. `SystemDefault` parece la opción moderna y en este
   runtime es peor —pide TLS 1.3 al sistema, el runtime no lo conoce y la conexión se corta en el
   handshake—. Como el exe no lleva `.config`, el ajuste tiene que hacerse en código.
-- **Las dos salidas a red son `async`, cada una con su techo.** La comprobación de versiones aguanta 20
-  segundos y la lista de iconos 45: medido desde casa, SteamGridDB tardó 21,5 s en contestar la lista de un
-  juego, y con el techo corto la barra lo contaba como «sin red» cuando el API estaba respondiendo. La
-  píldora sigue magnificando mientras se pregunta o se baja, así que aguantar más cuesta poco.
+- **Todas las salidas a red son `async`, cada una con su techo.** La comprobación de versiones aguanta 20
+  segundos, la lista de iconos 45 y la ficha del juego 12: medido desde casa, SteamGridDB tardó 21,5 s en
+  contestar la lista de un juego, y con el techo corto la barra lo contaba como «sin red» cuando el API
+  estaba respondiendo. El techo de la ficha es justo el contrario —sale bajo el cursor, y una tienda que
+  tarde más de doce segundos ya no es información, es un bloqueo; además la píldora sigue magnificando
+  mientras se pregunta, así que aguantar más en los otros dos cuesta poco—.
   La oferta de actualización puede nacer dentro de Ajustes sin anidar dos velos —`Veil` cuenta profundidad
   —, y lo que decide cada botón se ejecuta **después** de que vuelva `ShowDialog`, por la misma razón que
   en los avisos.
@@ -566,6 +658,59 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
 - **Un tema son dieciséis brochas**, todas con alfa: cristal de arriba y abajo, contorno, tres brillos,
   hover, pulsado, insignia, letra, los cuatro colores del tooltip y los dos del campo de texto. Añadir
   un tema es añadir una entrada en `Themes.cs`; no hay código de pintado nuevo.
+- **La ficha es una ventana propia, no un `Popup` dentro de la píldora**, por el mismo motivo que el
+  fantasma del arrastre: la píldora vive pegada al escritorio y solo mide lo que mide su cristal, así que
+  cualquier cosa que sobresalga de su rectángulo se corta contra su borde. Sale `WS_EX_NOACTIVATE` +
+  `WS_EX_TRANSPARENT` —el cursor puede pasar por encima sin dejar de estar sobre el tile, y al salir la
+  ficha se apaga sola—, y al cerrarse se **aparca** en `-32000`, no se cierra: la ventana tiene que seguir
+  viva para el siguiente hover, y ocultarla bajando `Window.Opacity` a 0 dejaba la carta invisible para
+  siempre después del primer cierre.
+- **La red de la ficha se dispara antes de que venza la espera del hover**, y `async void` a propósito: el
+  cursor no puede esperar a la tienda. Si la ficha llega cuando el usuario ya se fue, se guarda igualmente
+  y a la pasada siguiente sale al instante. La espera es de 380 ms con la barra fría y 140 ms si ya había
+  una ficha abierta.
+- **`appdetails` envuelve el resultado bajo la clave del propio app id** (`{"221100":{…}}`), y esa clave
+  cambia en cada juego, así que no se puede declarar como contrato. El detalle traicionero:
+  `DataContractJsonSerializer` **no** sabe leer ese objeto como `Dictionary<string,…>` y devuelve el
+  diccionario *vacío* sin avisar —así se quedó la ficha sin géneros ni sinopsis la primera versión—. Se
+  pela el sobre a mano en `Interior()` y el contenido ya es un contrato normal. Reproducido fuera de la app
+  por `_dev/cs-ficha-json.ps1`, para saber si el fallo era del json o de la red.
+- **El parámetro `l` de la tienda no es un código de idioma.** Medido con `_dev/cs-ficha-net.ps1`:
+  `l=es` se ignora y devuelve la ficha en inglés; `l=spanish` la devuelve en español. Y en `storesearch`
+  `l=es` **sí** cambia el resultado —«Counter-Strike 2» sale como «Contragolpe 2»—, que es justo lo que
+  rompe la búsqueda por nombre. Así que se busca sin `l`, con el nombre tal cual lo enseña la barra, y se
+  pide el detalle con el nombre del idioma que usa la tienda, sacado del idioma de la interfaz.
+- **El banner se sortea solo entre los que ya están en disco.** Si el azar cayera sobre una url sin bajar,
+  la ficha parpadeaba vacía y habría que volver a sortear tras la descarga; la primera pasada de un juego
+  lanza una descarga y sale solo con los textos. Las urls se guardan en el orden de preferencia —los
+  *heroes* de la comunidad delante, la `header_image` de la tienda al final—, así que **sin clave de
+  SteamGridDB la ficha sigue teniendo banner**: el de la tienda, y no se pide ninguna credencial para
+  bajarlo. La poda de `cards\` deja los 60 banners más recientes.
+- **El alto de la carta lo da `SizeToContent.Height`, y eso miente al colocar.** `SizeToContent` cierra el
+  tamaño del `HWND` *después* del `Arrange`, así que en el instante en que la ficha se coloca
+  `Window.ActualHeight` todavía trae la medida anterior —la de la carta vacía, 24 DIP— y la ficha salía
+  colocada con un alto falso, pegada al tile o cruzada sobre él. Lo que se mide para colocar es el cristal
+  colocado más sus dos márgenes de sombra.
+- **Los bitmaps de los banners se decodifican una vez y se guardan** (tope de 8, ~1,4 MB cada uno): la
+  carta se abre y se cierra con cada pasada del cursor y no hay por qué volver a decodificar el PNG en
+  cada una. La sinopsis va topada a cinco renglones y recortada **por palabras** (`WordEllipsis`): con
+  `CharacterEllipsis` la última línea terminaba en «solitario par…», que parece un fallo antes que un
+  resumen.
+- **La palanca de la ficha se aplica sobre los tiles ya pintados.** `Dock.ActualizarGlobos()` repasa la
+  fila, reescribe `ToolTipService.IsEnabled` de cada botón y apaga la carta si estaba abierta, así que el
+  cambio se nota sin reiniciar la barra. Con la ficha encendida el globo de WPF queda **deshabilitado**
+  (no es que la ficha lo tape: los dos a la vez sería dos ventanas de aviso), y con ella apagada no se pide
+  ninguna ficha, con lo que esa salida a internet tampoco existe.
+- **La fila va centrada en el cristal, y eso obligaba a cuantizar.** Cada tile pagaba su halo de
+  separación (`RingMain`, ~16 px) también por la cara de fuera de las dos puntas, donde no hay vecino que
+  separar: el primer y el último icono quedaban a 29 px del cristal contra 8 px por arriba y por abajo.
+  Ahora `EndTrim` quita ese sobrante del ancho de la píldora y del centro de cada punta, `TilePadding`
+  pone `RingCross` en esas dos caras y `TileCenter` devuelve el centro real de cada hueco —sin eso el
+  imán de una punta se encogía en el punto equivocado y el índice de reordenamiento se desplazaba al
+  arrastrar contra el extremo—. Y tanto `RowInset` como los tamaños del eje transversal pasan por
+  `Layout.Snap()`, que cuantiza al píxel **físico**: WPF redondea cada elemento al píxel físico de la
+  ventana, así que a 125 % una medida de `9+9` salía 84 px en vez de 85 y la fila entera se iba 1 px por
+  tile, que era la desigualdad que se veía a simple vista.
 - **El arte de Steam se busca por nombre, no por ruta.** `appcache\librarycache\<appid>` tiene ahora
   las imágenes dentro de subcarpetas con nombre-hash y a veces con otro fichero —el 292030 no guarda
   `library_600x900.jpg`, sino `dd1c19c4…/library_capsule.jpg`—, así que se recorre un nivel de
@@ -619,6 +764,17 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
 - El selector enseña como mucho 60 miniaturas, y con muchas (los juegos con entrada muy trabajada llegan a
   40 y pico) la rejilla no cabe en el alto máximo del panel: se desplaza con la rueda, pero no hay barra
   que lo avise. Los iconos de abajo no se ven hasta que se rueda.
+- La ficha sale completa solo para lo que la tienda de Steam conoce. Una app que no está en Steam sale con
+  el nombre, la ruta y el pie —sin banner ni sinopsis—, y el «buscado y no había nada» se guarda para no
+  volver a preguntar. El app id se adivina por nombre cuando el acceso no lo trae, así que un acceso
+  renombrado puede acabar con la ficha de otro juego; lo mismo que pasa con los iconos.
+- La **primera pasada** por un juego nuevo enseña los textos y deja el hueco del banner vacío: la imagen se
+  baja mientras tanto y entra en la pasada siguiente, que es cuando ya está en disco.
+- La sinopsis es la corta de la tienda y cabe lo que cabe: cinco renglones como mucho, recortados por palabras
+  y sin barra de scroll —la carta no va a comerse media pantalla—. Los géneros y el desarrollador se juntan
+  en una sola línea.
+- Sin clave de SteamGridDB la ficha usa `header_image` de la tienda: un solo banner, sin sorteo. La variedad
+  de *heroes* de la comunidad —los que cambian entre pasadas— sí pide clave.
 
 ## Privacidad
 
@@ -635,14 +791,25 @@ en silencio y la barra no reintenta hasta el arranque siguiente. Lo único que s
 
 Si no quieres ni esa petición, el cortafuegos de Windows puede negarle la salida al proceso: la comprobación
 quedará en un aviso al pulsar el botón y en nada al arrancar. Ten en cuenta que la misma regla deja también
-de servir para «Iconos de la comunidad».
+de servir para la ficha del juego y para «Iconos de la comunidad».
 
-La otra salida a internet son los iconos de la comunidad, y esa la pides tú: al pulsar ese botón la barra
+La salida que se ve sola —la que no se pulsa— es la de la [ficha del juego](#la-ficha-del-juego), y sale
+únicamente cuando el cursor se queda sobre un icono cuyo juego no está todavía en `cards\`. Son peticiones a
+la API pública de la tienda de Steam (`GET https://store.steampowered.com/api/appdetails?appids=<id>`, y
+`storesearch/?term=<nombre>` solo cuando la barra no tiene el app id) para sacar título, sinopsis, géneros,
+autor y fecha, y —si tienes clave pegada— una llamada a SteamGridDB para **listar** los banners; la imagen se
+baja después del CDN público `cdn2.steamgriddb.com`, sin cabecera de autenticación. Lo que viaja es el app id
+o el nombre del juego que ya estaba puesto en el tile: ni clave en las llamadas de la tienda, ni token, ni
+identificadores de la máquina, ni la lista de tus juegos. Cada juego se pregunta **una vez**, la ficha y el
+banner se quedan en tu `cards\` y de ahí en adelante la carta sale sin tocar la red. Y con la palanca de
+Ajustes abajo la barra no hace ninguna de esas peticiones, así que apagar la ficha es cerrar esa puerta.
+
+La última salida son los iconos de la comunidad, y esa la pides tú: al pulsar ese botón la barra
 manda a `www.steamgriddb.com` el app id de Steam o el nombre del juego que ya tenía en el tile, junto con
-tu clave, y descarga la imagen que elijas. Esa cabecera solo viaja a ese host —las miniaturas y el icono se
-piden al CDN sin ella, que es público—, la clave se queda en tu `config.json` local, solo se escribe desde
-Ajustes → *Iconos de la comunidad*, y no hay ninguna escrita en el binario ni en este repositorio. Si no
-quieres usarlo, el botón no se pulsa y el programa sigue sin tocar la red por ese lado.
+tu clave, y descarga la imagen que elijas. Esa cabecera solo viaja a ese host —las miniaturas, el icono y los
+banners de la ficha se piden al CDN sin ella, que es público—, la clave se queda en tu `config.json` local,
+solo se escribe desde Ajustes → *Iconos de la comunidad*, y no hay ninguna escrita en el binario ni en este
+repositorio. Si no quieres usarlo, el botón no se pulsa y el programa sigue sin tocar la red por ese lado.
 
 La otra vez que mira fuera de sí mismo es con el desplegable abierto: para saber si el clic ha caído
 fuera instala un gancho de ratón global del que solo lee las coordenadas y el botón pulsado, y lo
@@ -660,13 +827,26 @@ behind your windows, never stealing focus. It auto-detects installed games (Stea
 Menu, desktop shortcuts), pulls each game's artwork out of Steam's `librarycache` even when the client
 hides it inside a hashed subfolder, lets you pin anything by dropping it on the bar —with any icon you
 like—, and magnifies on hover with spring physics driven by the compositor clock, idling at essentially
-zero CPU. Dropping one tile on another builds an iOS-style folder: a mosaic on the bar, a container
+zero CPU. The two end icons grow whole —the glass is clipped to the magnified row every frame, not to a fixed
+margin— and the row sits **centred inside the pill**, with the same gap at the ends as above and below.
+Dropping one tile on another builds an iOS-style folder: a mosaic on the bar, a container
 with names on click, and a title that only shows inside. Every icon can be masked three ways —plain
 square, iOS-rounded corners or full circle—, folder mosaics included; the mask is only how the tile is
 clipped, never a replacement for the icon. Dragging the pill to a screen edge is a magnet: release the mouse
 near any of the four edges and the bar snaps there, onto exactly the rectangle the **Position** chips in
 Settings use — bottom wins a tie, and a bar set to **Free** is the one case with no magnet: it stays wherever
-you let go. One click on a tile's menu can also fetch its artwork from
+you let go. **Resting the cursor on an icon opens a game card** above the pill instead of a text tooltip: a
+banner picked at random from the ones already downloaded for that game —the wide *hero* artwork the community
+uploads—, over the title, the genres · developer · release date, the store's short synopsis and a footer that
+says where the shortcut came from and how many times you have launched it. The data comes from Steam's public
+store API and the banners from a SteamGridDB listing plus its public CDN, and everything is cached under
+`%APPDATA%\GamesDock\cards`, so a game is looked up **once in its life** and every card after that is drawn
+from disk without touching the network. It shows 380 ms after the cursor stops —140 ms if you slide from one
+icon to another—, is click-through, never takes focus, always opens toward the inside of the bar and closes
+when you leave; its texts come in your interface language. Folders never trigger it, and a game the store
+doesn't know shows its name, path and footer instead of a blank card. The whole feature is one switch in
+**Settings → Behavior**: with it off the plain three-line tooltip comes back and that route stays shut.
+One click on a tile's menu can also fetch its artwork from
 SteamGridDB —the row is **Community icons**: the bar searches by Steam app id when it has one and by the
 tile's own name otherwise, shows the community thumbnails in a grid, and saves whichever one you click into
 its own icon folder — no name to type, no save dialog, and the rest of the bar keeps answering while it
@@ -688,8 +868,10 @@ is newer than the one running, a glass panel shows the version, its date and its
 script that deletes itself, relaunches the bar and leaves no trace behind — you never save or move a file
 yourself. The program carries no version number on purpose —the build from the repository *is* the
 development build—, so the call is made on the release's publish date; the only thing remembered about a
-release you declined is its title, in your local `config.json`. Outbound traffic is those two routes and
+release you declined is its title, in your local `config.json`. Outbound traffic is those three routes and
 nothing else: an unauthenticated `GET` to the release page —no key, no machine identifiers, no list of
-your games— and the icon lookup you ask for, whose SteamGridDB key stays in your local `config.json`.
-No installer, no telemetry, no background traffic while you use it. Settings, icon cache and log live in
-`%APPDATA%\GamesDock`. MIT licensed.
+your games—, the game card, which sends only the Steam app id or the tile's own name to the store API and an
+image URL to a public CDN, and the icon lookup you ask for, whose SteamGridDB key stays in your local
+`config.json`.
+No installer, no telemetry, no background traffic while you use it. Settings, icon cache, game cards and the
+log live in `%APPDATA%\GamesDock`. MIT licensed.

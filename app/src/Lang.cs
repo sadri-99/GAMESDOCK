@@ -152,13 +152,17 @@ namespace GamesDock
             Put(d, "Juegos", "Games");
             Put(d, "Apps", "Apps");
             Put(d, "Agrandar los iconos al pasar el ratón (efecto Mac)", "Enlarge icons on hover (Mac effect)");
+            Put(d, "Ficha del juego al pasar el ratón (banner y descripción)", "Game card on hover (banner and description)");
             Put(d, "Vivir solo en el escritorio (nunca por encima de otras ventanas)",
                  "Stay on the desktop (never above other windows)");
             Put(d, "Minimizar todo al lanzar", "Minimize everything when launching");
             Put(d, "Ocultar el dock al lanzar (Ctrl+Alt+D lo trae)",
                  "Hide the dock when launching (Ctrl+Alt+D brings it back)");
-            Put(d, "Vaciar escritorio al dock", "Move desktop shortcuts in");
-            Put(d, "Devolver al escritorio", "Put them back on the desktop");
+            // las dos etiquetas en ingles tenian que ser cortas: eran las que hacian que la rejilla de
+            // botones del sistema pidiera una fila mas que en castellano, y esa fila era justo la que
+            // sacaba el pie del viewport del panel (la barra de scroll va oculta a proposito)
+            Put(d, "Vaciar escritorio al dock", "Shortcuts into the dock");
+            Put(d, "Devolver al escritorio", "Shortcuts to the desktop");
             Put(d, "Todo devuelto", "Everything back");
             Put(d, "Reescaneados: {0}", "Rescanned: {0}");
             Put(d, "Arranca con Windows: sí", "Start with Windows: yes");

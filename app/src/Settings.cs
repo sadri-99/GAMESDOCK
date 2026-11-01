@@ -383,6 +383,8 @@ namespace GamesDock
             der.Children.Add(SecHead("Comportamiento"));
             der.Children.Add(Switch(Lang.T("Agrandar los iconos al pasar el ratón (efecto Mac)"), cfg.Magnify,
                 on => { cfg.Magnify = on; cfg.Save(); dock.ResetProximity(); dock.ApplyLayout(); }));
+            der.Children.Add(Switch(Lang.T("Ficha del juego al pasar el ratón (banner y descripción)"), cfg.Ficha,
+                on => { cfg.HoverCard = on; cfg.Save(); dock.ActualizarGlobos(); }));
             der.Children.Add(Switch(Lang.T("Vivir solo en el escritorio (nunca por encima de otras ventanas)"), cfg.DesktopLevel,
                 on => { cfg.DesktopLevel = on; cfg.Save(); dock.AttachToDesktop(); dock.ApplyLayout(); }));
             der.Children.Add(Switch(Lang.T("Minimizar todo al lanzar"), cfg.MinimizeAll,
