@@ -164,7 +164,7 @@ namespace GamesDock
         {
             var g = GroupOfSpec(it);
             if (g == null) return;
-            string n = Settings.ReadNamePrompt(this, string.IsNullOrEmpty(g.Name) ? it.Name : g.Name);
+            string n = Settings.PromptNombre(this, string.IsNullOrEmpty(g.Name) ? it.Name : g.Name);
             if (string.IsNullOrEmpty(n) || n == g.Name) return;
             g.Name = n;
             Cfg.Save();

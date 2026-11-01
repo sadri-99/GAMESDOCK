@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -432,8 +434,7 @@ namespace GamesDock
             catch (Exception ex)
             {
                 Log.Write("ERROR al lanzar " + it.Name + ": " + ex.Message);
-                Veil.Say(Win, Lang.F("No se pudo lanzar:\n{0}\n\n{1}", it.Name, ex.Message), "GamesDock",
-                                MessageBoxButton.OK, MessageBoxImage.Error);
+                Settings.Aviso(Lang.F("No se pudo lanzar:\n{0}\n\n{1}", it.Name, ex.Message));
                 ShowDock();
             }
         }
@@ -515,7 +516,7 @@ namespace GamesDock
             if (_batchFail.Count > 0)
             {
                 string cabeza = _batchFail.Count == 1 ? Lang.T("No se pudo añadir:") : Lang.T("No se pudieron añadir:");
-                Veil.Say(Win, cabeza + "\n" + string.Join("\n", _batchFail.ToArray()), "GamesDock");
+                Settings.Aviso(cabeza + "\n" + string.Join("\n", _batchFail.ToArray()));
             }
             _batchFail.Clear();
         }
@@ -606,7 +607,7 @@ namespace GamesDock
             {
                 Log.Write("fijar fallida " + path + ": " + ex.Message);
                 if (Batch) _batchFail.Add(path);
-                else Veil.Say(Win, Lang.F("No se pudo añadir:\n{0}\n\n{1}", path, ex.Message), "GamesDock");
+                else Settings.Aviso(Lang.F("No se pudo añadir:\n{0}\n\n{1}", path, ex.Message));
                 return null;
             }
         }
@@ -747,7 +748,8 @@ namespace GamesDock
                 MenuRow(Lang.T("Lanzar ahora"), delegate { StartEntry(it, "menu"); }),
                 MenuRow(Lang.T("Abrir carpeta del juego"), delegate { OpenFolderOf(it); }),
                 MenuRow(Lang.T("Renombrar"), delegate { Rename(it); }),
-                MenuRow(Lang.T("Cambiar icono..."), delegate { ChangeIcon(it); })
+                MenuRow(Lang.T("Cambiar icono..."), delegate { ChangeIcon(it); }),
+                MenuRow(Lang.T("Iconos de la comunidad"), delegate { IconosComunidad(it); })
             };
             // la opcion de deshacer solo tiene sentido mientras el fijado guarde un icono propio
             if (it.Pin != null && Icons.IsCustom(it.Pin.Icon))
@@ -783,12 +785,12 @@ namespace GamesDock
             if (!string.IsNullOrEmpty(t) && !System.Text.RegularExpressions.Regex.IsMatch(t, @"^\w+://") && File.Exists(t))
                 Launcher.SelectInExplorer(t);
             else
-                Veil.Say(Win, Lang.T("Ese juego se lanza por el cliente (Steam/Epic) y no tiene carpeta directa."), "GamesDock");
+                Settings.Aviso(Lang.T("Ese juego se lanza por el cliente (Steam/Epic) y no tiene carpeta directa."));
         }
 
         public void Rename(ItemSpec it)
         {
-            string n = Settings.ReadNamePrompt(this, it.Name);
+            string n = Settings.PromptNombre(this, it.Name);
             if (string.IsNullOrEmpty(n) || n == it.Name) return;
             SetPinOverride(it, p => p.Name = n);
             it.Name = n;
@@ -813,10 +815,11 @@ namespace GamesDock
             string dest = Icons.InstallCustom(it.Key, dlg.FileName);
             if (dest == null)
             {
-                Veil.Say(Win, Lang.F("Ese archivo no tiene un icono que se pueda extraer:\n{0}", dlg.FileName), "GamesDock");
+                Settings.Aviso(Lang.F("Ese archivo no tiene un icono que se pueda extraer:\n{0}", dlg.FileName));
                 return;
             }
             SetPinOverride(it, p => p.Icon = dest);
+            OlvidarPincel(dest);
             it.Icon = dest;
             Cfg.Save();
             Refresh(false);
@@ -825,12 +828,121 @@ namespace GamesDock
 
         void RestoreIcon(ItemSpec it)
         {
+            string viejo = it.Icon;
             SetPinOverride(it, p => p.Icon = null);
             Icons.ForgetCustom(it.Key);
+            OlvidarPincel(viejo);
             it.Icon = it.AutoIcon;
             it.IconHint = it.AutoIconHint;
             Cfg.Save();
             Refresh(false);
+        }
+
+        // ------------------------------------------------------------------ iconos de la comunidad (SteamGridDB)
+        // mientras una busqueda esta en vuelo no se puede lanzar otra: dos selectores abiertos sobre el
+        // mismo tile escribirian en el mismo png
+        bool _sgdOcupada;
+
+        // El boton 100 % automatico. La barra ya sabe como se llama el juego -y si salio de Steam, su
+        // app id-, asi que el usuario no escribe nada: se pulsa, salen las miniaturas, se elige una y el
+        // tile cambia. Nada de cuadros de guardado: el png va a la carpeta de la app, que ya existe
+        // desde el primer arranque (%APPDATA%\GamesDock\icons\custom). Lo unico que se pide una vez es
+        // la clave, y se pone en Ajustes.
+        async void IconosComunidad(ItemSpec it)
+        {
+            if (it == null || _sgdOcupada) return;
+            _sgdOcupada = true;
+            try
+            {
+                string clave = ClaveSgd();
+                if (string.IsNullOrEmpty(clave)) { AvisoSinClave(); return; }
+
+                var lista = await IconosDeSgdAsync(it, clave);
+                if (!lista.EsOk) { AvisoSgd(lista.Estado, lista.Error); return; }
+
+                string url = IconPicker.Seleccionar(this, it.Name, lista.Datos);
+                if (string.IsNullOrEmpty(url)) return;   // cerrado sin elegir: el icono de siempre sigue igual
+
+                string destino = Icons.RutaPropia(it.Key, ".png");
+                var d = await SteamGrid.DescargarIconoAsync(url, destino, CancellationToken.None);
+                if (!d.EsOk) { AvisoSgd(d.Estado, d.Error); return; }
+
+                Icons.OlvidarOtrasExtensiones(destino);
+                OlvidarPincel(destino);
+                SetPinOverride(it, p => p.Icon = destino);
+                it.Icon = destino;
+                Cfg.Save();
+                Refresh(false);
+                Log.Write("iconos comunidad: " + it.Name + " <- " + url);
+            }
+            catch (Exception ex)
+            {
+                Log.Write("iconos comunidad: " + ex.Message);
+                Settings.Aviso(Lang.T("No se ha podido cambiar el icono."));
+            }
+            finally { _sgdOcupada = false; }
+        }
+
+        // Los dos caminos posibles: si el fijado tiene app id de Steam se pide directo (coincidencia
+        // exacta, sin adivinar por el nombre) y si no, o si SteamGridDB no conoce ese juego, se busca el
+        // nombre del tile en el autocomplete.
+        async Task<SgdRespuesta<List<SgdIcono>>> IconosDeSgdAsync(ItemSpec it, string clave)
+        {
+            var ct = CancellationToken.None;
+            int steam = AppIdSteam(it);
+            if (steam > 0)
+            {
+                var r = await SteamGrid.IconosDeSteamAsync(steam, clave, ct);
+                // "no esta ese juego" no es un fallo: es el motivo de continuar con la busqueda por nombre
+                if (r.EsOk || r.Estado != SgdEstado.NoEncontrado) return r;
+            }
+            var b = await SteamGrid.BuscarJuegoIdAsync(it.Name, clave, ct);
+            if (!b.EsOk) return SgdRespuesta<List<SgdIcono>>.Mal(b.Estado, b.Error);
+            return await SteamGrid.IconosDeJuegoAsync(b.Datos, clave, ct);
+        }
+
+        // el app id solo vale si es numero: es lo que SteamGridDB entiende por id de Steam
+        static int AppIdSteam(ItemSpec it)
+        {
+            if (it == null || string.IsNullOrEmpty(it.AppId)) return 0;
+            int n;
+            return int.TryParse(it.AppId, out n) && n > 0 ? n : 0;
+        }
+
+        // La clave no va escrita dentro del programa: la pega el usuario en Ajustes y se queda en su
+        // config.json. La variable de entorno la usa unicamente el harness, que levanta un servidor local
+        // con el mismo formato de respuestas.
+        string ClaveSgd()
+        {
+            string k = (Environment.GetEnvironmentVariable("STEAMGRIDDB_KEY") ?? string.Empty).Trim();
+            if (k.Length == 0) k = (Cfg.SteamGridKey ?? string.Empty).Trim();
+            return k;
+        }
+
+        // Sin clave la API responde 401 seguro, asi que se avisa antes de llamar. Y el aviso no puede ser
+        // un callejon sin salida: su boton lleva al panel donde se pega la clave.
+        void AvisoSinClave()
+        {
+            Settings.Aviso(Lang.T("Sin clave no se pueden pedir iconos a SteamGridDB.\nCrea una cuenta gratis, saca la clave en Perfil > Preferencias > API y pégala en Ajustes > Iconos de la comunidad."),
+                           Lang.T("Abrir ajustes"), delegate { Settings.Show(this); });
+        }
+
+        // cada motivo de fallo se explica distinto: sin clave hay que pedirla, con clave caducada hay
+        // que dirigir a la pagina del desarrollador y sin red no se puede hacer nada
+        void AvisoSgd(SgdEstado e, string detalle)
+        {
+            string msg;
+            switch (e)
+            {
+                case SgdEstado.SinClave: msg = Lang.T("Falta la clave de SteamGridDB."); break;
+                case SgdEstado.ClaveInvalida: msg = Lang.T("SteamGridDB no acepta esa clave.\nCompruébala o crea una nueva en Perfil > Preferencias > API y pégala en Ajustes > Iconos de la comunidad."); break;
+                case SgdEstado.NoEncontrado: msg = Lang.T("SteamGridDB no tiene iconos para ese juego."); break;
+                case SgdEstado.SinRed: msg = Lang.T("Sin conexión con SteamGridDB."); break;
+                case SgdEstado.ImagenInvalida: msg = Lang.T("Lo descargado no es una imagen válida."); break;
+                default: msg = Lang.F("SteamGridDB ha respondido mal: {0}", detalle); break;
+            }
+            Log.Write("SteamGridDB " + e + ": " + (detalle ?? string.Empty));
+            Settings.Aviso(msg);
         }
 
         public void SetTheme(string id)

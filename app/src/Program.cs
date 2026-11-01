@@ -12,6 +12,7 @@ namespace GamesDock
         static void Main(string[] args)
         {
             Paths.Ensure();
+            Net.AsegurarTls();
 
             bool primero;
             using (var single = new Mutex(false, "GamesDock_Single_Instance", out primero))
@@ -79,6 +80,16 @@ namespace GamesDock
 
                 dock.TrayIcon = new Tray(dock);
                 dock.InstallHotkey();
+
+                // lo que dejara una descarga cortada a medias no se hereda de una sesion a otra
+                Update.LimpiarRestos();
+
+                // la comprobacion de versiones unos segundos despues del primer pintado: al arrancar
+                // Windows es cuando menos gracia hace que se monte una ventana encima del escritorio, y
+                // ademas deja pasar delante el escaneo de juegos
+                var upd = new DispatcherTimer { Interval = TimeSpan.FromSeconds(8) };
+                upd.Tick += delegate { upd.Stop(); Settings.ComprobarAlArrancar(dock); };
+                upd.Start();
 
                 // red de seguridad, no un recorte periodico: solo suelta memoria si el proceso se ha
                 // pasado del umbral, asi que en reposo no mueve ni un cuadro de animacion

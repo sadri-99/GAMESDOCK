@@ -26,9 +26,13 @@ namespace GamesDock
 
         // las unicas ventanas nuestras que NUNCA tienen que quedar por encima del velo: la propia
         // pildora, el icono que sigue al cursor al arrastrar y el velo mismo
-        const string TituloPildora = "GamesDock";
         const string TituloFantasma = "GamesDockGhost";
         const string TituloVelo = "GamesDockVeil";
+
+        // La pildora se reconoce por su handle, nunca por su titulo: un aviso puede llevar el mismo
+        // titulo en la barra (el de la propia app) y entonces el velo lo dejaba debajo, con el hilo de
+        // UI parado dentro de un cuadro modal que nadie podia cerrar.
+        public static IntPtr Pildora;
 
         static readonly uint MiPid = (uint)System.Diagnostics.Process.GetCurrentProcess().Id;
 
@@ -101,18 +105,8 @@ namespace GamesDock
             finally { Pop(); }
         }
 
-        // los avisos de Windows tambien son emergentes: mientras uno esta abierto no se puede tocar
-        // nada de fuera, igual que con los paneles de cristal
-        public static void Say(Window owner, string text, string cap)
-        {
-            Around(delegate { MessageBox.Show(owner, text, cap); });
-        }
-
-        public static void Say(Window owner, string text, string cap, MessageBoxButton btn, MessageBoxImage icono)
-        {
-            Around(delegate { MessageBox.Show(owner, text, cap, btn, icono); });
-        }
-
+        // Los avisos de texto ya no pasan por aqui: viven en Settings.Notice, que es un panel del propio
+        // programa. Queda el cuadro de si/no, que es la unica vez que se le pide a Windows una decision.
         public static MessageBoxResult Ask(Window owner, string text, string cap, MessageBoxButton btn, MessageBoxImage icono)
         {
             MessageBoxResult r = MessageBoxResult.None;
@@ -174,6 +168,7 @@ namespace GamesDock
                 Native.EnumWindows((h, lp) =>
                 {
                     if (h == _hwnd || !Native.IsWindowVisible(h)) return true;
+                    if (Pildora != IntPtr.Zero && h == Pildora) return true;
                     uint pid;
                     Native.GetWindowThreadProcessId(h, out pid);
                     if (pid != MiPid) return true;
@@ -182,7 +177,7 @@ namespace GamesDock
                     if (n > 0)
                     {
                         string t = Buf.ToString();
-                        if (t == TituloPildora || t == TituloFantasma || t == TituloVelo) return true;
+                        if (t == TituloFantasma || t == TituloVelo) return true;
                     }
                     if (!Subidas.Contains(h)) Subidas.Add(h);
                     Native.SetWindowPos(h, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);

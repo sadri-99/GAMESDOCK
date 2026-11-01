@@ -47,6 +47,16 @@ namespace GamesDock
         public static extern bool GetWindowRect(IntPtr h, out RECT r);
 
         [DllImport("user32.dll")]
+        public static extern bool GetCursorPos(out POINT p);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
+        [DllImport("user32.dll")]
         public static extern bool IsWindowVisible(IntPtr h);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]

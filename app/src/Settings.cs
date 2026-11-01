@@ -129,7 +129,11 @@ namespace GamesDock
                 VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
                 Focusable = false,
-                MaxHeight = 640,
+                // el techo era fijo en 640, y con la sección de la clave los ajustes ya no cabían ahí:
+                // la última fila se cortaba sin barra a la vista. Se da tanto alto como deja el área de
+                // trabajo, con un suelo para pantallas pequeñas y un techo para no estirar el panel de
+                // un aviso. El ScrollViewer sigue ahí para lo que aun así no quepa.
+                MaxHeight = BodyHeight(),
                 Content = Body
             };
             shell.Child = scroll;
@@ -137,6 +141,22 @@ namespace GamesDock
         }
 
         static void SetColumn(UIElement e, int c) { Grid.SetColumn(e, c); }
+
+        // Cuanto puede ocupar el cuerpo de un panel: lo que deja el area de trabajo menos la cabecera,
+        // los margenes del cristal y un dedo de aire. Con un suelo para pantallas pequenas y un techo
+        // para que un monitor grande no estire el aviso de dos lineas.
+        //
+        // El aire era de 110 y el cristal solo gasta 30 (medido: 736 de ventana para 706 de cuerpo), asi
+        // que 80 px eran puro margen perdido. Con 70 el panel de ajustes entra entero en un 1080p al
+        // 125 %: con 110 la ultima fila se quedaba detras del viewport, y la barra de scroll esta oculta
+        // a proposito, o sea que esa fila era invisible e inalcanzable a la vista.
+        static double BodyHeight()
+        {
+            double h = SystemParameters.WorkArea.Height - 70;
+            if (h < 420) h = 420;
+            if (h > 760) h = 760;
+            return h;
+        }
 
         // entrada y salida: el panel se hincha desde el 95,5 % mientras enciende, en el primer pintado
         public void PlayIn()
@@ -205,7 +225,9 @@ namespace GamesDock
         public Action<int> OnSet;
     }
 
-    public static class Settings
+    // Las dos mitades del panel viven en este archivo y en UpdateUI.cs: aqui esta la rejilla de ajustes y
+    // alla lo que se pregunta y se responde sobre las versiones.
+    public static partial class Settings
     {
         static Window _open;
         static readonly Dictionary<string, Stepper> Steppers = new Dictionary<string, Stepper>();
@@ -223,9 +245,21 @@ namespace GamesDock
             var w = par.Win;
             Steppers.Clear();
 
-            var sp = new StackPanel { Orientation = Orientation.Horizontal };
-            var izq = new StackPanel { Width = 340 };
-            var der = new StackPanel { Margin = new Thickness(22, 0, 0, 0), Width = 340 };
+            // Las dos columnas se reparten el ancho del cristal con un hueco fijo en medio. Antes cada
+            // una llevaba 340 px contados: sobraban 48 px a la derecha y el panel se veia descompensado.
+            var sp = new Grid();
+            sp.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            sp.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(24) });
+            sp.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            // dos filas: la de las columnas y, debajo de las dos, la del pie a lo ancho. El pie en una
+            // sola columna eran cuatro lineas que empujaban la ultima fila de esa columna fuera del alto
+            // de la pantalla (1080p al 125 %), y detras de una barra de scroll que ni se ve.
+            sp.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            sp.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            var izq = new StackPanel();
+            var der = new StackPanel();
+            Grid.SetColumn(izq, 0);
+            Grid.SetColumn(der, 2);
             sp.Children.Add(izq);
             sp.Children.Add(der);
             par.Body.Children.Add(sp);
@@ -243,12 +277,21 @@ namespace GamesDock
             {
                 string id = posMap[k];
                 posRow.Children.Add(Chip(Lang.T(k), "posicion", id == cfg.Position,
-                    delegate { cfg.Position = id; cfg.Save(); dock.ApplyLayout(); }));
+                    delegate
+                    {
+                        // al pasar de un borde a Libre la barra se queda donde esta: sin este aviso
+                        // PlaceDock usaria el ultimo punto libre que recuerda la config, que puede ser el
+                        // de otra tarde y acabar a medias fuera de la pantalla
+                        if (id == "free" && cfg.Position != "free") dock.AnotarPuestoActual();
+                        cfg.Position = id;
+                        cfg.Save();
+                        dock.ApplyLayout();
+                    }));
             }
-            izq.Children.Add(Field(Lang.T("Posición de la barra"), posRow, 13));
+            izq.Children.Add(Field(Lang.T("Posición de la barra"), posRow, 14));
 
             izq.Children.Add(Field(Lang.T("Tamaño del icono"),
-                Stepper("iconSize", 28, 76, 2, cfg.IconSize, "px", v => { cfg.IconSize = v; cfg.Save(); dock.ApplyLayout(); dock.Refresh(false); }), 13));
+                Stepper("iconSize", 28, 76, 2, cfg.IconSize, "px", v => { cfg.IconSize = v; cfg.Save(); dock.ApplyLayout(); dock.Refresh(false); }), 14));
 
             // la forma es el recorte, no el icono: las tres chips repintan la misma fila de pngs
             var formaRow = new WrapPanel();
@@ -262,29 +305,29 @@ namespace GamesDock
                 formaRow.Children.Add(Chip(Lang.T(f[0]), "forma", id == (cfg.IconShape ?? "defecto"),
                     delegate { cfg.IconShape = id; cfg.Save(); dock.Refresh(false); }));
             }
-            izq.Children.Add(Field(Lang.T("Forma del icono"), formaRow, 13));
+            izq.Children.Add(Field(Lang.T("Forma del icono"), formaRow, 14));
 
             izq.Children.Add(Field(Lang.T("Opacidad en reposo"),
-                Stepper("idleOpacity", 10, 100, 5, cfg.IdleOpacity, "%", v => { cfg.IdleOpacity = v; cfg.Save(); dock.SetWindowOpacity(v / 100.0, 120); }), 13));
+                Stepper("idleOpacity", 10, 100, 5, cfg.IdleOpacity, "%", v => { cfg.IdleOpacity = v; cfg.Save(); dock.SetWindowOpacity(v / 100.0, 120); }), 14));
 
             var temRow = new WrapPanel();
             foreach (var kv in Themes.All) temRow.Children.Add(ThemeChip(kv.Key, kv.Key == cfg.Theme, dock));
-            izq.Children.Add(Field(Lang.T("Tema de la barra"), temRow, 4));
+            izq.Children.Add(Field(Lang.T("Tema de la barra"), temRow, 8));
 
             // cada idioma se escribe en su propio idioma: es la convención de los selectores y evita
             // que "Español" aparezca como "Spanish" cuando ya estás en inglés
-            var langRow = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+            var langRow = new WrapPanel();
             foreach (var l in new[] { new[] { "auto", "Auto" }, new[] { "es", "Español" }, new[] { "en", "English" } })
             {
                 string id = l[0];
                 langRow.Children.Add(Chip(l[1], "idioma", id == (cfg.Language ?? "auto"),
                     delegate { SetLanguage(dock, cfg, id); }));
             }
-            izq.Children.Add(Field(Lang.T("Idioma de la interfaz"), langRow, 4));
+            izq.Children.Add(Field(Lang.T("Idioma de la interfaz"), langRow, 8));
 
             // --------------------------------------------------------- columna derecha
             der.Children.Add(SecHead("Qué se ve"));
-            var secRow = new WrapPanel { Margin = new Thickness(0, 0, 0, 15) };
+            var secRow = new WrapPanel { Margin = new Thickness(0, 0, 0, 7) };
             var secMap = new[]
             {
                 new[] { "Favoritos", "fav" }, new[] { "Juegos", "games" },
@@ -296,6 +339,46 @@ namespace GamesDock
                 secRow.Children.Add(Chip(Lang.T(s[0]), "seccion", id == cfg.Section, delegate { dock.SetSection(id); }));
             }
             der.Children.Add(secRow);
+
+            // ------------------------------------------------------- iconos de la comunidad
+            // El unico campo del programa que guarda una credencial. Se queda en el config.json del
+            // usuario y nunca viaja dentro del exe: una clave metida en un binario publico se recupera
+            // descompilando y quien la registró es quien paga el uso que otros hagan de ella.
+            // Va el segundo en la columna, no al final: es la caja que busca quien acaba de leer el
+            // aviso de "sin clave", y debajo de lo que cabe en pantalla no se ve a primera vista.
+            der.Children.Add(SecHead("Iconos de la comunidad"));
+            var clave = new TextBox
+            {
+                Style = Res.Style("GlassText"),
+                Text = cfg.SteamGridKey,
+                Margin = new Thickness(0, 0, 0, 7)
+            };
+            Button kBoton = null;
+            Action kGuardar = delegate
+            {
+                cfg.SteamGridKey = (clave.Text ?? string.Empty).Trim();
+                cfg.Save();
+                bool hay = cfg.SteamGridKey.Length > 0;
+                kBoton.Content = Lang.T(hay ? "Clave guardada" : "Clave vaciada");
+                Log.Write(hay ? "SteamGridDB: clave guardada en el config" : "SteamGridDB: clave vaciada");
+            };
+            var kAyuda = Res.Label(Lang.T(
+                "Crea una cuenta gratis en steamgriddb.com y saca la clave en Perfil > Preferencias > API. " +
+                "Después, el clic derecho en un icono ofrece «Iconos de la comunidad»: el arte que sube la gente, " +
+                "en vez del icono oficial."), 10.5, "PanelSub");
+            kAyuda.TextWrapping = TextWrapping.Wrap;
+            kAyuda.Margin = new Thickness(0, 0, 0, 10);
+            var kFila = new WrapPanel();
+            kFila.Children.Add(kBoton = Pill(Lang.T("Guardar la clave"), kGuardar));
+            kFila.Children.Add(Pill(Lang.T("Abrir la página de la clave"), delegate { Launcher.OpenUrl(SteamGrid.PaginaClave); }));
+
+            clave.KeyDown += (s, e) =>
+            {
+                if (e.Key == System.Windows.Input.Key.Enter) { e.Handled = true; kGuardar(); }
+            };
+            der.Children.Add(Field(Lang.T("Clave de SteamGridDB"), clave, 0));
+            der.Children.Add(kAyuda);
+            der.Children.Add(kFila);
 
             der.Children.Add(SecHead("Comportamiento"));
             der.Children.Add(Switch(Lang.T("Agrandar los iconos al pasar el ratón (efecto Mac)"), cfg.Magnify,
@@ -309,7 +392,7 @@ namespace GamesDock
 
             der.Children.Add(SecHead("Sistema"));
             var sysRow = new WrapPanel();
-            Button b1 = null, b2 = null, b3 = null, b4 = null, b5 = null;
+            Button b1 = null, b2 = null, b3 = null, b4 = null, b5 = null, b6 = null;
             sysRow.Children.Add(b1 = Pill(Lang.T("Reescanear juegos"), delegate { dock.Rebuild(); b1.Content = Lang.F("Reescaneados: {0}", dock.Cat.Items.Count); }));
             sysRow.Children.Add(b2 = Pill(Lang.T("Vaciar escritorio al dock"), delegate
             {
@@ -333,15 +416,38 @@ namespace GamesDock
                 else { cfg.Autostart = false; cfg.Save(); b4.Content = Lang.T("Arranca con Windows: no"); }
             }));
             sysRow.Children.Add(b5 = Pill(Lang.T("Abrir carpeta de ajustes"), delegate { Launcher.OpenFolder(Paths.Root); }));
+            // pregunta a GitHub cual es la ultima version publicada y cuenta el resultado, bueno o malo:
+            // un actualizador que se queda callado no se distingue de uno roto
+            sysRow.Children.Add(b6 = Pill(Lang.T("Buscar actualizaciones"), delegate { BuscarActualizaciones(dock, b6); }));
             der.Children.Add(sysRow);
 
+            // la estrella cierra la columna izquierda: es lo unico del panel que no es un ajuste, y puesta
+            // arriba se confundiria con el boton de guardar de algo. Son dos lineas y una ficha: metiendo
+            // ademas el aviso de los gestos en esta columna, la ficha se salia del alto de la pantalla.
+            var guya = Res.Label(Lang.T("¿Te gusta la barra? Deja una estrella: es nuestra única señal de que la usas."), 10.5, "PanelSub");
+            guya.TextWrapping = TextWrapping.Wrap;
+            guya.Margin = new Thickness(0, 6, 0, 0);
+            izq.Children.Add(guya);
+            var filaEstrella = new WrapPanel { Margin = new Thickness(0, 1, 0, 0) };
+            filaEstrella.Children.Add(Pill(Lang.T("Estrella en GitHub"), delegate { Launcher.OpenUrl(Update.PaginaRepo); }));
+            izq.Children.Add(filaEstrella);
+
+            // el pie va debajo de las dos columnas, a lo ancho del cristal y separado por un hilo: son las
+            // lineas que explican los gestos, y en media columna ocupaban cuatro renglones
+            var pie = new StackPanel();
+            Grid.SetRow(pie, 1);
+            Grid.SetColumnSpan(pie, 3);
+            var hilo = new Border { Height = 1, Margin = new Thickness(0, 12, 0, 0) };
+            hilo.SetResourceReference(Border.BackgroundProperty, "MenuSep");
+            pie.Children.Add(hilo);
             var note = Res.Label(Lang.T("Arrastra un .lnk, .exe o un enlace steam:// sobre la barra para fijarlo. " +
                                  "Arrastra un icono para ordenar la barra; soltarlo fuera del cristal lo quita y vuelve con " +
                                  "\"Restaurar ocultos\" del clic derecho. Clic derecho en un icono: fijar, renombrar u ocultar. " +
                                  "Clic central: favorito."), 10.5, "PanelSub");
             note.TextWrapping = TextWrapping.Wrap;
-            note.Margin = new Thickness(0, 6, 0, 0);
-            der.Children.Add(note);
+            note.Margin = new Thickness(0, 9, 0, 0);
+            pie.Children.Add(note);
+            sp.Children.Add(pie);
 
             _open = w;
             w.Closed += delegate { _open = null; cfg.Save(); };
@@ -383,20 +489,41 @@ namespace GamesDock
             return b;
         }
 
-        static StackPanel SecHead(string txt)
+        // Cabecera de bloque: raya de acento, texto en mayusculas y un hilo que estira hasta el borde de
+        // la columna. El texto paso a PanelFg: antes usaba el mismo gris que las etiquetas de los campos
+        // y los dos niveles se leian como uno solo.
+        static FrameworkElement SecHead(string txt)
         {
-            var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 11) };
+            var row = new Grid { Margin = new Thickness(0, 6, 0, 10) };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
             var bar = new Border
             {
-                Width = 3,
-                Margin = new Thickness(0, 2, 7, 1),
-                CornerRadius = new CornerRadius(2)
+                Width = 2,
+                Margin = new Thickness(0, 2, 7, 2),
+                CornerRadius = new CornerRadius(1)
             };
             bar.SetResourceReference(Border.BackgroundProperty, "MenuAccent");
-            var t = Res.Label(Lang.T(txt).ToUpperInvariant(), 10.5, "PanelSub");
+
+            var t = Res.Label(Lang.T(txt).ToUpperInvariant(), 10.5, "PanelFg");
             t.FontWeight = FontWeights.SemiBold;
+            t.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(t, 1);
+
+            var hilo = new Border
+            {
+                Height = 1,
+                Margin = new Thickness(11, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            hilo.SetResourceReference(Border.BackgroundProperty, "MenuSep");
+            Grid.SetColumn(hilo, 2);
+
             row.Children.Add(bar);
             row.Children.Add(t);
+            row.Children.Add(hilo);
             return row;
         }
 
@@ -406,7 +533,7 @@ namespace GamesDock
             if (!string.IsNullOrEmpty(label))
             {
                 var t = Res.Label(label, 11, "PanelSub");
-                t.Margin = new Thickness(0, 0, 0, 6);
+                t.Margin = new Thickness(0, 0, 0, 7);
                 s.Children.Add(t);
             }
             s.Children.Add(ctrl);
@@ -420,7 +547,7 @@ namespace GamesDock
                 Style = Res.Style("ChipRadio"),
                 Content = txt,
                 GroupName = group,
-                Margin = new Thickness(0, 0, 6, 6)
+                Margin = new Thickness(0, 0, 7, 7)
             };
             rb.IsChecked = on;                       // antes de enganchar el evento: si no, arranca pulsando
             rb.Checked += delegate { pick(); };
@@ -433,7 +560,7 @@ namespace GamesDock
             {
                 Style = Res.Style("SwitchBox"),
                 Content = txt,
-                Margin = new Thickness(0, 0, 0, 9)
+                Margin = new Thickness(0, 0, 0, 10)
             };
             cb.IsChecked = on;
             RoutedEventHandler h = delegate { changed(cb.IsChecked == true); };
@@ -450,7 +577,7 @@ namespace GamesDock
                 Style = Res.Style("ThemeChip"),
                 GroupName = "tema",
                 Tag = id,
-                Margin = new Thickness(0, 0, 11, 13)
+                Margin = new Thickness(0, 0, 12, 14)
             };
             rb.IsChecked = on;
             // el chip va sin texto accesible (el nombre va debajo, en otro bloque): sin esto es un boton
@@ -558,18 +685,21 @@ namespace GamesDock
             if (s.OnSet != null) s.OnSet(s.Value);
         }
 
-        // ------------------------------------------------------------------ prompt de nombre
-        public static string ReadNamePrompt(Dock dock, string current)
+        // ------------------------------------------------------------------ prompt de una linea
+        // El unico cuadro de texto suelto fuera de Ajustes: sirve para renombrar un tile o un grupo. Lo
+        // que cambian son los tres textos, que pasan por argumentos porque un parametro opcional ha de
+        // ser constante en tiempo de compilacion.
+        public static string ReadPrompt(Dock dock, string titulo, string aviso, string etiqueta, string actual)
         {
-            var par = new GlassPanel(Lang.T("Nombre en el dock"), 400, Lang.T("Enter para guardar - Esc para cancelar"));
+            var par = new GlassPanel(titulo, 400, aviso);
             var w = par.Win;
             _promptValue = null;
 
-            var etq = Res.Label(Lang.T("Nombre visible"), 11, "PanelSub");
+            var etq = Res.Label(etiqueta, 11, "PanelSub");
             etq.Margin = new Thickness(0, 0, 0, 6);
             par.Body.Children.Add(etq);
 
-            var box = new TextBox { Style = Res.Style("GlassText"), Text = current, Margin = new Thickness(0, 0, 0, 14) };
+            var box = new TextBox { Style = Res.Style("GlassText"), Text = actual, Margin = new Thickness(0, 0, 0, 14) };
             par.Body.Children.Add(box);
 
             var ok = new Button
@@ -595,6 +725,63 @@ namespace GamesDock
             w.ContentRendered += delegate { box.Focus(); box.SelectAll(); };
             par.ShowModal();
             return _promptValue;
+        }
+
+        // renombrar un tile y renombrar un grupo son el mismo cuadro con los mismos tres textos
+        public static string PromptNombre(Dock dock, string actual)
+        {
+            return ReadPrompt(dock, Lang.T("Nombre en el dock"),
+                Lang.T("Enter para guardar - Esc para cancelar"), Lang.T("Nombre visible"), actual);
+        }
+
+        // ------------------------------------------------------------------ aviso de cristal
+        // Un aviso del programa es un panel del propio programa, no un cuadro de Windows. El MessageBox
+        // nativo se atiende con su propio bucle modal -que deja la barra sin moverse hasta que alguien lo
+        // cierra- y debajo del velo casi no se ve. El panel de cristal usa el mismo ShowDialog que
+        // Ajustes: se ve por encima del velo, se cierra con Enter, Esc, la cruz o el boton, y la barra
+        // detras sigue animando.
+        public static void Aviso(string texto)
+        {
+            Aviso(texto, null, null);
+        }
+
+        // El boton opcional evita el callejon sin salida: el aviso de "falta la clave" abre Ajustes al
+        // pulsarlo. La accion se lanza DESPUES de que ShowDialog haya vuelto, con el velo ya quitado, para
+        // no anidar un modal dentro del bucle modal del aviso.
+        public static void Aviso(string texto, string boton, Action accion)
+        {
+            bool pedido = false;
+            var par = new GlassPanel(Lang.T("Aviso de GamesDock"), 430, Lang.T("Enter o Esc para cerrar"));
+            var w = par.Win;
+
+            var cuerpo = Res.Label(texto, 12.5, "PanelFg");
+            cuerpo.TextWrapping = TextWrapping.Wrap;
+            cuerpo.Margin = new Thickness(0, 0, 0, 16);
+            par.Body.Children.Add(cuerpo);
+
+            var fila = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+            fila.Children.Add(Pill(Lang.T("Vale"), delegate { Cerrar(w); }));
+            if (!string.IsNullOrEmpty(boton))
+                fila.Children.Add(Pill(boton, delegate { pedido = true; Cerrar(w); }));
+            par.Body.Children.Add(fila);
+
+            // Esc ya lo cierra el panel; Enter es lo que se espera de un aviso de un boton
+            w.KeyDown += (s, e) =>
+            {
+                if (e.Key == System.Windows.Input.Key.Enter) { e.Handled = true; Cerrar(w); }
+            };
+
+            par.ShowModal();
+            if (pedido && accion != null) { try { accion(); } catch (Exception ex) { Log.Write("aviso: " + ex.Message); } }
+        }
+
+        static void Cerrar(Window w)
+        {
+            try { w.Close(); } catch { }
         }
     }
 

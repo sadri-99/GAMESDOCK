@@ -217,13 +217,15 @@
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="FontSize" Value="14"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Width" Value="28"/>
-    <Setter Property="Height" Value="26"/>
+    <!-- 30x30: el mismo cuadrado que la pildora de los botones y que las chips, para que una fila de
+         ajustes no lleve tres alturas distintas -->
+    <Setter Property="Width" Value="30"/>
+    <Setter Property="Height" Value="30"/>
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
-          <Border x:Name="Bd" CornerRadius="8" Background="{TemplateBinding Background}"
+          <Border x:Name="Bd" CornerRadius="9" Background="{TemplateBinding Background}"
                   BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
@@ -276,14 +278,14 @@
       <Setter.Value>
         <ControlTemplate TargetType="RadioButton">
           <Grid Background="Transparent">
-            <Border x:Name="Base" CornerRadius="9" Background="{DynamicResource CtlBg}"
+            <Border x:Name="Base" CornerRadius="10" Background="{DynamicResource CtlBg}"
                     BorderBrush="{DynamicResource CtlEdge}" BorderThickness="1"/>
-            <Border x:Name="Fill" CornerRadius="9" Opacity="0" RenderTransformOrigin="0.5,0.5"
+            <Border x:Name="Fill" CornerRadius="10" Opacity="0" RenderTransformOrigin="0.5,0.5"
                     Background="{DynamicResource ChipOn}" BorderBrush="{DynamicResource MenuAccent}"
                     BorderThickness="1">
               <Border.RenderTransform><ScaleTransform ScaleX="1" ScaleY="1"/></Border.RenderTransform>
             </Border>
-            <ContentPresenter x:Name="Txt" Margin="12,6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <ContentPresenter x:Name="Txt" Margin="13,7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
@@ -332,7 +334,7 @@
         <ControlTemplate TargetType="RadioButton">
           <Grid Background="Transparent">
             <ContentPresenter/>
-            <Border x:Name="Ring" CornerRadius="11" BorderBrush="{DynamicResource MenuAccent}"
+            <Border x:Name="Ring" CornerRadius="12" BorderBrush="{DynamicResource MenuAccent}"
                     BorderThickness="2" Opacity="0" Margin="-3" IsHitTestVisible="False"/>
           </Grid>
           <ControlTemplate.Triggers>
@@ -424,12 +426,12 @@
     <Setter Property="BorderBrush" Value="{DynamicResource CtlEdge}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="FontSize" Value="13"/>
-    <Setter Property="Padding" Value="9,6"/>
+    <Setter Property="Padding" Value="11,7"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="TextBox">
-          <Border CornerRadius="9" Background="{TemplateBinding Background}"
+          <Border CornerRadius="10" Background="{TemplateBinding Background}"
                   BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
             <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
           </Border>

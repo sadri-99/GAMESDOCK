@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Text;
 
 namespace GamesDock
@@ -13,6 +14,10 @@ namespace GamesDock
         // porque el cache de extraccion vive justo al lado y no hay que confundirlo
         public static readonly string CustomDir = Path.Combine(Root, "icons", "custom");
         public static readonly string DeskDir = Path.Combine(Root, "escritorio");
+        // donde cae el ejecutable descargado mientras se espera a poder sustituir el viejo. NO se crea al
+        // arrancar: solo existe durante una actualizacion, y el lanzador la borra entera al terminar, asi
+        // que en una barra sin actualizar no queda ni la carpeta
+        public static readonly string UpdateDir = Path.Combine(Root, "update");
         public static readonly string CfgFile = Path.Combine(Root, "config.json");
         public static readonly string LogFile = Path.Combine(Root, "dock.log");
 
@@ -42,6 +47,24 @@ namespace GamesDock
             catch
             {
             }
+        }
+    }
+
+    // .NET Framework arranca con TLS 1.0 como techo y ni GitHub ni Cloudflare negocian por debajo de 1.2:
+    // sin esto el HttpClient de la actualizacion y el de los iconos fallan antes de salir de casa. El exe
+    // no lleva .config, asi que el ajuste tiene que hacerse en codigo. Se lista 1.2 delante y se dejan
+    // detras 1.1 y 1.0 para no cerrar la puerta a ningun servidor; SystemDefault queda fuera porque en
+    // este runtime pide TLS 1.3 al sistema y el runtime no lo conoce: la conexion se corta en el handshake.
+    public static class Net
+    {
+        public static void AsegurarTls()
+        {
+            try
+            {
+                ServicePointManager.SecurityProtocol =
+                    SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+            }
+            catch (Exception ex) { Log.Write("tls: " + ex.Message); }
         }
     }
 

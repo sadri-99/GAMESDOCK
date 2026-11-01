@@ -136,6 +136,15 @@ namespace GamesDock
             try { Process.Start(new ProcessStartInfo("explorer.exe") { Arguments = "\"" + dir + "\"", UseShellExecute = true }); }
             catch { }
         }
+
+        // Abrir una pagina en el navegador que el usuario ya tiene: UseShellExecute es lo unico que
+        // funciona con URLs en .NET Framework (una ProcessStartInfo sin ella intenta ejecutar la url
+        // como si fuera un executable y revienta con Win32Exception)
+        public static void OpenUrl(string url)
+        {
+            try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+            catch (Exception ex) { Log.Write("no se pudo abrir " + url + ": " + ex.Message); }
+        }
     }
 
     // Autostart: un acceso directo en la carpeta de inicio que lanza el propio exe via wscript con la

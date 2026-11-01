@@ -84,6 +84,24 @@ namespace GamesDock
                  "Images and icons|*.png;*.jpg;*.jpeg;*.ico|Programs|*.exe;*.dll;*.lnk|All files|*.*");
             Put(d, "Ese archivo no tiene un icono que se pueda extraer:\n{0}",
                  "That file has no icon that can be extracted:\n{0}");
+
+            // ------------------------------------------------------------ iconos de la comunidad (SteamGridDB)
+            Put(d, "Iconos de la comunidad", "Community icons");
+            Put(d, "Elige un icono para {0}", "Choose an icon for {0}");
+            Put(d, "clic en el que quieras - Esc para cancelar", "click the one you want - Esc to cancel");
+            Put(d, "cargando miniaturas...", "loading thumbnails...");
+            Put(d, "Clave de SteamGridDB", "SteamGridDB key");
+            Put(d, "Falta la clave de SteamGridDB.", "The SteamGridDB key is missing.");
+            Put(d, "Sin clave no se pueden pedir iconos a SteamGridDB.\nCrea una cuenta gratis, saca la clave en Perfil > Preferencias > API y pégala en Ajustes > Iconos de la comunidad.",
+                 "Without a key no icons can be requested from SteamGridDB.\nCreate a free account, get the key at Profile > Preferences > API and paste it in Settings > Community icons.");
+            Put(d, "SteamGridDB no acepta esa clave.\nCompruébala o crea una nueva en Perfil > Preferencias > API y pégala en Ajustes > Iconos de la comunidad.",
+                 "SteamGridDB does not accept that key.\nCheck it or create a new one at Profile > Preferences > API and paste it in Settings > Community icons.");
+            Put(d, "SteamGridDB no tiene iconos para ese juego.", "SteamGridDB has no icons for that game.");
+            Put(d, "Sin conexión con SteamGridDB.", "No connection to SteamGridDB.");
+            Put(d, "Lo descargado no es una imagen válida.", "What was downloaded is not a valid image.");
+            Put(d, "SteamGridDB ha respondido mal: {0}", "SteamGridDB replied badly: {0}");
+            Put(d, "No se ha podido cambiar el icono.", "The icon could not be changed.");
+            Put(d, "Abrir ajustes", "Open settings");
             Put(d, "Quitar del dock", "Remove from dock");
             Put(d, "Ocultar del dock", "Hide from dock");
             Put(d, "Ese juego se lanza por el cliente (Steam/Epic) y no tiene carpeta directa.",
@@ -146,14 +164,54 @@ namespace GamesDock
             Put(d, "Arranca con Windows: sí", "Start with Windows: yes");
             Put(d, "Arranca con Windows: no", "Start with Windows: no");
             Put(d, "Abrir carpeta de ajustes", "Open settings folder");
+            Put(d, "Guardar la clave", "Save the key");
+            Put(d, "Clave guardada", "Key saved");
+            Put(d, "Clave vaciada", "Key cleared");
+            Put(d, "Abrir la página de la clave", "Open the key page");
+            Put(d, "Crea una cuenta gratis en steamgriddb.com y saca la clave en Perfil > Preferencias > API. Después, el clic derecho en un icono ofrece «Iconos de la comunidad»: el arte que sube la gente, en vez del icono oficial.",
+                 "Create a free account at steamgriddb.com and get the key at Profile > Preferences > API. Right-clicking an icon then offers \"Community icons\": the artwork people upload, instead of the official icon.");
             Put(d, "Arrastra un .lnk, .exe o un enlace steam:// sobre la barra para fijarlo. Arrastra un icono para ordenar la barra; soltarlo fuera del cristal lo quita y vuelve con \"Restaurar ocultos\" del clic derecho. Clic derecho en un icono: fijar, renombrar u ocultar. Clic central: favorito.",
                  "Drop a .lnk, .exe or steam:// link on the bar to pin it. Drag an icon to reorder the bar; dropping it outside the glass hides it, and it comes back from \"Restore hidden\". Right-click an icon to pin, rename or hide it. Middle click: favorite.");
+            Put(d, "¿Te gusta la barra? Deja una estrella: es nuestra única señal de que la usas.",
+                 "Like the bar? Leave a star: it is our only signal that you use it.");
+            Put(d, "Estrella en GitHub", "Star on GitHub");
+
+            // ------------------------------------------------------------ actualizaciones
+            Put(d, "Buscar actualizaciones", "Check for updates");
+            Put(d, "Comprobando...", "Checking...");
+            Put(d, "Actualización disponible", "Update available");
+            Put(d, "Enter para actualizar - Esc para dejarlo para otra vez",
+                 "Enter to update - Esc to leave it for another time");
+            Put(d, "Publicada el {0} - ocupa {1}", "Published on {0} - takes {1}");
+            Put(d, "Lo que tienes ahora es la compilación del {0}.", "What you are running now is the build from {0}.");
+            Put(d, "Se sustituye el programa en su propio sitio: no tienes que guardar ni mover ningún archivo. La barra se cierra un instante y vuelve sola con la versión nueva.",
+                 "The program is replaced in its own folder: you do not have to save or move any file. The bar closes for a moment and comes back on its own with the new version.");
+            Put(d, "Actualizar", "Update");
+            Put(d, "Ahora no", "Not now");
+            Put(d, "Descargando...", "Downloading...");
+            Put(d, "Cambiando...", "Swapping...");
+            Put(d, "No se ha podido bajar la nueva versión: {0}", "The new version could not be downloaded: {0}");
+            Put(d, "La actualización no ha podido empezar: {0}", "The update could not start: {0}");
+            Put(d, "No hay ninguna versión publicada más nueva que la que estás usando. La última es {0}.",
+                 "No published version is newer than the one you are using. The last one is {0}.");
+            Put(d, "Todavía no hay ninguna versión publicada en el repositorio.",
+                 "There is no published release in the repository yet.");
+            Put(d, "Sin conexión con GitHub para comprobar las versiones.",
+                 "No connection to GitHub to check the versions.");
+            Put(d, "GitHub ha cortado la comprobación por exceso de peticiones. Vuelve a intentarlo dentro de un rato.",
+                 "GitHub cut the check short for too many requests. Try again in a while.");
+            Put(d, "GitHub ha respondido mal: {0}", "GitHub replied badly: {0}");
 
             // ------------------------------------------------------------ prompt de nombre
             Put(d, "Nombre en el dock", "Name in the dock");
             Put(d, "Enter para guardar - Esc para cancelar", "Enter to save - Esc to cancel");
             Put(d, "Nombre visible", "Display name");
             Put(d, "Guardar", "Save");
+
+            // ------------------------------------------------------------ avisos de cristal
+            Put(d, "Aviso de GamesDock", "GamesDock notice");
+            Put(d, "Enter o Esc para cerrar", "Enter or Esc to close");
+            Put(d, "Vale", "OK");
 
             // ------------------------------------------------------------ grupos (carpetas de iOS)
             Put(d, "Grupo", "Group");

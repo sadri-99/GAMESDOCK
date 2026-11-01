@@ -65,6 +65,16 @@ namespace GamesDock
         [DataMember(Name = "section")] public string Section = "games";
         // "auto" toma la cultura de interfaz de Windows; "es" y "en" fuerzan el idioma
         [DataMember(Name = "language")] public string Language = "auto";
+        // la clave de SteamGridDB para el "Icono automatico". Vive aqui y nunca en el codigo: el
+        // repositorio es publico y la clave es de la cuenta de cada uno. Tambien vale la variable de
+        // entorno STEAMGRIDDB_KEY, que gana a esta cuando las dos existen.
+        [DataMember(Name = "steamGridKey")] public string SteamGridKey = "";
+        // El titulo del release que se rechazo la ultima vez ("GamesDock v.1.0.1"). Sirve para que la
+        // comprobacion automatica del arranque no vuelva a ofrecer lo mismo que se acabo de decir que no;
+        // el boton de Ajustes si lo vuelve a preguntar, porque ahi lo pide uno a proposito. Se guarda el
+        // titulo y no el tag porque el tag puede repetirse entre versiones y el titulo es lo que se vio
+        // en pantalla.
+        [DataMember(Name = "updateIgnored")] public string UpdateIgnored = "";
         [DataMember(Name = "order")] public List<string> Order = new List<string>();
         [DataMember(Name = "pins")] public List<PinDto> Pins = new List<PinDto>();
         [DataMember(Name = "groups")] public List<GroupDto> Groups = new List<GroupDto>();
@@ -98,6 +108,7 @@ namespace GamesDock
             if (cfg.Groups == null) cfg.Groups = new List<GroupDto>();
             if (cfg.Usage == null) cfg.Usage = new Dictionary<string, UsageDto>();
             if (cfg.DesktopMoved == null) cfg.DesktopMoved = new Dictionary<string, string>();
+            if (cfg.SteamGridKey == null) cfg.SteamGridKey = "";
             // el json viejo no trae "iconShape" y cualquiera que no sea de las tres conocido vale tanto
             // como no tenerlo: el cuadrado de siempre
             if (cfg.IconShape != "ios" && cfg.IconShape != "esfera") cfg.IconShape = "defecto";

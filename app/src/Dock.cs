@@ -313,6 +313,14 @@ namespace GamesDock
             return it.Name + "\n" + origen + " · " + uso + "\n" + ruta;
         }
 
+        // el icono propio de un fijado se sobrescribe SIEMPRE en la misma ruta (Icons.RutaPropia parte
+        // de la clave del pin), asi que cambiarlo dos veces no mueve la clave de esta caché: sin este
+        // quite el tile seguiria pintando el primer png elegido aunque en disco esté el segundo.
+        void OlvidarPincel(string path)
+        {
+            if (!string.IsNullOrEmpty(path)) _brushes.Remove(path);
+        }
+
         ImageBrush GetBrush(string path)
         {
             ImageBrush cached;
@@ -323,6 +331,10 @@ namespace GamesDock
                 var bmp = new BitmapImage();
                 bmp.BeginInit();
                 bmp.CacheOption = BitmapCacheOption.OnLoad;
+                // WPF cachea el decoded por URI y no se entera de que el archivo cambio por debajo: un
+                // icono de la comunidad re-elegido se sobrescribe en LA MISMA ruta, y sin este flag el
+                // segundo y tercer png elegidos vuelven a pintar el primero que se abrio en la sesion.
+                bmp.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
                 if (new FileInfo(path).Length > 8000) bmp.DecodePixelWidth = 256;
                 bmp.UriSource = new Uri(path, UriKind.Absolute);
                 bmp.EndInit();
@@ -684,6 +696,16 @@ namespace GamesDock
             UpdatePillShape();
         }
 
+        // acordarse del rectangulo que se ocupa ahora, en las mismas coordenadas de contenido que lee la
+        // posicion "free": elegir Libre en Ajustes tiene que ser quedarse quieto, no saltar al ultimo punto
+        // que guardo la config (el de otra tarde, a media pantalla o fuera de ella).
+        public void AnotarPuestoActual()
+        {
+            double m = Layout.Margin;
+            Cfg.Left = (int)Math.Round(Win.Left + m);
+            Cfg.Top = (int)Math.Round(Win.Top + m);
+        }
+
         public void PlaceDock()
         {
             var wa = SystemParameters.WorkArea;
@@ -743,6 +765,7 @@ namespace GamesDock
             {
                 var hwnd = new WindowInteropHelper(Win).EnsureHandle();
                 if (hwnd == IntPtr.Zero) return;
+                Veil.Pildora = hwnd;   // el velo tiene que saber a que ventana jamas sube
                 DesktopLevel = on;
                 int ex = Native.GetWindowLong(hwnd, -20);   // GWL_EXSTYLE
                 if (on) Native.SetWindowLong(hwnd, -20, ex | unchecked((int)0x08000000));   // WS_EX_NOACTIVATE
@@ -805,6 +828,9 @@ namespace GamesDock
                 }
                 try
                 {
+                    // la posición de Ajustes se apunta ANTES de arrastrar: SaveDockAfterDrag la reescribe
+                    // con el imán, y la excepción de "libre" tiene que juzgarse por lo que había elegido
+                    _posAntesDeArrastrar = Cfg.Position;
                     Win.DragMove();
                     SaveDockAfterDrag();
                 }
@@ -911,24 +937,63 @@ namespace GamesDock
             };
         }
 
+        // el imán de los bordes. Al soltar la barra se mira qué borde le queda más cerca y se le asigna
+        // esa posición, así que aterriza en el mismo sitio que si se hubiera elegido en Ajustes: centrada
+        // en el eje transversal y con su hueco de tarea. La excepción es la posición "libre": ahí manda lo
+        // que decidió el usuario con la mano, y la barra se queda exactamente donde la soltó.
+        string _posAntesDeArrastrar = "bottom";
+
         public void SaveDockAfterDrag()
         {
             var wa = SystemParameters.WorkArea;
             double m = Layout.Margin;
             double l = Win.Left + m, t = Win.Top + m;
-            double w = Win.Width - 2 * m, h = Win.Height - 2 * m;
-            if (t <= wa.Y + m) Cfg.Position = "top";
-            else if (t + h >= wa.Bottom - m) Cfg.Position = "bottom";
-            else if (l <= wa.X + m) Cfg.Position = "left";
-            else if (l + w >= wa.Right - m) Cfg.Position = "right";
-            else
+
+            // las coordenadas del último soltado se guardan siempre: si no, elegir "Libre" en Ajustes
+            // después de arrastrar llevaba la barra a la posición de otra tarde en vez de a donde está
+            Cfg.Left = (int)l;
+            Cfg.Top = (int)t;
+
+            // la posición en la que estaba el mando antes de este arrastre, no la que sale de él: el
+            // propio imán la reescribe, y "libre" tiene que juzgarse por lo que puso el usuario
+            if (_posAntesDeArrastrar == "free") { Cfg.Save(); return; }
+
+            // el punto donde se levantó el botón, en DIP de pantalla: esa es la intención de la mano, y
+            // el imán juzga por ahí. Se pregunta al sistema y no a WPF porque al salir de DragMove el
+            // ratón de WPF ya no sabe donde está (devuelve 0,0, que es la esquina de arriba a la izquierda
+            // de la ventana: juzgar por ahí anclaría la barra al borde que tocara por accidente).
+            double px, py;
+            if (!PuntoDeSueltado(out px, out py))
             {
-                Cfg.Position = "free";
-                Cfg.Left = (int)l;
-                Cfg.Top = (int)t;
+                px = Win.Left + Win.Width / 2.0;
+                py = Win.Top + Win.Height / 2.0;
             }
+
+            double arriba, abajo, izquierda, derecha;
+            string mejor = EdgeSnap.BordeMasCercano(px, py, wa.X, wa.Y, wa.Width, wa.Height,
+                out arriba, out abajo, out izquierda, out derecha);
+
+            Log.Write("borde mas cercano: " + Cfg.Position + " -> " + mejor +
+                      " (arriba " + (int)arriba + ", abajo " + (int)abajo +
+                      ", izq " + (int)izquierda + ", der " + (int)derecha + ")");
+            Cfg.Position = mejor;
             Cfg.Save();
             ApplyLayout();
+        }
+
+        // el cursor en DIP de pantalla: GetCursorPos devuelve pixeles fisicos absolutos y TransformFromDevice
+        // los pasa a las mismas unidades con las que Win.Left y SystemParameters.WorkArea ya hablan.
+        bool PuntoDeSueltado(out double px, out double py)
+        {
+            px = py = 0.0;
+            Native.POINT p;
+            if (!Native.GetCursorPos(out p)) return false;
+            var src = PresentationSource.FromVisual(Win);
+            if (src == null || src.CompositionTarget == null) return false;
+            var d = src.CompositionTarget.TransformFromDevice.Transform(new Point(p.X, p.Y));
+            px = d.X;
+            py = d.Y;
+            return true;
         }
     }
 }

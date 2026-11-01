@@ -35,7 +35,7 @@ namespace GamesDock
         // el usuario borra o mueve el original, el tile no se queda sin nada.
         public static string InstallCustom(string key, string src)
         {
-            string name = Md5Hex(key ?? string.Empty).Substring(0, 16);
+            string name = NombrePropio(key);
             string ext = Path.GetExtension(src) ?? string.Empty;
             try
             {
@@ -61,9 +61,37 @@ namespace GamesDock
             return null;
         }
 
+        // la ruta de un icono del usuario dentro de la carpeta de la app: el MISMO nombre que pone
+        // InstallCustom, asi que descargar uno de SteamGridDB y elegir uno a mano se reemplazan entre si
+        // y "Quitar icono" borra lo que sea que hubiera. La carpeta ya la crea Paths.Ensure al arrancar.
+        public static string RutaPropia(string key, string ext)
+        {
+            return Path.Combine(Paths.CustomDir, NombrePropio(key) + ext);
+        }
+
+        static string NombrePropio(string key)
+        {
+            return Md5Hex(key ?? string.Empty).Substring(0, 16);
+        }
+
+        // al cambiar un icono elegido a mano (.jpg) por uno descargado (.png) la copia vieja sobra: el
+        // tile ya apunta al nuevo y la otra solo ocupa disco
+        public static void OlvidarOtrasExtensiones(string destino)
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(destino);
+                string nombre = Path.GetFileNameWithoutExtension(destino);
+                if (string.IsNullOrEmpty(dir) || string.IsNullOrEmpty(nombre)) return;
+                foreach (var f in Directory.GetFiles(dir, nombre + ".*"))
+                    if (!string.Equals(f, destino, StringComparison.OrdinalIgnoreCase)) TryDelete(f);
+            }
+            catch { }
+        }
+
         public static void ForgetCustom(string key)
         {
-            string name = Md5Hex(key ?? string.Empty).Substring(0, 16);
+            string name = NombrePropio(key);
             try { foreach (var f in Directory.GetFiles(Paths.CustomDir, name + ".*")) TryDelete(f); }
             catch { }
         }

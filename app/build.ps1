@@ -23,6 +23,8 @@ if (-not $csc) {
 
 # Las referencias salen del propio runtime de .NET Framework 4.8, que ya esta en Windows. Los ensamblajes
 # de WPF viven en la subcarpeta WPF\ y System.Xaml en la raiz; no es una equivalencia tipografica.
+# System.Net.Http (el HttpClient de SteamGridDB) tambien esta en la raiz: en el GAC hay una copia, pero el
+# que resuelve csc es este.
 $fw = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319'
 $refs = @(
     "$fw\WPF\WindowsBase.dll",
@@ -33,6 +35,7 @@ $refs = @(
     "$fw\System.Core.dll",
     "$fw\System.Drawing.dll",
     "$fw\System.Windows.Forms.dll",
+    "$fw\System.Net.Http.dll",
     "$fw\System.Runtime.Serialization.dll",
     "$fw\System.Xml.dll"
 )
