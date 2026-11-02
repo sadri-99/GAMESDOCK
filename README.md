@@ -253,6 +253,14 @@ abajo, debajo si está arriba, y a un lado si la barra vive en un canto.
   seguidas por el mismo icono suelen enseñar dibujos distintos. Son los *heroes* de SteamGridDB —los
   banners horizontales que sube la comunidad—, el mismo arte del selector de iconos pero en su versión
   ancha.
+- El cuadro del banner **mide lo que mide el dibujo**, no lo que mida la carta. Los *heroes* de la comunidad
+  salen a 850×274 (3,10:1) y la cápsula de la tienda a 460×215 (2,14:1): con un alto fijo de 140 DIP,
+  `UniformToFill` llenaba la altura y se comía un tercio del ancho de los *heroes* —70 px por cada canto—,
+  que es justo lo que hacía parecer que el arte «salía cortado» en *Counter-Strike 2* o *PRAGMATA*. Ahora el
+  alto sale de la proporción del mapa de bits (95 DIP para un *hero*, 137 para una cápsula), sujeto entre 84
+  y 176: un 21:9 no puede quedarse en una tira de 40 px y un dibujo cuadrado no puede ocupar media carta.
+  Fuera de esas dos franjas se recorta por igual arriba y abajo, que es donde un *hero* pierde menos cosas
+  que en los cantos.
 - Si la tienda no conoce el juego la ficha no sale en blanco: sale con el nombre, la ruta de instalación y
   el pie, que es justo lo que decía el globo viejo.
 - Las **carpetas** no sacan ficha nunca: su hueco es un mosaico y el contenedor ya enseña los nombres.
@@ -295,7 +303,13 @@ momento, sin reiniciar.
 proceso —la de la ficha, que el globo viejo está callado—, que va anclada al tile con el hueco de 12 DIP
 (15 px al 125 %) y sin solaparse con él, que el banner pinta más de la mitad de la carta, que al sacar el
 cursor no queda ninguna ficha visible, que la ficha y su banner han caído en `cards\` y que dos pasadas por
-el mismo icono enseñan banners distintos. `_dev/cs-ficha-toggle.ps1` hace el recorrido de la palanca: abre
+el mismo icono enseñan banners distintos. `_dev/cs-banner.ps1` es el control del recorte: coge el banner que
+ya está en disco para un juego, hace salir la carta de verdad y compara la franja pintada con el fichero bajo
+las dos hipótesis —el cuadro fijo de antes, que pintaba el centro del arte, y el cuadro del dibujo, que lo
+pinta entero—. Con los *heroes* de *Counter-Strike 2* y *PRAGMATA* el error medio contra el dibujo entero es
+5,2 y 3,8 frente a 35,2 y 23,2 contra el recorte viejo, que se comía el 32 % del ancho; con la cápsula de
+2,14:1 de *The Blood of Dawnwalker* el recorte viejo era de un 1,8 % y el arnés lo dice claro en lugar de
+fingir que discrimina. `_dev/cs-ficha-toggle.ps1` hace el recorrido de la palanca: abre
 Ajustes por el menú de la barra, la apaga, comprueba que la ficha desaparece y que **vuelve el globo con
 las tres líneas** —y que la tercera es una ruta, con su barra invertida—, la vuelve a encender y comprueba
 que la ficha regresa; al terminar exige que el config vuelva a su hash original.

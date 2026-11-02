@@ -25,8 +25,15 @@ namespace GamesDock
         // 320 de ancho: con 12 de margen del cristal quedan 296 de texto, que es lo que ocupa una linea
         // de generos y una sinopsis corta sin partirse en cinco renglones.
         const double Ancho = 320;
-        // los heroes de la comunidad son ~920x430 (2,14:1); a 296 de ancho eso son ~138 de alto
+        // El alto del banner lo manda el dibujo, no la carta. Los heroes de la comunidad salen a
+        // 850x274 (3,10:1) y la carula de la tienda a 460x215 (2,14:1): con un cuadro fijo de 140 el
+        // UniformToFill llenaba la altura y se comia un tercio del ancho de los heroes, que es justo lo
+        // que se ve cortado en Counter-Strike 2 o PRAGMATA. BannerAlto queda como valor de descanso
+        // (la carta ya abierta que espera a que aterrice su dibujo) y las dos franjas sujetan los
+        // extremos: un cuadro no puede ocupar media pantalla y un 21:9 no puede ser una tira de 40 px.
         const double BannerAlto = 140;
+        const double BannerMin = 84;
+        const double BannerMax = 176;
         const double Hueco = 12;          // aire entre la pildora y la ficha
         const double Radio = 14;
 
@@ -241,6 +248,19 @@ namespace GamesDock
             return h > 2 ? h + 2 * Cristal : 240.0;
         }
 
+        // El marco del banner, a la medida del dibujo. El ancho utile es la carta menos los dos margenes
+        // de sombra y menos el borde del cristal (1 DIP por cada lado), y con eso UniformToFill ya no
+        // recorta nada mientras la proporcion caiga dentro de las dos franjas: fuera de ellas recorta por
+        // igual arriba y abajo, que es donde un hero pierde menos cosas que en los cantos.
+        static double AltoBanner(ImageSource b)
+        {
+            var bs = b as BitmapSource;
+            if (bs == null || bs.PixelWidth <= 0 || bs.PixelHeight <= 0) return BannerAlto;
+            double anchoUtil = Ancho - 2 * Cristal - 2;
+            double h = anchoUtil * (double)bs.PixelHeight / bs.PixelWidth;
+            return Math.Round(Math.Max(BannerMin, Math.Min(BannerMax, h)));
+        }
+
         void Soltar()
         {
             var it = _apuntero;
@@ -291,6 +311,7 @@ namespace GamesDock
             if (bmp != null)
             {
                 _img.Source = bmp;
+                _cartel.Height = AltoBanner(bmp);
                 _cartel.Visibility = Visibility.Visible;
             }
             else _cartel.Visibility = Visibility.Collapsed;
@@ -376,8 +397,8 @@ namespace GamesDock
                     ms.Position = 0;
                     bi.BeginInit();
                     bi.CacheOption = BitmapCacheOption.OnLoad;
-                    // 700 de ancho: el hero_thumb son ~920 px y la carta mide 296 DIP; decodificar a
-                    // la mitad de resolucion sale igual de nitido y cuesta la cuarta parte de memoria
+                    // 700 de ancho: el hero_thumb de la comunidad mide 850 px y la carta 296 DIP, asi que
+                    // decodificar por debajo del original sale igual de nitido y guarda menos bitmap
                     bi.DecodePixelWidth = 700;
                     bi.StreamSource = ms;
                     bi.EndInit();
