@@ -387,10 +387,6 @@ namespace GamesDock
                 on => { cfg.HoverCard = on; cfg.Save(); dock.ActualizarGlobos(); }));
             der.Children.Add(Switch(Lang.T("Vivir solo en el escritorio (nunca por encima de otras ventanas)"), cfg.DesktopLevel,
                 on => { cfg.DesktopLevel = on; cfg.Save(); dock.AttachToDesktop(); dock.ApplyLayout(); }));
-            der.Children.Add(Switch(Lang.T("Minimizar todo al lanzar"), cfg.MinimizeAll,
-                on => { cfg.MinimizeAll = on; cfg.Save(); }));
-            der.Children.Add(Switch(Lang.T("Ocultar el dock al lanzar (Ctrl+Alt+D lo trae)"), cfg.HideOnLaunch,
-                on => { cfg.HideOnLaunch = on; cfg.Save(); }));
 
             der.Children.Add(SecHead("Sistema"));
             var sysRow = new WrapPanel();

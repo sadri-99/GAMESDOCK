@@ -30,7 +30,7 @@ y los iconos de la comunidad, que son lo único que necesita que tú pegues una 
 | ![La misma fila de la barra con las tres formas de icono: cuadrada, iOS y esfera](docs/screenshots/dock-formas.png) | **La forma del icono.** La misma fila, la misma config y los mismos PNG recortados de tres maneras: cuadrada por defecto, cuadrado suavizado tipo iOS, o esfera. Se cambia en los ajustes y se aplica a todo, carpetas incluidas. |
 | ![El selector de iconos de la comunidad, con dieciséis versiones de un mismo juego](docs/screenshots/iconos-selector.png) | **Iconos de la comunidad.** Clic derecho sobre un tile → *Iconos de la comunidad*: la rejilla con las miniaturas que la gente subió a SteamGridDB, ordenadas por la puntuación que le da quien las usa. Un clic en cualquiera la baja, la guarda y pinta ese dibujo en el hueco del juego. |
 | ![La píldora con los iconos de la comunidad puestos](docs/screenshots/iconos-barra.png) | **Y así queda la barra** —la misma fila, con los dibujos elegidos en su hueco; el PNG se recorta con la forma que esté puesta en Ajustes—. |
-| ![Ajustes en español](docs/screenshots/ajustes.png) | **Ajustes.** Posición, tamaño y forma del icono, opacidad en reposo, los nueve temas con su muestra de color, el idioma de la interfaz, el campo donde se pega la clave de SteamGridDB, las cinco palancas de comportamiento —con la ficha del juego al pasar el ratón—, las filas de sistema —con **Buscar actualizaciones**— y, abajo del todo, la fila para dejar una estrella en el repositorio. |
+| ![Ajustes en español](docs/screenshots/ajustes.png) | **Ajustes.** Posición, tamaño y forma del icono, opacidad en reposo, los nueve temas con su muestra de color, el idioma de la interfaz, el campo donde se pega la clave de SteamGridDB, las tres palancas de comportamiento —con la ficha del juego al pasar el ratón—, las filas de sistema —con **Buscar actualizaciones**— y, abajo del todo, la fila para dejar una estrella en el repositorio. |
 | ![Ajustes en inglés](docs/screenshots/ajustes-en.png) | **Y en inglés**, cambiándolo en caliente: la ventana se reescribe sin reiniciar la barra. |
 | ![El panel de actualización disponible](docs/screenshots/actualizacion.png) | **Cuando hay versión nueva.** Un panel de cristal con el título del release, cuándo se publicó, lo que ocupa y la fecha de la compilación que tienes delante. Da a **Actualizar** y se cambia él solo, sin que guardes ni muevas nada. *(La captura es contra el servidor de pruebas del arnés, por eso ofrece una `v.9.9.9`.)* |
 
@@ -61,7 +61,11 @@ y los iconos de la comunidad, que son lo único que necesita que tú pegues una 
   recorta en el momento, no por un margen fijo que los cortaba. Y la fila va **centrada en el cristal**,
   con el mismo hueco a cada lado de los dos iconos de las puntas que por arriba y por abajo —antes las
   puntas pagaban el halo de separación de los vecinos también por fuera, así que el primer y el último
-  icono quedaban visiblemente metidos hacia dentro—.
+  icono quedaban visiblemente metidos hacia dentro—. El margen de las puntas se mide contra **la curva de
+  la tapa**, no contra el canto de la ventana: el cabete es una semielipse y a la altura del icono entra
+  unos 20 px hacia dentro, así que un margen «igual» al de los lados dejaba el icono pegado al cristal.
+  Cuadra igual en las cuatro posiciones —arriba, abajo, izquierda y derecha— y después de arrastrar la
+  barra de un borde a otro, que es cuando antes se descuadraba y se quedaba descuadrada.
 - **Ficha del juego al pasar el ratón**: en vez del globo de texto sale una ficha encima del icono, con un
   banner del juego y debajo sus datos —título, géneros, desarrollador, fecha de lanzamiento y la sinopsis
   de la tienda—, más un pie que dice de dónde salió el acceso y cuántas veces lo has lanzado. Se apaga sola
@@ -70,8 +74,9 @@ y los iconos de la comunidad, que son lo único que necesita que tú pegues una 
 - **Se comporta como parte del escritorio**: ventana `WS_EX_NOACTIVATE` colocada al fondo de la
   z-order, de modo que cualquier ventana —incluso a pantalla completa— la tapa y nunca le roba el foco
   a lo que estés usando.
-- **Se oculta al lanzar** (y vuelve con el atajo de teclado), minimiza todo al lanzar si lo pides y
-  deja un icono en la bandeja del sistema como acceso cuando está oculta.
+- **Nunca se esconde al lanzar**: al abrir un juego o una app la barra se queda donde está, que es
+  cuando la quieres tener a mano. Ocultarla sigue siendo cosa tuya —el atajo de teclado o «Ocultar» en el
+  menú de la píldora—, y el icono de la bandeja del sistema permanece ahí como acceso.
 - **Absorbe el escritorio**: un botón mueve los accesos de la mesa de trabajo a la barra y otro los
   devuelve exactamente a donde estaban.
 - **Se actualiza solo, pero pregunta antes**: a los ocho segundos de arrancar —y cuando tú pulses
@@ -157,8 +162,8 @@ cruz. El contenedor de una carpeta no es modal: se cierra pinchando fuera o con 
 - **Idioma de la interfaz**: automático —el del sistema—, español o inglés. Se cambia en caliente
   desde los ajustes: menús, bandeja y ventana de ajustes se reescriben sin reiniciar.
 - **Comportamiento**: la ficha del juego al pasar el ratón —con la palanca apagada vuelve el globo de
-  texto de siempre—, el magnificado, vivir solo en el escritorio, minimizar todo al lanzar, ocultar al
-  lanzar y arrancar con Windows.
+  texto de siempre—, el magnificado y vivir solo en el escritorio. Son tres: ocultar la barra al lanzar y
+  minimizarlo todo al lanzar se quitaron, y arrancar con Windows vive en las filas de *Sistema*.
 
 ## Iconos de la comunidad (SteamGridDB)
 
@@ -434,7 +439,7 @@ app/
     Settings.cs      ventana de ajustes —campo de clave incluido—, sus avisos y la absorción del escritorio
     Update.cs        cliente de la página de releases: preguntar la última, bajar el exe y encargar el cambio
     UpdateUI.cs      el panel de oferta con los megabytes, el aviso y lo que hace cada botón
-    Shell.cs         lanzar, minimizar todo, accesos .lnk y arranque con Windows
+    Shell.cs         lanzar, accesos .lnk y arranque con Windows
     Native.cs        P/Invoke justos (atajo global, working set, gancho de ratón y primer plano)
     XamlAssets.cs    carga de los XAML empotrados
   xaml/              diccionario de estilos y ventana, parseados en runtime
@@ -619,7 +624,17 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
   dentro del viewport en los dos idiomas —la barra de scroll del panel está oculta a propósito, así que
   una fila que asoma por debajo es una fila inalcanzable—, que expone `InvokePattern` y que al pulsarla
   pasa a primer plano una ventana de otro proceso con la página del repositorio en el título. Últimas
-  pasadas: 33 y 26 comprobaciones, 0 fallos en las dos.
+  pasadas: 34 y 26 comprobaciones, 0 fallos en las dos.
+- **Las puntas y el lanzado se miden por separado.** `_dev/cs-puntas.ps1` cambia de posición con la ficha
+  de Ajustes y además arrastra la barra de borde a borde, y en las cuatro posiciones lee dos cosas
+  distintas: los huecos de la **caja** (UIA) y el aire del **arte** contra la curva de la tapa (píxeles),
+  porque la caja del botón incluye el halo transparente, que no se ve. Exige fila centrada (0-1 px de
+  diferencia entre los dos cabos), rejilla con el paso de siempre y que, al volver abajo, los huecos sean
+  los de la base —el desorden que se quedaba guardado es justo lo que esta tanda persigue—.
+  `_dev/cs-ocultar.ps1` cuenta los interruptores del panel —tienen que ser tres— y lanza de verdad un
+  fijado de prueba: fotografía los estados de las ventanas de terceros antes y después y exige que la
+  barra siga visible a 0 y a 2,5 segundos y que ninguna ventana se haya minimizado. Últimas pasadas: 83
+  y 12 comprobaciones, 0 fallos en las dos.
 - **El actualizador no tiene versión que comparar: compara fechas.** `Update.cs` lee `published_at` del
   release y lo enfrenta a `File.GetLastWriteTimeUtc` del ejecutable en marcha (`Update.Exe` lo saca de
   `MainModule`, con `Assembly.Location` de respaldo), con `Margen` de cinco minutos. Por eso `build.ps1`
@@ -711,6 +726,19 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
   `Layout.Snap()`, que cuantiza al píxel **físico**: WPF redondea cada elemento al píxel físico de la
   ventana, así que a 125 % una medida de `9+9` salía 84 px en vez de 85 y la fila entera se iba 1 px por
   tile, que era la desigualdad que se veía a simple vista.
+- **El aire de las puntas se mide contra la curva, y se re-mide al cambiar de eje.** El cabete de la
+  píldora es una semielipse de radio horizontal `HalfIdle`, así que a la altura del canto del icono
+  (`IconSize/2`) el cristal entra `eL - sqrt(eL² - dy²)`: con iconos de 64 a 125 %, unos 20 px. Con el
+  `RowInset` en la `PadH` de siempre el último icono quedaba a ~3 px del cristal —no había margen, se
+  tocaban—. Ahora `Layout.CapIntrusion()` calcula esa entrada y `RowInset` vale
+  `max(PadH, CapIntrusion + EndAir - RingCross)`, con `EndAir` = 4 DIP de aire real. Detrás van dos
+  correcciones que son las que se descuadraban al arrastrar la barra de un borde a otro: `ApplyTileSizes()`
+  re-asigna el `Padding` de cada tile en cada cambio de layout —el halo largo y el transversal se
+  intercambian al girar el eje, y asignarlo una sola vez dejaba en la punta el halo del eje viejo— y
+  `SetRowShift()` escribe **los dos** ejes del `TranslateTransform` siempre: el transform manda en X o en
+  Y según la orientación, y si solo se toca el activo el otro se queda con el valor de la posición
+  anterior —medido: 14 px, lo que la píldora se hincha con el cursor encima—. Como la ventana no se
+  recoloca al cambiar de lado, ese desplazamiento ya no se iba nunca: ni al volver a abajo.
 - **El arte de Steam se busca por nombre, no por ruta.** `appcache\librarycache\<appid>` tiene ahora
   las imágenes dentro de subcarpetas con nombre-hash y a veces con otro fichero —el 292030 no guarda
   `library_600x900.jpg`, sino `dd1c19c4…/library_capsule.jpg`—, así que se recorre un nivel de
@@ -828,14 +856,20 @@ Menu, desktop shortcuts), pulls each game's artwork out of Steam's `librarycache
 hides it inside a hashed subfolder, lets you pin anything by dropping it on the bar —with any icon you
 like—, and magnifies on hover with spring physics driven by the compositor clock, idling at essentially
 zero CPU. The two end icons grow whole —the glass is clipped to the magnified row every frame, not to a fixed
-margin— and the row sits **centred inside the pill**, with the same gap at the ends as above and below.
+margin— and the row sits **centred inside the pill**, with the same gap at the ends as above and below. The
+end gap is measured against the **cap's curve**, not the window edge: the pill ends in a half-ellipse that
+bites some 20 px inward at the height of the corner icon, so a flat margin left the two end icons touching
+the glass. It also survives a change of side — bottom, top, left, right, and after dragging the bar from one
+edge to another, which used to leave the row off-centre for good.
 Dropping one tile on another builds an iOS-style folder: a mosaic on the bar, a container
 with names on click, and a title that only shows inside. Every icon can be masked three ways —plain
 square, iOS-rounded corners or full circle—, folder mosaics included; the mask is only how the tile is
 clipped, never a replacement for the icon. Dragging the pill to a screen edge is a magnet: release the mouse
 near any of the four edges and the bar snaps there, onto exactly the rectangle the **Position** chips in
 Settings use — bottom wins a tie, and a bar set to **Free** is the one case with no magnet: it stays wherever
-you let go. **Resting the cursor on an icon opens a game card** above the pill instead of a text tooltip: a
+you let go. Launching something never hides the bar and never minimizes your windows — it stays where it is,
+because that is exactly when you want it in sight; hiding it remains a thing you do on purpose, with the
+hotkey or the pill's own menu. **Resting the cursor on an icon opens a game card** above the pill instead of a text tooltip: a
 banner picked at random from the ones already downloaded for that game —the wide *hero* artwork the community
 uploads—, over the title, the genres · developer · release date, the store's short synopsis and a footer that
 says where the shortcut came from and how many times you have launched it. The data comes from Steam's public

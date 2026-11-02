@@ -217,6 +217,9 @@ namespace GamesDock
         // la longitud del hueco a lo largo de la fila la impone Layout en vez de dejar que salga de
         // medir el contenido; sin esto la rejilla real se descuadra 1 px por tile respecto a la que
         // usan el magnes y el reordenamiento. Ver Layout.TileMain.
+        // El halo va en las dos cuentas: RingMain y RingCross cambian de eje al pasar de horizontal a
+        // vertical, y si aqui solo se tocara el largo el tile se queda el padding del lado anterior,
+        // que lo saca del centro del grosor (3-6 px) y le come la punta por el cristal.
         void ApplyTileSizes()
         {
             int n = Tiles.Count;
@@ -224,6 +227,7 @@ namespace GamesDock
             {
                 double largo = Lay.TileMain(i, n);
                 var b = Tiles[i];
+                b.Padding = Lay.TilePadding(i, n);
                 if (Lay.Vert) { b.Width = double.NaN; b.Height = largo; }
                 else { b.Height = double.NaN; b.Width = largo; }
             }
@@ -672,8 +676,15 @@ namespace GamesDock
                 Bar.RenderTransform = tr;
             }
             double d = 0.0 - Lay.Outward * s;
-            if (Lay.Vert) { if (Math.Abs(tr.X - d) > 0.005) tr.X = d; }
-            else { if (Math.Abs(tr.Y - d) > 0.005) tr.Y = d; }
+            // los dos ejes siempre: el transform vive en X o en Y segun la orientacion, y si solo se
+            // escribe el activo el otro se queda con el desplazamiento de la posicion anterior. Al
+            // arrastrar la barra de abajo a la izquierda la pildora todavia esta hinchada, y el valor
+            // viejo (medido: 14 px) se queda plantado en el eje que deja de mandar. Como la ventana no
+            // se recoloca al cambiar de eje, el desorden ya no se va nunca: ni al volver a abajo.
+            double dx = Lay.Vert ? d : 0.0;
+            double dy = Lay.Vert ? 0.0 : d;
+            if (Math.Abs(tr.X - dx) > 0.005) tr.X = dx;
+            if (Math.Abs(tr.Y - dy) > 0.005) tr.Y = dy;
         }
 
         // ------------------------------------------------------------------ medida y sitio

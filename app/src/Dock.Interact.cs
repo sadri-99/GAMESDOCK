@@ -435,23 +435,22 @@ namespace GamesDock
         }
 
         // ------------------------------------------------------------------ lanzar
+        // La barra no se esconde ni minimiza nada al lanzar: quien abre un juego desde aqui quiere ver
+        // el dock, y si se ocultaba solo volvía con Ctrl+Alt+D o con el raton en el borde.
         public void StartEntry(ItemSpec it, string via)
         {
             if (it == null) return;
             Log.Write("Lanzando (" + via + "): " + it.Name);
             try
             {
-                if (Cfg.MinimizeAll) Shell.MinimizeAll();
                 var p = Launcher.Start(it);
                 RegisterUse(it);
                 WatchProcess(p);
-                if (Cfg.HideOnLaunch) HideDock();
             }
             catch (Exception ex)
             {
                 Log.Write("ERROR al lanzar " + it.Name + ": " + ex.Message);
                 Settings.Aviso(Lang.F("No se pudo lanzar:\n{0}\n\n{1}", it.Name, ex.Message));
-                ShowDock();
             }
         }
 

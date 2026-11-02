@@ -65,8 +65,6 @@ namespace GamesDock
         [DataMember(Name = "hoverCard")] public bool? HoverCard;
         public bool Ficha { get { return !HoverCard.HasValue || HoverCard.Value; } }
         [DataMember(Name = "idleOpacity")] public int IdleOpacity = 45;
-        [DataMember(Name = "minimizeAll")] public bool MinimizeAll = true;
-        [DataMember(Name = "hideOnLaunch")] public bool HideOnLaunch = true;
         [DataMember(Name = "hotkey")] public bool Hotkey = true;
         [DataMember(Name = "desktopLevel")] public bool DesktopLevel = true;
         [DataMember(Name = "autostart")] public bool Autostart = false;

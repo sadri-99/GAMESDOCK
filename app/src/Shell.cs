@@ -81,25 +81,6 @@ namespace GamesDock
         }
     }
 
-    public static class Shell
-    {
-        // Minimizar todo por Shell.Application: es lo que hace el atajo de Windows y no deja el
-        // escritorio cubierto justo cuando el usuario acaba de pedir lanzar un juego.
-        public static void MinimizeAll()
-        {
-            object sh = null;
-            try
-            {
-                var t = Type.GetTypeFromProgID("Shell.Application");
-                if (t == null) return;
-                sh = Activator.CreateInstance(t);
-                t.InvokeMember("MinimizeAll", BindingFlags.InvokeMethod, null, sh, null);
-            }
-            catch { }
-            finally { if (sh != null) { try { Marshal.ReleaseComObject(sh); } catch { } } }
-        }
-    }
-
     public static class Launcher
     {
         public static Process Start(ItemSpec it)

@@ -32,6 +32,10 @@ namespace GamesDock
         // que el cristal coma halo, y dejarla fija quita un ajuste cuyo efecto casi nadie veia
         public const double PadFix = 4.0;
 
+        // aire que se deja entre la esquina del icono de punta y la curva de la tapa, por el eje de la
+        // fila. 4 DIP son 5 px a 125 %: se ve separado sin que la pildora parezca larga y vacia.
+        public const double EndAir = 4.0;
+
         public double PadV { get { return PadFix; } }
         public double PadH { get { return PadV + 6; } }
 
@@ -86,11 +90,28 @@ namespace GamesDock
         public double TileBox { get { return Snap(IconSize + 2 * RingCross); } }
         public double Pitch { get { return IconSize + 2 * RingMain; } }
 
+        // cuanto entra la tapa de los extremos dentro del rectangulo de la fila, medida a la altura de la
+        // esquina del icono. La tapa es un semicirculo de radio HalfIdle: en el centro de la fila no entra
+        // nada, pero a la altura del borde del icono el vidrio llega ~19 px y se lleva por delante las dos
+        // esquinas. Con la tapa de medio circulo puro el colchon de la fila hay que contarlo desde ahi.
+        public double CapIntrusion()
+        {
+            double dy = IconSize / 2.0;
+            double r = HalfIdle;
+            if (dy >= r) return r;
+            return r - Math.Sqrt(r * r - dy * dy);
+        }
+
         // separacion de la fila respecto al borde de la pildora a lo largo de la fila: es el colchon de
         // "clic derecho en el hueco libre". Antes era PadH + 10 y, como cada tile pagaba ademas su halo
         // de RingMain por fuera, el primer y ultimo icono quedaban a 29 px del cristal contra 8 px por
-        // arriba y por abajo: la fila se veia metida con calzos dentro de la pildora.
-        public double RowInset { get { return Snap(PadH); } }
+        // arriba y por abajo: la fila se veia metida con calzos dentro de la pildora. PadH a secas era lo
+        // contrario: la esquina del icono de punta se plantaba 3 px POR DENTRO de la curva de la tapa.
+        // Se paga lo que la tapa entra mas un dedo de aire, descontando el halo propio del tile.
+        public double RowInset
+        {
+            get { return Snap(Math.Max(PadH, CapIntrusion() + EndAir - RingCross)); }
+        }
 
         // lo que se quita de halo en la cara de fuera de los dos tiles del extremo. RingMain existe para
         // separar iconos entre si; en la punta no hay vecino, y era padding transparente que solo hacia
