@@ -71,6 +71,7 @@ namespace GamesDock
             Put(d, "Tema", "Theme");
             Put(d, "Restaurar ocultos", "Restore hidden");
             Put(d, "(nada oculto)", "(nothing hidden)");
+            Put(d, "Bloquear posición e iconos", "Lock position and icons");
             Put(d, "Ocultar (Ctrl+Alt+D)", "Hide (Ctrl+Alt+D)");
             Put(d, "Quitar de favoritos", "Remove from favorites");
             Put(d, "Fijar en favoritos", "Pin as favorite");

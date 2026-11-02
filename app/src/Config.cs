@@ -67,6 +67,10 @@ namespace GamesDock
         [DataMember(Name = "idleOpacity")] public int IdleOpacity = 45;
         [DataMember(Name = "hotkey")] public bool Hotkey = true;
         [DataMember(Name = "desktopLevel")] public bool DesktopLevel = true;
+        // el candado del menu de la pildora: puesto, el raton no mueve la barra, no reordena los iconos y
+        // no fija lo que se suelte encima. La posicion elegida en Ajustes sigue mandando porque eso se
+        // pide a proposito; lo que se corta es el gesto involuntario.
+        [DataMember(Name = "locked")] public bool Locked = false;
         [DataMember(Name = "autostart")] public bool Autostart = false;
         [DataMember(Name = "section")] public string Section = "games";
         // "auto" toma la cultura de interfaz de Windows; "es" y "en" fuerzan el idioma

@@ -197,6 +197,9 @@ namespace GamesDock
             var p = e.GetPosition(RootGrid);
             if (!DragMoved)
             {
+                // con el candado puesto el gesto no despega: la pulsacion sigue siendo un clic y el icono
+                // se lanza igual, que es justo lo que uno quiere con la barra bloqueada
+                if (Cfg.Locked) return;
                 double dx = p.X - _dragStart.X, dy = p.Y - _dragStart.Y;
                 if (Math.Sqrt(dx * dx + dy * dy) < SystemParameters.MinimumHorizontalDragDistance) return;
                 DragMoved = true;
@@ -649,7 +652,7 @@ namespace GamesDock
 
         // ------------------------------------------------------------------ menus
         ContextMenu _dockMenu, _itemMenu;
-        MenuItem _verMenu, _temaMenu, _ocultosMenu;
+        MenuItem _verMenu, _temaMenu, _ocultosMenu, _lockMenu;
 
         public ContextMenu DockMenu
         {
@@ -688,6 +691,12 @@ namespace GamesDock
                 _ocultosMenu = new MenuItem { Header = Lang.T("Restaurar ocultos") };
                 _dockMenu.Items.Add(_ocultosMenu);
 
+                // el candado va marcado en vez de cambiar de texto: la fila dice lo que protege y la
+                // palomita dice si ya esta protegido, que es como se leen las demas filas del menu
+                _lockMenu = new MenuItem { Header = Lang.T("Bloquear posición e iconos"), IsCheckable = true };
+                _lockMenu.Click += delegate { ToggleLock(); };
+                _dockMenu.Items.Add(_lockMenu);
+
                 _dockMenu.Items.Add(MenuRow(Lang.T("Reescanear"), delegate { Rebuild(); }));
                 _dockMenu.Items.Add(MenuRow(Lang.T("Ajustes"), delegate { Settings.Show(this); }));
                 _dockMenu.Items.Add(new Separator());
@@ -706,6 +715,7 @@ namespace GamesDock
                         var mi = (MenuItem)o;
                         mi.IsChecked = Cfg.Theme == Convert.ToString(mi.Tag);
                     }
+                    _lockMenu.IsChecked = Cfg.Locked;
                     UpdateOcultosMenu();
                 };
                 MenuGuard.Watch(_dockMenu);
@@ -721,6 +731,7 @@ namespace GamesDock
             _verMenu = null;
             _temaMenu = null;
             _ocultosMenu = null;
+            _lockMenu = null;
         }
 
         MenuItem MenuRow(string header, Action accion)
@@ -728,6 +739,17 @@ namespace GamesDock
             var mi = new MenuItem { Header = header };
             mi.Click += delegate { accion(); };
             return mi;
+        }
+
+        // el candado se guarda al instante: si la barra se mueve mientras el menu esta abierto, la
+        // siguiente pasada del raton ya tiene que encontrarla quieta
+        void ToggleLock()
+        {
+            Cfg.Locked = !Cfg.Locked;
+            Cfg.Save();
+            if (_lockMenu != null) _lockMenu.IsChecked = Cfg.Locked;
+            Log.Write(Cfg.Locked ? "bloqueado: la barra y sus iconos no se mueven con el raton"
+                                 : "desbloqueado: arrastrar vuelve a funcionar");
         }
 
         void UpdateOcultosMenu()

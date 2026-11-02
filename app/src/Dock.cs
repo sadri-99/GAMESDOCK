@@ -920,6 +920,9 @@ namespace GamesDock
                     if (o is Button || o is System.Windows.Controls.Primitives.ToggleButton || o is TextBox) return;
                     try { o = VisualTreeHelper.GetParent(o); } catch { break; }
                 }
+                // el candado corta el arrastre de la barra entera antes de empezar: sin DragMove no hay
+                // suelto, y sin suelto el imán no escribe posicion nueva
+                if (Cfg.Locked) return;
                 try
                 {
                     // la posición de Ajustes se apunta ANTES de arrastrar: SaveDockAfterDrag la reescribe
@@ -999,12 +1002,16 @@ namespace GamesDock
             RootGrid.DragLeave += delegate { SetWindowOpacity((double)Cfg.IdleOpacity / 100.0, 260); };
             RootGrid.DragOver += (s, e) =>
             {
-                e.Effects = DropPaths(e.Data).Count > 0 ? DragDropEffects.Copy : DragDropEffects.None;
+                // bloqueada, la pildora no acepta carga: el cursor lo dice con el prohibido y abajo no
+                // entra ningun fichero
+                e.Effects = (!Cfg.Locked && DropPaths(e.Data).Count > 0)
+                    ? DragDropEffects.Copy : DragDropEffects.None;
                 e.Handled = true;
             };
             RootGrid.Drop += (s, e) =>
             {
                 e.Handled = true;
+                if (Cfg.Locked) return;
                 AddPinsBatch(DropPaths(e.Data));
             };
 

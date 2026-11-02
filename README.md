@@ -24,7 +24,7 @@ y los iconos de la comunidad, que son lo único que necesita que tú pegues una 
 | --- | --- |
 | ![La píldora con su ficha de hover encima del icono](docs/screenshots/dock-hover.png) | **Magnificado estilo macOS con la ficha del juego.** El icono bajo el cursor crece y sus vecinos lo hacen de forma decreciente; la píldora se estira con él. Encima del hueco sale la ficha: un banner del juego y debajo sus datos. |
 | ![La ficha de hover sola: banner, género, autor, fecha y sinopsis](docs/screenshots/ficha-hover.png) | **La ficha, de cerca.** Banner elegido al azar entre los que hay para ese juego, nombre, géneros · desarrollador · fecha de lanzamiento, la sinopsis de la tienda y un pie que dice de dónde salió el acceso y cuántas veces se ha lanzado. Se apaga al sacar el cursor y se cambia por el globo de texto de siempre en Ajustes. |
-| ![Menú del clic derecho](docs/screenshots/dock-menu.png) | **Todo por el clic derecho.** Buscar, añadir, elegir qué se ve, el tema, restaurar ocultos, reescanear y ajustes —en las dos puntas vacías de la barra, no en los iconos—. Sin cuadros ni engranajes a la vista. |
+| ![Menú del clic derecho](docs/screenshots/dock-menu.png) | **Todo por el clic derecho.** Buscar, añadir, elegir qué se ve, el tema, restaurar ocultos, el candado de posición e iconos, reescanear y ajustes —en las dos puntas vacías de la barra, no en los iconos—. Sin cuadros ni engranajes a la vista. |
 | ![La carpeta en la barra: un mosaico con los iconos de dentro](docs/screenshots/dock-carpeta.png) | **Carpetas como en iOS.** Se suelta un icono encima de otro y en ese hueco queda un mosaico con lo que hay dentro —aquí, Cyberpunk 2077 y The Witcher 3—, no un dibujo de carpeta. |
 | ![El contenedor abierto, con el título del grupo y el nombre de cada icono](docs/screenshots/carpeta-abierta.png) | **Al pincharla sale el contenedor**, pegado a la barra y centrado en su hueco: el título del grupo arriba —que solo se ve ahí—, los iconos con su nombre debajo, y un clic en cualquiera lo lanza y cierra el contenedor. |
 | ![La misma fila de la barra con las tres formas de icono: cuadrada, iOS y esfera](docs/screenshots/dock-formas.png) | **La forma del icono.** La misma fila, la misma config y los mismos PNG recortados de tres maneras: cuadrada por defecto, cuadrado suavizado tipo iOS, o esfera. Se cambia en los ajustes y se aplica a todo, carpetas incluidas. |
@@ -77,6 +77,10 @@ y los iconos de la comunidad, que son lo único que necesita que tú pegues una 
 - **Nunca se esconde al lanzar**: al abrir un juego o una app la barra se queda donde está, que es
   cuando la quieres tener a mano. Ocultarla sigue siendo cosa tuya —el atajo de teclado o «Ocultar» en el
   menú de la píldora—, y el icono de la bandeja del sistema permanece ahí como acceso.
+- **Candado para que nadie la mueva por accidente**: «Bloquear posición e iconos» en el menú de la píldora
+  congela la barra —arrastrarla no la mueve, arrastrar un icono no la reordena y soltar un archivo encima
+  no la fija—, mientras pinchar sigue lanzando como siempre. No es un modo lectura: corta el gesto sin
+  querer, no la decisión, así que la posición de Ajustes y las acciones del menú siguen mandando.
 - **Absorbe el escritorio**: un botón mueve los accesos de la mesa de trabajo a la barra y otro los
   devuelve exactamente a donde estaban.
 - **Se actualiza solo, pero pregunta antes**: a los ocho segundos de arrancar —y cuando tú pulses
@@ -93,7 +97,7 @@ y los iconos de la comunidad, que son lo único que necesita que tú pegues una 
 | --- | --- |
 | `Ctrl` + `Alt` + `D` | Mostrar / ocultar la barra |
 | Doble clic en el icono de la bandeja | Mostrar / ocultar la barra |
-| Clic derecho en el hueco libre de la píldora | Menú: Buscar…, Añadir app o juego…, Qué se ve, Tema, Restaurar ocultos, Reescanear, Ajustes, Ocultar, Salir |
+| Clic derecho en el hueco libre de la píldora | Menú: Buscar…, Añadir app o juego…, Qué se ve, Tema, Restaurar ocultos, Bloquear posición e iconos, Reescanear, Ajustes, Ocultar, Salir |
 | Clic derecho sobre un icono | Favorito, Lanzar ahora, Abrir carpeta del juego, Renombrar, Cambiar icono…, Iconos de la comunidad, Quitar/Ocultar del dock |
 | Clic derecho sobre una carpeta | Abrir el grupo, Renombrar, Desagrupar, Ocultar del dock |
 | Clic fuera del menú desplegado | Cierra el menú sin activar lo que haya debajo |
@@ -103,6 +107,7 @@ y los iconos de la comunidad, que son lo único que necesita que tú pegues una 
 | Arrastrar un archivo hasta la píldora | Fijarlo en la barra |
 | Arrastrar un icono dentro de la barra | Reordenar la fila |
 | Soltar un icono encima de otro | Crece una carpeta con los dos dentro |
+| «Bloquear posición e iconos» en el menú de la píldora | Congela los cuatro gestos de arrastre de arriba —mover la barra, reordenar un icono, fijar un archivo y crear una carpeta— sin tocar los clics: pinchar sigue lanzando |
 | Clic en la carpeta | Se abre el contenedor con los iconos de dentro y sus nombres |
 | Clic o `Esc` fuera del contenedor | Lo cierra, sin lanzar nada |
 | Clic en un icono del contenedor | Lo lanza y cierra el contenedor |
@@ -126,6 +131,15 @@ al que le queda menos desde donde la sueltas; en una esquina manda el hueco más
 no se va de lado cuando la dejas a medio camino. Con la posición en «Libre» el imán no entra y la píldora
 se queda píxel a píxel donde la soltaste. Lo uno y lo otro se recuperan igual al arrancar.
 
+El **candado** es la fila marcable del menú de la píldora, «Bloquear posición e iconos», y se guarda en
+`config.json` como `locked`, así que sigue puesto al arrancar. Puesto, los cuatro gestos que reordenan el
+mundo del dock se cortan antes de empezar: la barra no despega de su sitio, ningún icono sale de su hueco,
+lo que se suelte encima no se fija y un icono encima de otro no cuaja en carpeta. Lo que sigue vivo es todo
+lo que se pide a propósito: lanzar de un clic, el menú de cada icono, ocultar o renombrar, y la chip de
+posición de Ajustes —si tú la pulsas, la barra se mueve; quien no puede moverla es el ratón que pasa por
+delante—. La palanca del menú se marca con la palomita de siempre, igual que los temas, y el estado se lee
+en el log cada vez que se cambia.
+
 El desplegable se cierra con un clic en cualquier punto de la pantalla que no sea el propio menú —el
 escritorio, otro icono, otra ventana—, igual que cualquier menú de Windows. Y ese clic no llega a la
 ventana que hay debajo: se retira para que no dispare nada por accidente.
@@ -140,7 +154,8 @@ cruz. El contenedor de una carpeta no es modal: se cierra pinchando fuera o con 
 
 - **Posición**: abajo, arriba, izquierda, derecha o libre en cualquier punto de la pantalla. Las cuatro
   fijas se eligen por chip o arrastrando la barra hasta ese borde y soltándola: los dos caminos acaban en
-  el mismo rectángulo. Con «Libre» no hay imán.
+  el mismo rectángulo. Con «Libre» no hay imán, y con el candado del menú puesto el arrastre está cortado,
+  así que esta chip es la única manera de moverla.
 - **Tamaño del icono**: 28 – 76 px.
 - **Forma del icono**: por defecto (el cuadrado de siempre), iOS (cuadrado con la esquina suavizada)
   o esfera. Es solo el recorte con el que se pinta: el PNG no se sustituye ni se reescala, y las
@@ -530,6 +545,22 @@ Todos los ficheros de `src/` comparten el namespace `GamesDock` y se compilan co
   límite y el borde del slot → zona muerta, no hace nada, que es lo que antes convertía cualquier roce
   en un reordenamiento; pasado el centro → se mueve el slot. Las tres rutas están cubiertas por el
   arnés `_dev/cs-orden.ps1`.
+- **El candado corta los gestos en su origen, no en el resultado.** Son tres guardas, cada una en el punto
+  donde el ratón ya no se puede confundir: `Dock.cs` sale antes de `DragMove` en el arrastre de la píldora,
+  `TileMove` en `Dock.Interact.cs` no deja despegar el gesto del icono —la pulsación sigue siendo un clic y
+  el tile lanza igual—, y `DragOver` contesta `None` para que el cursor lo anuncie antes de que `Drop`
+  ignore lo que se suelte. Se habría podido filtrar la escritura del config en su lugar, pero entonces la
+  barra se movería y volvería sola, con el fantasma del icono por el medio.
+- **El candado se comprueba con ratón de verdad, no leyendo el config.** `_dev/cs-bloqueo.ps1` mete una
+  sonda como última ficha —así ningún arrastre cae sobre un icono de la persona— y recorre las cuatro
+  rutas en los dos estados: puesto, la ventana no se mueve ni un píxel, el imán no escribe ninguna línea,
+  ningún icono despega, soltar un acceso no se acepta y pinchar sigue lanzando; quitado, la misma barra se
+  mueve 904 px con su línea de imán, la ficha despega y ese mismo acceso se fija. El suelto es un arrastre
+  OLE de verdad —`DragDrop.DoDragDrop` desde una ventana diminuta situada fuera de la píldora, con el
+  botón levantado por otro hilo sobre el cristal opaco del icono de la punta— por una razón que solo se
+  ve midiéndolo: el margen transparente de la ventana no es la píldora, así que lo que acepta la carga ahí
+  es el escritorio y deja el archivo en la mesa de trabajo. Termina exigiendo el `config.json` byte a byte
+  y la fila y los fijados exactamente como estaban.
 - **El contenedor de la carpeta no es modal** —se cierra pinchando fuera o con `Esc`—, pero pide el
   primer plano al abrirse. El clic que lo saca recae en la píldora, que es `WS_EX_NOACTIVATE` y nunca
   pierde la activación, así que Windows no le soltaba el foco al panel y el `Esc` se quedaba en la
