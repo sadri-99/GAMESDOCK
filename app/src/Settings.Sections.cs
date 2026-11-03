@@ -133,9 +133,15 @@ namespace GamesDock
             }));
             panel.Children.Add(startup = Pill(AutostartLabel(cfg), delegate
             {
-                cfg.Autostart = !cfg.Autostart; cfg.Save();
-                if (Autostart.Set(cfg.Autostart)) startup.Content = AutostartLabel(cfg);
-                else { cfg.Autostart = false; cfg.Save(); startup.Content = Lang.T("Arranca con Windows: no"); }
+                bool enabled = !cfg.Autostart;
+                if (Autostart.Set(enabled))
+                {
+                    cfg.Autostart = enabled;
+                    cfg.Save();
+                    startup.Content = AutostartLabel(cfg);
+                }
+                else MessageBox.Show(Lang.T("No se ha podido cambiar el inicio con Windows. Consulta dock.log."),
+                    "GamesDock", MessageBoxButton.OK, MessageBoxImage.Warning);
             }));
             panel.Children.Add(Pill(Lang.T("Abrir carpeta de ajustes"), () => Launcher.OpenFolder(Paths.Root)));
             panel.Children.Add(update = Pill(Lang.T("Buscar actualizaciones"), () => BuscarActualizaciones(dock, update)));

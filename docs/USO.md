@@ -219,8 +219,8 @@ Se queda íntegramente en el perfil de usuario. El registro solo se lee, nunca s
 | `%APPDATA%\GamesDock\cards\` | La ficha de hover: `steam-<appid>.json` (o `n-<hash>` para lo que no sale de Steam) con los datos del juego, y `b-<hash>.img` con cada banner bajado. Se poda a los 60 banners más recientes. Borrar la carpeta solo cuesta volver a pedir los juegos que se vuelvan a pasar por encima |
 | `%APPDATA%\GamesDock\escritorio\` | Copias de los accesos movidos desde el escritorio |
 | `%APPDATA%\GamesDock\update\` | Solo durante una actualización: el ejecutable bajado mientras espera a poder sustituir el viejo. Se borra entera al terminar, así que en una barra sin actualizar ni siquiera existe |
-| `%APPDATA%\GamesDock\GamesDock.lanzador.vbs` | Solo si activas «Arranca con Windows» |
-| `%STARTUP%\GamesDock.lnk` | El acceso de arranque, que ejecuta el `.vbs` anterior con la ventana oculta |
+| `%LOCALAPPDATA%\Programs\GamesDock` | Ejecutable y desinstalador cuando se usa el asistente |
+| Tarea `GamesDock-<SID del usuario>` | Inicio directo al entrar en Windows, sin VBS; ver [inicio con Windows](INICIO-WINDOWS.md) |
 
 Borrar `%APPDATA%\GamesDock` deja la aplicación como recién instalada; lo único que puede quedar es
 el acceso de `%STARTUP%` si activaste el arranque con Windows. El único sitio fuera de esa carpeta que

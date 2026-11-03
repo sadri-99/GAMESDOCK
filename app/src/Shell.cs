@@ -128,40 +128,4 @@ namespace GamesDock
         }
     }
 
-    // Autostart: un acceso directo en la carpeta de inicio que lanza el propio exe via wscript con la
-    // ventana oculta. Sin el vbs intermedio el arranque de Windows deja una consola negra un instante.
-    public static class Autostart
-    {
-        static string VbsPath { get { return Path.Combine(Paths.Root, "GamesDock.lanzador.vbs"); } }
-
-        static string WriteLauncherVbs()
-        {
-            string self = Process.GetCurrentProcess().MainModule.FileName;
-            string vbs = "Set sh = CreateObject(\"WScript.Shell\")\r\n" +
-                         "sh.Run \"\"\"" + self + "\"\", 0, False\r\n";
-            File.WriteAllText(VbsPath, vbs, System.Text.Encoding.ASCII);
-            return VbsPath;
-        }
-
-        public static bool Set(bool on)
-        {
-            try
-            {
-                string lnk = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), "GamesDock.lnk");
-                if (on)
-                {
-                    string vbs = WriteLauncherVbs();
-                    string wscript = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "wscript.exe");
-                    return ShellLink.Create(lnk, wscript, "\"" + vbs + "\"", null, Lang.T("Dock de videojuegos"));
-                }
-                if (File.Exists(lnk)) File.Delete(lnk);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Log.Write("autostart fallida: " + ex.Message);
-                return false;
-            }
-        }
-    }
 }

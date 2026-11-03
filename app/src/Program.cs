@@ -9,9 +9,27 @@ namespace GamesDock
     static class Program
     {
         [STAThread]
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
+            if (args.Length == 1 && args[0] == "--shutdown")
+            {
+                EventWaitHandle signal;
+                if (EventWaitHandle.TryOpenExisting("GamesDock_Shutdown", out signal))
+                    using (signal) signal.Set();
+                return 0;
+            }
             Paths.Ensure();
+            if (args.Length == 2 && args[0] == "--configure-startup")
+            {
+                if (args[1] != "on" && args[1] != "off") return 2;
+                var settings = Config.Load();
+                bool enabled = args[1] == "on";
+                if (!Autostart.Set(enabled)) return 1;
+                settings.Autostart = enabled;
+                settings.Save();
+                return 0;
+            }
+            var startupWatch = Stopwatch.StartNew();
             Net.AsegurarTls();
 
             bool primero;
@@ -20,7 +38,7 @@ namespace GamesDock
                 if (!primero)
                 {
                     Log.Write("Segunda instancia: cancelada.");
-                    return;
+                    return 0;
                 }
 
                 Log.Write("Arranque PID " + Process.GetCurrentProcess().Id +
@@ -64,6 +82,10 @@ namespace GamesDock
                 dock.RebuildStrip(false);
                 dock.PlayEntry();
                 dock.AttachToDesktop();
+                win.ContentRendered += delegate
+                {
+                    Log.Write("Primera imagen: " + startupWatch.ElapsedMilliseconds + " ms");
+                };
 
                 // el escaneo va en prioridad background: registry + manifiestos + recorrido del menu
                 // Inicio puede tardar unos cientos de ms y no debe bloquear la primera pildora
@@ -86,7 +108,11 @@ namespace GamesDock
                 dock.InstallHotkey();
 
                 // lo que dejara una descarga cortada a medias no se hereda de una sesion a otra
-                Update.LimpiarRestos();
+                win.Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    Autostart.Repair(cfg);
+                    Update.LimpiarRestos();
+                }), DispatcherPriority.ContextIdle);
 
                 // la comprobacion de versiones unos segundos despues del primer pintado: al arrancar
                 // Windows es cuando menos gracia hace que se monte una ventana encima del escritorio, y
@@ -104,8 +130,17 @@ namespace GamesDock
                 };
                 idle.Start();
 
-                app.Run(win);
+                using (var shutdown = new EventWaitHandle(false, EventResetMode.AutoReset, "GamesDock_Shutdown"))
+                {
+                    var wait = ThreadPool.RegisterWaitForSingleObject(shutdown, (state, timedOut) =>
+                    {
+                        app.Dispatcher.BeginInvoke(new Action(delegate { dock.Exiting = true; win.Close(); }));
+                    }, null, Timeout.Infinite, true);
+                    try { app.Run(win); }
+                    finally { wait.Unregister(null); }
+                }
                 GC.KeepAlive(single);
+                return 0;
             }
         }
     }

@@ -1,10 +1,14 @@
-# GamesDock v1.9.1
+# GamesDock v1.9.5
 
-A desktop dock for games and applications on **Windows 10/11 x64**. One executable, no installer. Requires .NET Framework 4.8.
+A desktop dock for games and applications on **Windows 10/11 x64**. Simple setup wizard and portable executable. Requires .NET Framework 4.8.
 
-[Download v1.9.1](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.1) · [Español](README.md) · [Full changelog (Spanish)](CHANGELOG.md)
+[Download v1.9.5](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.5) · [Español](README.md) · [Full changelog (Spanish)](CHANGELOG.md)
 
 ![All settings visible, English interface](docs/screenshots/v1.9.1/ajustes-en.png)
+
+## New in v1.9.5
+
+Fixed Windows startup: launch the GUI executable directly with a per-user logon task, without VBScript or an added delay. Battery and offline use are supported. A Spanish/English setup wizard installs into `%LOCALAPPDATA%\Programs\GamesDock`, keeping the executable in a stable location. Downloaded setup files can be moved or deleted safely. Updates only select the exact `GamesDock.exe` asset.
 
 ## New in v1.9.1
 
@@ -21,9 +25,9 @@ A **Buy me a coffee** button sits beside the GitHub star in Settings → Help an
 
 ## Start
 
-Download **GamesDock.exe** from the [v1.9.1 release](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.1), save it in a permanent folder and run it. Right-click an empty area to open Settings. Preview icons test animations without launching applications.
+Download **GamesDock-Setup-1.9.5.exe** from the [v1.9.5 release](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.5) and follow the wizard. Choose optional Windows startup and desktop shortcut. No administrator rights required. Close any older copy before installing; settings, folders, and favorites remain in `%APPDATA%\GamesDock`.
 
-Exit the previous instance through the tray before replacing its executable. Preferences, folders and favorites stay in `%APPDATA%\GamesDock`. If you move the executable and use startup with Windows, toggle startup off and on from the new location.
+The portable **GamesDock.exe** is also available. If moved, open it once at its new location to repair enabled startup. Windows cannot discover a moved executable before it runs again. The installer avoids that problem through a stable installation directory.
 
 The executable is unsigned. Windows may show its normal warning for downloaded applications.
 

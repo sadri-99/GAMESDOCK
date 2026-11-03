@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.9.5 — 2026-11-03
+
+- Reemplazado VBScript de inicio por tarea de sesión por usuario, ejecutable directo, sin elevación, sin demora añadida y compatible con batería y sin red.
+- Migración del acceso y VBS antiguos; reparación automática de ruta al abrir una copia portable movida.
+- Instalador Inno Setup con asistente español/inglés, ruta estable por usuario, accesos directos y desinstalación que conserva datos personales.
+- Ajustes conserva estado anterior y muestra error si Windows rechaza cambio de inicio.
+- Actualizador acepta exclusivamente asset GamesDock.exe y compara tags de versión; mantiene fechas para tags antiguos.
+- Pruebas de regresión de registro real de tareas, Unicode/XML, migración, instalación, actualización y desinstalación.
+
 ## [1.9.1] — 2026-11-03
 
 - Botón «invítame a un café» junto a «Estrella en GitHub» en Ajustes, con traducción «Buy me a coffee».

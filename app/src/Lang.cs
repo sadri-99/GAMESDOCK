@@ -211,6 +211,7 @@ namespace GamesDock
             Put(d, "Devolver al escritorio", "Shortcuts to the desktop");
             Put(d, "Todo devuelto", "Everything back");
             Put(d, "Reescaneados: {0}", "Rescanned: {0}");
+            Put(d, "No se ha podido cambiar el inicio con Windows. Consulta dock.log.", "Could not change Windows startup. Check dock.log.");
             Put(d, "Arranca con Windows: sí", "Start with Windows: yes");
             Put(d, "Arranca con Windows: no", "Start with Windows: no");
             Put(d, "Abrir carpeta de ajustes", "Open settings folder");

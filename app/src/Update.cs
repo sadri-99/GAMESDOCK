@@ -162,7 +162,11 @@ namespace GamesDock
 
             r.Url = a.Url;
             r.Bytes = a.Size;
-            r.Estado = MasNuevo(r.PublicadoUtc) ? UpdEstado.Disponible : UpdEstado.Actualizada;
+            Version remoteVersion;
+            string versionText = r.Tag.TrimStart('v', 'V').TrimStart('.');
+            r.Estado = (Version.TryParse(versionText, out remoteVersion)
+                ? remoteVersion > Assembly.GetExecutingAssembly().GetName().Version
+                : MasNuevo(r.PublicadoUtc)) ? UpdEstado.Disponible : UpdEstado.Actualizada;
             Log.Write("actualizacion: \"" + r.Titulo + "\" publicado " +
                       r.PublicadoUtc.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) +
                       " UTC, " + r.Mb + " -> " + (r.HayNovedad ? "hay novedad" : "ya esta puesta"));
@@ -176,9 +180,6 @@ namespace GamesDock
             if (d.Assets == null || d.Assets.Count == 0) return null;
             foreach (var a in d.Assets)
                 if (a != null && string.Equals(a.Name, "GamesDock.exe", StringComparison.OrdinalIgnoreCase)) return a;
-            foreach (var a in d.Assets)
-                if (a != null && !string.IsNullOrEmpty(a.Name) &&
-                    a.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) return a;
             return null;
         }
 

@@ -1,0 +1,32 @@
+name: Windows installer
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile GamesDock
+        shell: pwsh
+        run: ./app/build.ps1
+      - name: Test startup and updater regressions
+        shell: pwsh
+        run: ./tests/test-startup.ps1 -Integration
+      - name: Build setup wizard
+        shell: pwsh
+        run: ./installer/build.ps1
+      - name: Installer smoke test
+        shell: pwsh
+        run: ./tests/test-installer.ps1
+      - name: Package checksums
+        shell: pwsh
+        run: |
+          Copy-Item app/GamesDock.exe dist/GamesDock.exe
+          Get-FileHash dist/*.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $([IO.Path]::GetFileName($_.Path))" } | Set-Content dist/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GamesDock-v1.9.5-windows-x64
+          path: dist/*
+          if-no-files-found: error

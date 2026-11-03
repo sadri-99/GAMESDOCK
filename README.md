@@ -2,13 +2,22 @@
   <img src="docs/logo.png" width="128" height="128" alt="GamesDock">
 </p>
 
-# GamesDock v1.9.1
+# GamesDock v1.9.5
 
-Dock de juegos y aplicaciones para **Windows 10/11 x64**. Un solo ejecutable, sin instalador. Detecta juegos, organiza accesos y permanece al nivel del escritorio.
+Dock de juegos y aplicaciones para **Windows 10/11 x64**. Instalador sencillo y ejecutable portable. Detecta juegos, organiza accesos y permanece al nivel del escritorio.
 
-[Descargar v1.9.1](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.1) · [English](README.en.md) · [Cambios](CHANGELOG.md) · [Guía de uso](docs/USO.md)
+[Descargar v1.9.5](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.5) · [English](README.en.md) · [Cambios](CHANGELOG.md) · [Guía de uso](docs/USO.md)
 
 ![Ajustes de GamesDock v1.9, con todos los controles visibles](docs/screenshots/v1.9.1/ajustes-es.png)
+
+## Novedades de v1.9.5
+
+- **Inicio con Windows reparado**: ejecutable directo mediante tarea al entrar en sesión, sin VBScript ni retraso añadido. Funciona sin red y con batería.
+- **Setup wizard en español e inglés**: instala en `%LOCALAPPDATA%\Programs\GamesDock`, crea acceso en Inicio y permite elegir inicio automático y acceso al escritorio. No necesita administrador.
+- Mover o borrar el instalador descargado no afecta al arranque. La copia portable repara su registro al abrirla desde una ubicación nueva.
+- Conserva ajustes, juegos y los 15 temas. Actualizador selecciona exclusivamente `GamesDock.exe`, nunca el instalador.
+
+[Detalle y comprobaciones de v1.9.5](docs/releases/v1.9.5.md) · [Instalación e inicio con Windows](docs/INICIO-WINDOWS.md)
 
 ## Novedades de v1.9.1
 
@@ -27,11 +36,13 @@ Botón **«invítame a un café»** junto a la estrella de GitHub en Ajustes →
 
 ## Descargar y usar
 
-1. Descarga **GamesDock.exe** desde la [release v1.9.1](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.1).
-2. Guarda el archivo en una carpeta permanente y ejecútalo. Requiere .NET Framework 4.8.
-3. Clic derecho en una zona vacía de la barra → **Ajustes**. Prueba temas y combinaciones en la muestra; sus iconos no abren programas.
+1. Descarga **GamesDock-Setup-1.9.5.exe** desde la [release v1.9.5](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.5).
+2. Sigue el asistente. Elige si quieres iniciar con Windows y crear acceso al escritorio. Requiere .NET Framework 4.8.
+3. Abre GamesDock desde Inicio. Clic derecho en barra → **Ajustes**.
 
-Para actualizar manualmente, cierra la copia anterior desde la bandeja antes de sustituirla. Juegos, favoritos, carpetas y preferencias se conservan en `%APPDATA%\GamesDock`. Si cambias la carpeta del ejecutable y usas inicio con Windows, desactiva y vuelve a activar ese ajuste desde la nueva ubicación.
+Para actualizar una copia portable anterior, ciérrala desde la bandeja e instala esta versión. Juegos, favoritos, carpetas y preferencias se conservan en `%APPDATA%\GamesDock`. El asistente mantiene la preferencia anterior de inicio automático. Después puedes borrar la copia portable antigua.
+
+También se publica **GamesDock.exe** para uso portable. Si lo mueves, ábrelo una vez desde su ubicación nueva para reparar el inicio automático; si lo mueves sin abrirlo, Windows seguirá teniendo la ruta anterior. Recomendamos el instalador para evitar este problema.
 
 El ejecutable no está firmado digitalmente. Windows puede mostrar su aviso habitual para aplicaciones descargadas.
 
