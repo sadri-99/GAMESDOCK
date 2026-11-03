@@ -4,7 +4,6 @@ A desktop dock for games and applications on **Windows 10/11 x64**. Simple setup
 
 [Download v1.9.5](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.5) · [Español](README.md) · [Full changelog (Spanish)](CHANGELOG.md)
 
-![All settings visible, English interface](docs/screenshots/v1.9.1/ajustes-en.png)
 
 ## New in v1.9.5
 
@@ -40,6 +39,10 @@ Position the dock on any screen edge or freely. Lock position and icons, move sh
 ![All 15 dock themes in motion, captured at 1920 × 540](docs/screenshots/v1.9.5/dock-15-temas-hd.gif)
 
 [View all six animated themes at 1680 × 2040](docs/screenshots/v1.9.5/temas-animados-hd.gif)
+
+### Settings with the Horizon theme
+
+![All settings with the Horizon theme](docs/screenshots/v1.9.5/ajustes-horizonte-en.png)
 
 ## Performance and privacy
 

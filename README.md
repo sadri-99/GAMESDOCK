@@ -8,7 +8,6 @@ Dock de juegos y aplicaciones para **Windows 10/11 x64**. Instalador sencillo y 
 
 [Descargar v1.9.5](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.5) · [English](README.en.md) · [Cambios](CHANGELOG.md) · [Guía de uso](docs/USO.md)
 
-![Ajustes de GamesDock v1.9, con todos los controles visibles](docs/screenshots/v1.9.1/ajustes-es.png)
 
 ## Novedades de v1.9.5
 
@@ -64,6 +63,10 @@ El ejecutable no está firmado digitalmente. Windows puede mostrar su aviso habi
 ![Los 15 temas del dock en movimiento, captura de 1920 × 540](docs/screenshots/v1.9.5/dock-15-temas-hd.gif)
 
 [Ver los seis temas animados a 1680 × 2040](docs/screenshots/v1.9.5/temas-animados-hd.gif)
+
+### Ajustes con el tema Horizonte
+
+![Ajustes completos con el tema Horizonte](docs/screenshots/v1.9.5/ajustes-horizonte-es.png)
 
 | Animado | Referencia | Detalles |
 | --- | --- | --- |
