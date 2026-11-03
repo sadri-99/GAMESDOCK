@@ -1,4 +1,8 @@
-﻿$ErrorActionPreference = 'Stop'
+﻿param([string]$OutputPath)
+
+$ErrorActionPreference = 'Stop'
+if (-not $OutputPath) { $OutputPath = Join-Path $PSScriptRoot 'GamesDock.exe' }
+$OutputPath = [IO.Path]::GetFullPath($OutputPath)
 
 # No hay proyecto MSBuild: el exe se compila invocando directamente el Roslyn de Visual Studio. En esta
 # maquina no existe ni el SDK de .NET ni los targeting packs de Framework, asi que un .csproj con
@@ -47,14 +51,15 @@ if ($faltan.Count -gt 0) {
 }
 
 # csc no puede escribir encima de un exe en ejecucion: mejor decirlo aqui que un CS0016 en la cara.
-if (Get-Process -Name GamesDock -ErrorAction SilentlyContinue) {
+if (Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $OutputPath }) {
     Write-Host 'GamesDock.exe esta en ejecucion. Cierralo desde la bandeja (Salir) o para el proceso antes de compilar.' -ForegroundColor Yellow
     exit 1
 }
 
 $src = @(Get-ChildItem -Path "$PSScriptRoot\src" -Filter *.cs -Recurse | Select-Object -ExpandProperty FullName)
 if ($src.Count -eq 0) { Write-Host 'No hay fuentes en .\src' -ForegroundColor Red; exit 1 }
-$out = "$PSScriptRoot\GamesDock.exe"
+[IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($OutputPath)) | Out-Null
+$out = $OutputPath
 
 $cscArgs = @('-nologo', '-target:winexe', '-platform:x64', '-langversion:latest', '-optimize+',
              '-codepage:65001', "-out:$out", "-win32manifest:$PSScriptRoot\app.manifest",

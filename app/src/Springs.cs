@@ -47,6 +47,8 @@ namespace GamesDock
         // el contorno solo se rehace UNA vez por cuadro: los muelles pill, ptr y slide lo piden cada
         // uno y, sin esta cola, el segundo se comería el trabajo del primero dentro del mismo frame
         public static bool ShapeDirty;
+        public static bool IsRunning { get { return _on; } }
+        public static bool Advance(Spring spring, double seconds) { return Step(spring, seconds); }
         public static Action RepaintShape;
 
         public static void Add(Spring s) { Springs.Add(s); }

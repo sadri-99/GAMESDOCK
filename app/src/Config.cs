@@ -53,9 +53,11 @@ namespace GamesDock
         [DataMember(Name = "iconSize")] public int IconSize = 46;
         // como se recorta el icono dentro de su hueco: "defecto" (el cuadrado de siempre), "ios" o
         // "esfera". No cambia el png, solo el recorte con el que se pinta.
-        [DataMember(Name = "iconShape")] public string IconShape = "defecto";
+        [DataMember(Name = "iconShape")] public string IconShape = "ios";
         [DataMember(Name = "theme")] public string Theme = "noche";
         [DataMember(Name = "magnify")] public bool Magnify = true;
+        [DataMember(Name = "themeMotion")] public bool? ThemeMotion;
+        public bool Motion { get { return !ThemeMotion.HasValue || ThemeMotion.Value; } }
         // la ficha de hover: banner del juego y sus datos basicos al posar el cursor, en vez del globo
         // de texto. Se apaga aqui y el globo de toda la vida vuelve tal cual estaba.
         //
@@ -64,7 +66,7 @@ namespace GamesDock
         // maquinas que ya tienen GamesDock. Sin valor = encendida.
         [DataMember(Name = "hoverCard")] public bool? HoverCard;
         public bool Ficha { get { return !HoverCard.HasValue || HoverCard.Value; } }
-        [DataMember(Name = "idleOpacity")] public int IdleOpacity = 45;
+        [DataMember(Name = "idleOpacity")] public int IdleOpacity = 100;
         [DataMember(Name = "hotkey")] public bool Hotkey = true;
         [DataMember(Name = "desktopLevel")] public bool DesktopLevel = true;
         // el candado del menu de la pildora: puesto, el raton no mueve la barra, no reordena los iconos y
@@ -119,13 +121,18 @@ namespace GamesDock
             if (cfg.Usage == null) cfg.Usage = new Dictionary<string, UsageDto>();
             if (cfg.DesktopMoved == null) cfg.DesktopMoved = new Dictionary<string, string>();
             if (cfg.SteamGridKey == null) cfg.SteamGridKey = "";
-            // el json viejo no trae "iconShape" y cualquiera que no sea de las tres conocido vale tanto
-            // como no tenerlo: el cuadrado de siempre
-            if (cfg.IconShape != "ios" && cfg.IconShape != "esfera") cfg.IconShape = "defecto";
+            NormalizeAppearance(cfg);
             int fus = MergePins(cfg);
             Log.Write(string.Format("Config leida: {0} fijados, {1} usos, {2} grupos{3}", cfg.Pins.Count, cfg.Usage.Count,
                 cfg.Groups.Count, fus > 0 ? ", " + fus + " duplicados fusionados" : "."));
             return cfg;
+        }
+
+        static void NormalizeAppearance(Config cfg)
+        {
+            cfg.IdleOpacity = 100;
+            // Explicit existing shapes remain valid; new or missing preferences use iOS.
+            if (cfg.IconShape != "ios" && cfg.IconShape != "esfera" && cfg.IconShape != "defecto") cfg.IconShape = "ios";
         }
 
         // las versiones anteriores guardaban los fijados en un hashtable por clave, asi que volver a

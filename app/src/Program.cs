@@ -100,7 +100,7 @@ namespace GamesDock
                 var idle = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
                 idle.Tick += delegate
                 {
-                    if (Process.GetCurrentProcess().WorkingSet64 > 80L * 1024 * 1024) Memory.Trim();
+                    if (dock.CanTrimMemory && Process.GetCurrentProcess().WorkingSet64 > 80L * 1024 * 1024) Memory.Trim();
                 };
                 idle.Start();
 

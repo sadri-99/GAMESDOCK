@@ -108,9 +108,8 @@ namespace GamesDock
             }
         }
 
-        // Cuando se compilo el ejecutable que esta en marcha: su ultima escritura. Es lo unico que la
-        // barra sabe de si misma, porque el build de desarrollo no lleva numero de version y nunca se le
-        // pone uno. El numero solo lo tiene lo publicado, y sale del titulo del release.
+        // El actualizador compara la ultima escritura del ejecutable con la publicacion del release.
+        // Los metadatos de producto llevan version, pero no cambian este criterio de compatibilidad.
         public static DateTime FechaLocalUtc()
         {
             try { return File.GetLastWriteTimeUtc(Exe); }

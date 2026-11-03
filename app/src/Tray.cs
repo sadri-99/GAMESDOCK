@@ -36,6 +36,8 @@ namespace GamesDock
             Row(menu, Lang.T("Mostrar / ocultar   (Ctrl+Alt+D)"), () => _dock.ToggleDock());
             Row(menu, Lang.T("Reescanear juegos"), () => _dock.Rebuild());
             Row(menu, Lang.T("Ajustes"), () => Settings.Show(_dock));
+            menu.Items[2].Text += " · " + Lang.T("Consumo");
+            menu.Items[2].ToolTipText = PerformanceInfo.Description;
             menu.Items.Add("-");
             Row(menu, Lang.T("Salir"), () => { _dock.Exiting = true; _dock.Win.Close(); });
             return menu;

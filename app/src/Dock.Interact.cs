@@ -57,9 +57,10 @@ namespace GamesDock
                 n++;
             }
             _iconBusy = false;
+            if (n > 0 && _iconQueue.Count == 0) NotifyAppearanceChanged();
             if (_iconQueue.Count > 0)
                 Win.Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(PumpIcons));
-            else if (_trimArmed) { _trimArmed = false; Memory.Trim(); }
+            else if (_trimArmed && CanTrimMemory) { _trimArmed = false; Memory.Trim(); }
         }
 
         // ------------------------------------------------------------------ arrastre del tile
@@ -448,6 +449,16 @@ namespace GamesDock
             {
                 var p = Launcher.Start(it);
                 RegisterUse(it);
+                double launchPosition = _ptrInside ? _ptrLive : (Lay.Vert ? RootGrid.ActualHeight : RootGrid.ActualWidth) / 2;
+                foreach (var tile in Tiles)
+                {
+                    if (!ReferenceEquals(tile.Tag, it)) continue;
+                    Point center = tile.TranslatePoint(new Point(tile.ActualWidth / 2, tile.ActualHeight / 2), RootGrid);
+                    launchPosition = Lay.Vert ? center.Y : center.X;
+                    if (Cfg.Motion) SagaTileMotion.Launch(tile, _theme.Material, Lay.Vert, Lay.Outward);
+                    break;
+                }
+                Material.Launch(launchPosition);
                 WatchProcess(p);
             }
             catch (Exception ex)
@@ -678,12 +689,18 @@ namespace GamesDock
                 _dockMenu.Items.Add(_verMenu);
 
                 _temaMenu = new MenuItem { Header = Lang.T("Tema") };
-                foreach (var kv in Themes.All)
+                foreach (var groupId in Themes.GroupIds)
                 {
-                    string id = kv.Key;
-                    var mi = new MenuItem { Header = Lang.T(kv.Value.Label), Tag = id, IsCheckable = true };
-                    mi.Click += (a, e) => SetTheme(id);
-                    _temaMenu.Items.Add(mi);
+                    var group = new MenuItem { Header = Lang.T(Themes.GroupLabel(groupId)), Tag = groupId };
+                    foreach (var kv in Themes.InGroup(groupId))
+                    {
+                        string id = kv.Key;
+                        var mi = new MenuItem { Header = Lang.T(kv.Value.Label), Tag = id, IsCheckable = true };
+                        if (kv.Value.MotionHint != null) mi.ToolTip = Lang.T(kv.Value.MotionHint);
+                        mi.Click += (a, e) => SetTheme(id);
+                        group.Items.Add(mi);
+                    }
+                    _temaMenu.Items.Add(group);
                 }
                 _dockMenu.Items.Add(_temaMenu);
 
@@ -698,7 +715,11 @@ namespace GamesDock
                 _dockMenu.Items.Add(_lockMenu);
 
                 _dockMenu.Items.Add(MenuRow(Lang.T("Reescanear"), delegate { Rebuild(); }));
-                _dockMenu.Items.Add(MenuRow(Lang.T("Ajustes"), delegate { Settings.Show(this); }));
+                var settings = MenuRow(Lang.T("Ajustes"), delegate { Settings.Show(this); });
+                settings.Header = PerformanceInfo.SettingsHeader();
+                System.Windows.Automation.AutomationProperties.SetName(settings, Lang.T("Ajustes"));
+                settings.ToolTip = PerformanceInfo.ToolTip();
+                _dockMenu.Items.Add(settings);
                 _dockMenu.Items.Add(new Separator());
                 _dockMenu.Items.Add(MenuRow(Lang.T("Ocultar (Ctrl+Alt+D)"), delegate { HideDock(); }));
                 _dockMenu.Items.Add(MenuRow(Lang.T("Salir"), delegate { Exiting = true; Win.Close(); }));
@@ -710,17 +731,20 @@ namespace GamesDock
                         var mi = (MenuItem)o;
                         mi.IsChecked = Cfg.Section == Convert.ToString(mi.Tag);
                     }
-                    foreach (var o in _temaMenu.Items)
-                    {
-                        var mi = (MenuItem)o;
-                        mi.IsChecked = Cfg.Theme == Convert.ToString(mi.Tag);
-                    }
+                    UpdateThemeChecks();
                     _lockMenu.IsChecked = Cfg.Locked;
                     UpdateOcultosMenu();
                 };
                 MenuGuard.Watch(_dockMenu);
                 return _dockMenu;
             }
+        }
+
+        void UpdateThemeChecks()
+        {
+            foreach (MenuItem group in _temaMenu.Items)
+                foreach (MenuItem mi in group.Items)
+                    mi.IsChecked = Cfg.Theme == Convert.ToString(mi.Tag);
         }
 
         // el menu de la pildora se construye una vez y se guarda: al cambiar de idioma hay que tirar el

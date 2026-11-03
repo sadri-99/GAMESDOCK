@@ -69,6 +69,25 @@ namespace GamesDock
             Put(d, "Aplicaciones", "Applications");
             Put(d, "Todo", "Everything");
             Put(d, "Tema", "Theme");
+            Put(d, "Clásicos", "Classic");
+            Put(d, "Animados", "Animated");
+            Put(d, "Animaciones de los temas", "Theme animations");
+            Put(d, "Alien: detector de movimiento, fósforo y secuencia de esclusa.",
+                "Alien: motion tracker, phosphor persistence and airlock sequence.");
+            Put(d, "Dark Souls: avivar la hoguera, brasas y sello de invocación.",
+                "Dark Souls: kindling, embers and a summoning seal.");
+            Put(d, "Portal: carga azul/naranja, apertura y transferencia entre portales.",
+                "Portal: blue/orange charge, aperture opening and portal transfer.");
+            Put(d, "PlayStation: arranque por pasos, paquetes de memoria y LED de escritura.",
+                "PlayStation: stepped boot sequence, memory packets and write LED.");
+            Put(d, "Mass Effect: lente orbital, compresión gravitatoria y onda de campo.",
+                "Mass Effect: orbital lens, gravitational compression and field wave.");
+            Put(d, "Matrix: lluvia de código, decodificación y breve fallo de señal.",
+                "Matrix: code rain, decoding and a brief signal glitch.");
+            Put(d, "Santuario", "Sanctuary");
+            Put(d, "Cámara de pruebas", "Test chamber");
+            Put(d, "Horizonte", "Horizon");
+            Put(d, "Terminal fantasma", "Ghost terminal");
             Put(d, "Restaurar ocultos", "Restore hidden");
             Put(d, "(nada oculto)", "(nothing hidden)");
             Put(d, "Bloquear posición e iconos", "Lock position and icons");
@@ -135,6 +154,35 @@ namespace GamesDock
             Put(d, "clic derecho en la barra vacía - Esc para cerrar",
                  "right-click on the empty bar - Esc to close");
             Put(d, "Aspecto", "Appearance");
+            Put(d, "Personaliza tu dock", "Make your dock yours");
+            Put(d, "Elige un tema y combina movimiento, forma y tamaño. Los cambios se aplican al instante.",
+                "Choose a theme and mix motion, shape and size. Changes apply instantly.");
+            Put(d, "Pasa el ratón por la muestra y pulsa un icono para probar su animación.",
+                "Hover over the preview and click an icon to try its animation.");
+            Put(d, "Elige un tema", "Choose a theme");
+            Put(d, "Prueba combinaciones", "Try combinations");
+            Put(d, "Probar animación", "Try animation");
+            Put(d, "Más ajustes", "More settings");
+            Put(d, "Barra y contenido", "Dock and content");
+            Put(d, "Posición y qué accesos aparecen.", "Position and which shortcuts appear.");
+            Put(d, "Ficha de juegos y nivel de escritorio.", "Game cards and desktop placement.");
+            Put(d, "Idioma", "Language");
+            Put(d, "Español, inglés o el idioma del sistema.", "Spanish, English or your system language.");
+            Put(d, "Tu clave y el arte de SteamGridDB.", "Your key and artwork from SteamGridDB.");
+            Put(d, "Inicio con Windows, actualizaciones y archivos.", "Windows startup, updates and files.");
+            Put(d, "Ayuda y proyecto", "Help and project");
+            Put(d, "Gestos, accesos rápidos y GitHub.", "Gestures, shortcuts and GitHub.");
+            Put(d, "CPU al animar · RAM extra baja en prueba", "CPU while animating · low extra RAM in test");
+            Put(d, "Consumo", "Resource use");
+            Put(d, "Prueba simplificada fuera del área visible, con ocho accesos de 64 px y 12 procesadores lógicos: al mover el cursor por los seis temas, aproximadamente 2–3,4 % de CPU total. Es una referencia, no un monitor en directo.",
+                "Simplified off-screen test with eight 64 px shortcuts and 12 logical processors: moving the cursor across the six themes used approximately 2–3.4% total CPU. This is a reference, not a live monitor.");
+            Put(d, "Las animaciones tienen un coste medible mientras se mueven: usan CPU y GPU. En reposo no mantienen un bucle de efectos.",
+                "Animations have a measurable cost while moving: they use CPU and GPU. At rest, they do not keep an effects loop running.");
+            Put(d, "En la prueba local, activar efectos con el cursor quieto añadió aproximadamente 1–4 MB de memoria privada y hasta 1,2 MB de memoria física. La memoria total de GamesDock también incluye Windows, iconos, catálogo y fichas; no corresponde solo a las animaciones.",
+                "In the local test, enabling effects with a stationary cursor added approximately 1–4 MB of private memory and up to 1.2 MB of physical memory. Total GamesDock memory also includes Windows, icons, the catalog and game cards; it is not all animation memory.");
+            Put(d, "El consumo cambia con el equipo, el tema, la resolución y la interacción. No se ha medido la GPU ni el impacto en los FPS de juegos. Puedes desactivar los efectos; el agrandado es independiente.",
+                "Usage varies with hardware, theme, resolution and interaction. GPU usage and game FPS impact have not been measured. You can disable effects; magnification is independent.");
+            Put(d, "Cuadrado", "Square");
             Put(d, "Comportamiento", "Behavior");
             Put(d, "Sistema", "System");
             Put(d, "Abajo", "Bottom");
@@ -152,7 +200,7 @@ namespace GamesDock
             Put(d, "Idioma de la interfaz", "Interface language");
             Put(d, "Juegos", "Games");
             Put(d, "Apps", "Apps");
-            Put(d, "Agrandar los iconos al pasar el ratón (efecto Mac)", "Enlarge icons on hover (Mac effect)");
+            Put(d, "Agrandar los iconos al pasar el ratón", "Enlarge icons on hover");
             Put(d, "Ficha del juego al pasar el ratón (banner y descripción)", "Game card on hover (banner and description)");
             Put(d, "Vivir solo en el escritorio (nunca por encima de otras ventanas)",
                  "Stay on the desktop (never above other windows)");

@@ -245,6 +245,26 @@
     </Setter>
   </Style>
 
+  <Style x:Key="InfoLink" TargetType="Button">
+    <Setter Property="Foreground" Value="{DynamicResource MenuAccent}"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Surface" Background="Transparent" CornerRadius="5" Padding="4,3">
+            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Surface" Property="Background" Value="{DynamicResource MenuHi}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style x:Key="GhostBtn" TargetType="Button">
     <Setter Property="Foreground" Value="{DynamicResource PanelSub}"/>
     <Setter Property="FontSize" Value="15"/>
@@ -270,6 +290,7 @@
   </Style>
 
   <Style x:Key="ChipRadio" TargetType="RadioButton">
+    <Setter Property="Padding" Value="13,7"/>
     <Setter Property="Foreground" Value="{DynamicResource MenuFg}"/>
     <Setter Property="FontSize" Value="12"/>
     <Setter Property="Cursor" Value="Hand"/>
@@ -285,7 +306,7 @@
                     BorderThickness="1">
               <Border.RenderTransform><ScaleTransform ScaleX="1" ScaleY="1"/></Border.RenderTransform>
             </Border>
-            <ContentPresenter x:Name="Txt" Margin="13,7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <ContentPresenter x:Name="Txt" Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">

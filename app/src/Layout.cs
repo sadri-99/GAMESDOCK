@@ -27,6 +27,8 @@ namespace GamesDock
 
         public bool Vert { get { return Cfg.Position == "left" || Cfg.Position == "right"; } }
         public int IconSize { get { return Cfg.IconSize; } }
+        public ThemeMotionProfile Motion { get { return ThemeMotionProfile.For(Themes.Get(Cfg.Theme).Material); } }
+        public double Peak { get { return Motion.Peak; } }
 
         // la holgura de la pildora ya no se ajusta: 4 px era el punto donde la fila se ve asentada sin
         // que el cristal coma halo, y dejarla fija quita un ajuste cuyo efecto casi nadie veia
@@ -170,7 +172,8 @@ namespace GamesDock
         {
             get
             {
-                double need = TileBox * MagPeak / 2.0 + PadV + 4.0;
+                double need = Motion.Classic ? TileBox * MagPeak / 2.0 + PadV + 4.0
+                    : IconSize * Peak / 2.0 + Motion.Lift * Math.Min(1, IconSize / 64.0) + PadV + 4;
                 return Math.Max(need, HalfIdle + 7.0);
             }
         }
@@ -185,7 +188,8 @@ namespace GamesDock
             {
                 if (!Cfg.Magnify) return 6.0;
                 double delta = HalfMax - HalfIdle;
-                double need = TileBox * MagPeak / 2.0 - HalfIdle + 4.0 + delta * 0.45;
+                double need = Motion.Classic ? TileBox * MagPeak / 2.0 - HalfIdle + 4.0 + delta * 0.45
+                    : IconSize * Peak / 2.0 + Motion.Lift + 4 - HalfIdle + delta * (1 - Motion.Locality);
                 return Math.Max(6.0, Math.Min(need, Margin - 2));
             }
         }
@@ -193,13 +197,10 @@ namespace GamesDock
         public double MagScale(double d, double r)
         {
             if (r <= 0) return 1.0;
-            double a = Math.Abs(d) / r;
-            if (a >= 1.0) return 1.0;
-            double c = Math.Cos(a * Math.PI / 2.0);
-            return 1.0 + (MagPeak - 1.0) * c * c;
+            return 1.0 + (Peak - 1.0) * Motion.Influence(d, r);
         }
 
-        public double MagRadius { get { return Pitch * 2.4; } }
+        public double MagRadius { get { return Pitch * Motion.Radius; } }
 
         // +1 si la pildora crece hacia arriba de la pantalla (abajo/derecha del work area)
         public double Outward

@@ -20,6 +20,7 @@ namespace GamesDock
         public readonly Grid RootGrid;
         readonly Canvas PillLayer;
         readonly Shape Glass, Edge;
+        readonly MaterialArt Material;
         readonly StackPanel Bar, Strip;
         readonly ScrollViewer StripScroll;
         readonly Border SearchPanel;
@@ -36,8 +37,9 @@ namespace GamesDock
         double _ptrU = -1e9;
         bool _ptrInside;
         int _magTop = -1;
-        string _shapeSig = string.Empty;
-        string _barSig = string.Empty;
+        ShapeStamp _shapeStamp;
+        BarStamp _barStamp;
+        bool _shapeValid, _barValid;
         ThemeDef _theme;
         Button _pressBtn;
         readonly Dictionary<string, ImageBrush> _brushes = new Dictionary<string, ImageBrush>();
@@ -63,6 +65,12 @@ namespace GamesDock
             PillLayer = (Canvas)Win.FindName("PillLayer");
             Glass = (Shape)Win.FindName("Glass");
             Edge = (Shape)Win.FindName("Edge");
+            Material = new MaterialArt { IsHitTestVisible = false, MotionEnabled = cfg.Motion };
+            PillLayer.Children.Add(Material);
+            var focusLayer = new Canvas { IsHitTestVisible = false };
+            Panel.SetZIndex(focusLayer, 3);
+            focusLayer.Children.Add(Material.Overlay);
+            RootGrid.Children.Add(focusLayer);
             Bar = (StackPanel)Win.FindName("Bar");
             Strip = (StackPanel)Win.FindName("Strip");
             StripScroll = (ScrollViewer)Win.FindName("StripScroll");
@@ -111,6 +119,10 @@ namespace GamesDock
             var t = Themes.Get(id);
             _theme = t;
             Cfg.Theme = id;
+            var motion = Lay.Motion;
+            motion.Tune(HoverSpr, motion.ShellK, motion.Classic ? .92 : 1.0);
+            motion.Tune(PtrSpr, motion.PointerK, 1.0);
+            _shapeValid = false;
 
             Glass.Fill = Themes.Grad(t.C["glass"], t.C["glassBot"]);
             Edge.Stroke = Themes.Br(t.C["edge"]);
@@ -147,7 +159,35 @@ namespace GamesDock
             ar["PanelSub"] = Themes.Br(t.C["fieldFg"]);
 
             if (Tiles.Count > 0) RebuildStrip(false);
+            Anim.ShapeDirty = true;
+            Anim.Start();
             Log.Write("tema aplicado: " + id);
+            NotifyAppearanceChanged();
+        }
+
+        public event Action AppearanceChanged;
+        public bool CanTrimMemory { get { return !_ptrInside && !DragMoved && !Material.HasAnimatedProperties && !Anim.IsRunning && !Settings.IsOpen; } }
+        public void NotifyAppearanceChanged() { var changed = AppearanceChanged; if (changed != null) changed(); }
+
+        public void SetMagnify(bool enabled)
+        {
+            Cfg.Magnify = enabled;
+            Cfg.Save();
+            ResetProximity();
+            ApplyLayout();
+            NotifyAppearanceChanged();
+        }
+
+        public void SetThemeMotion(bool enabled)
+        {
+            Cfg.ThemeMotion = enabled;
+            Material.MotionEnabled = enabled;
+            if (!enabled) foreach (var tile in Tiles) SagaTileMotion.Stop(tile);
+            else for (int i = 0; i < Tiles.Count; i++) UpdateTilePose(Tiles[i], Tiles[i].RenderTransform.Value.M11, i);
+            Anim.ShapeDirty = true;
+            Anim.Start();
+            Cfg.Save();
+            NotifyAppearanceChanged();
         }
 
         // ------------------------------------------------------------------ fila
@@ -176,16 +216,20 @@ namespace GamesDock
             for (int i = 0; i < Items.Count; i++)
             {
                 var t = NewTile(Items[i], i, Items.Count);
+                int tileIndex = i;
                 Strip.Children.Add(t);
                 Tiles.Add(t);
-                // muelle de escala propio por tile. Con pop entran escalonados y con un asomo de
-                // rebote, que es como se ve una app cara al abrirse; sin pop nacen ya asentados.
-                // k=900 en lugar de 300: el tile es lo ultimo que queda entre el cursor y lo que se
-                // ve, y a omega 17 la fila llegaba al agrandado ~340 ms despues de pasar el ratón.
-                var sp = Spring.Make("tile", 900.0, 0.85, t);
+                // Scale and artwork pose share the theme's response curve. The button keeps the
+                // stable hit area; the artwork's hover and launch transforms compose independently.
+                var sp = Spring.Make("tile", Lay.Motion.TileK, Lay.Motion.Damping, t);
                 var box = (Border)t.Content;
                 var st = (ScaleTransform)t.RenderTransform;
-                sp.Apply = s => { st.ScaleX = s.X; st.ScaleY = s.X; };
+                sp.Apply = s =>
+                {
+                    st.ScaleX = s.X; st.ScaleY = s.X;
+                    UpdateTilePose(t, s.X, tileIndex);
+                    Anim.ShapeDirty = true;
+                };
                 if (pop) { sp.X = 0.62; sp.Target = 1.0; sp.Wait = (3.0 + i * 1.6) / 60.0; }
                 else { sp.X = 1.0; sp.Target = 1.0; st.ScaleX = 1.0; st.ScaleY = 1.0; }
                 MagSpr.Add(sp);
@@ -516,6 +560,7 @@ namespace GamesDock
                 if (Tiles[i] == DragBtn) s = 0.86;
                 else if (Tiles[i] == _pressBtn) s *= 0.9;
                 Anim.Move(MagSpr[i], s);
+                UpdateTilePose(Tiles[i], MagSpr[i].X, i);
                 if (s > best) { best = s; bestIx = i; }
             }
 
@@ -556,11 +601,31 @@ namespace GamesDock
             _ptrInside = false;
             // el cursor se queda donde estaba y solo sueltan los muelles: la pildora se deshincha en su
             // sitio en vez de desplazar el bulto al extremo de la fila
-            for (int i = 0; i < MagSpr.Count; i++) Anim.Move(MagSpr[i], 1.0);
+            for (int i = 0; i < MagSpr.Count; i++)
+            {
+                if (Cfg.Magnify) Anim.Move(MagSpr[i], 1.0);
+                else
+                {
+                    var spring = MagSpr[i];
+                    spring.X = spring.Target = 1.0;
+                    spring.V = spring.Wait = 0;
+                    if (spring.Apply != null) spring.Apply(spring);
+                }
+            }
+            if (!Cfg.Magnify)
+            {
+                HoverSpr.X = HoverSpr.Target = 0;
+                HoverSpr.V = HoverSpr.Wait = 0;
+                HoverSpr.Apply(HoverSpr);
+            }
             for (int i = 0; i < Tiles.Count; i++) Panel.SetZIndex(Tiles[i], 0);
         }
 
-        public void SetPillHover(bool on) { Anim.Move(HoverSpr, on ? 1.0 : 0.0); }
+        public void SetPillHover(bool on)
+        {
+            Material.SetInteraction(on);
+            Anim.Move(HoverSpr, on && Cfg.Magnify ? 1.0 : 0.0);
+        }
 
         // el tile arrastrado y si el arrastre ya despego los modifica la capa de interaccion
         public Button DragBtn;
@@ -574,32 +639,32 @@ namespace GamesDock
 
             bool vert = Lay.Vert;
             double baseH = Lay.HalfIdle;
-            double fracc = Cfg.Magnify ? 0.55 : 0.0;
+            double fracc = Cfg.Magnify ? Lay.Motion.Locality : 0.0;
 
             // cuanto esta agrandado de verdad el tile mas grande, sacado de los muelles y no del cursor:
             // es lo que ata el bulto del cristal al tamano real de los iconos
             double mx = 1.0, eL = 1.0, eR = 1.0;
-            for (int i = 0; i < MagSpr.Count; i++)
+            for (int i = 0; Cfg.Magnify && i < MagSpr.Count; i++)
             {
                 double x = MagSpr[i].X;
                 if (x > mx) mx = x;
                 if (i == 0) eL = x;
                 else if (i == MagSpr.Count - 1) eR = x;
             }
-            _magLive = Math.Max(0.0, Math.Min(1.0, (mx - 1.0) / (Layout.MagPeak - 1.0)));
+            _magLive = Math.Max(0.0, Math.Min(1.0, (mx - 1.0) / (Lay.Peak - 1.0)));
 
-            string sig = string.Format("{0}|{1}|{2}x{3}|{4}|{5}|{6}|{7}|{8}",
-                Cfg.Position, Cfg.Magnify,
-                Math.Round(gw), Math.Round(gh),
-                Math.Round(_hoverT, 3), Math.Round(_ptrLive, 1),
-                Math.Round(_magLive, 3), Math.Round(eL, 3), Math.Round(eR, 3));
-            if (sig == _shapeSig) return;
-            _shapeSig = sig;
+            var stamp = new ShapeStamp { Position = Cfg.Position, Magnify = Cfg.Magnify,
+                Width = Math.Round(gw), Height = Math.Round(gh), Hover = Math.Round(_hoverT, 3), Pointer = Math.Round(_ptrLive, 1),
+                Magnification = Math.Round(_magLive, 3), First = Math.Round(eL, 3), Last = Math.Round(eR, 3) };
+            if (_shapeValid && stamp.Matches(_shapeStamp)) return;
+            _shapeStamp = stamp; _shapeValid = true;
 
             // manda lo que este MAS abierto de los dos: el hover o el agrandado real de los tiles. Si
             // solo mandara el hover el cristal se adelanta y si se quedara atras son los iconos los que
             // muerden el borde de arriba
-            double grow = Math.Max(_hoverT, _magLive);
+            // With magnification disabled the window reserves only idle-size clearance. Growing the
+            // shell alone pushes it beyond that clearance and clips the rounded corners.
+            double grow = Cfg.Magnify ? Math.Max(_hoverT, _magLive) : 0;
             double delta = (Lay.HalfMax - baseH) * grow;
             double uni = delta * (1.0 - fracc);
             // el bulto local sigue el agrandado animado de los iconos: si no, la pildora se deshincharia
@@ -624,9 +689,12 @@ namespace GamesDock
             SetRowShift(_rowShift);
 
             var geo = PillGeometry.Build(len, cc, baseH, uni, amp, _ptrLive, Lay.Pitch,
-                                         Layout.MagPeak, vert, overL, overR);
+                                         Lay.Peak, vert, overL, overR, _theme.CornerRatio, Lay.Motion.Radius);
             Glass.Data = geo;
             Edge.Data = geo;
+            double marker = _ptrInside ? _ptrLive : -1;
+            Material.Update(_theme, geo, len, cc, baseH + uni, vert, marker);
+            UpdateMaterialFocus();
         }
 
         // la fila se desplaza hacia dentro lo que la pildora gana por fuera: asi el borde que da al
@@ -636,9 +704,9 @@ namespace GamesDock
             double inset = Lay.RowInset;
             double ovr = Lay.Snap(Math.Ceiling(Lay.MagOverrun));
             bool fits = RowFits();
-            string sig = string.Format("{0}|{1}|{2}|{3}", Cfg.Position, inset, ovr, fits);
-            if (sig == _barSig) return;
-            _barSig = sig;
+            var stamp = new BarStamp { Position = Cfg.Position, Inset = inset, Overrun = ovr, Fits = fits };
+            if (_barValid && stamp.Matches(_barStamp)) return;
+            _barStamp = stamp; _barValid = true;
             // el margen solo abre el hueco ESTATICO para que el icono agrandado desborde el cristal;
             // lo que se mueve cuadro a cuadro va por SetRowShift
             double gap = -ovr;
@@ -785,7 +853,7 @@ namespace GamesDock
         // la pildora se dibuja con la medida real de la rejilla: hay que forzar el layout antes
         public void RefreshPill()
         {
-            _shapeSig = string.Empty;
+            _shapeValid = false;
             Win.UpdateLayout();
             UpdatePillShape();
         }
