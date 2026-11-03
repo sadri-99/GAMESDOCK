@@ -109,8 +109,7 @@ namespace GamesDock
             }
         }
 
-        // El actualizador compara la ultima escritura del ejecutable con la publicacion del release.
-        // Los metadatos de producto llevan version, pero no cambian este criterio de compatibilidad.
+        // Fecha local para mostrarla y para comparar releases historicos con tags no numericos.
         public static DateTime FechaLocalUtc()
         {
             try { return File.GetLastWriteTimeUtc(Exe); }

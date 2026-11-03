@@ -208,7 +208,7 @@ En Ajustes → Ayuda y proyecto, «invítame a un café» está junto a «Estrel
 
 ## Dónde guarda sus cosas
 
-Se queda íntegramente en el perfil de usuario. El registro solo se lee, nunca se escribe.
+Datos y programa instalado permanecen en perfil de usuario. Inicio con Windows registra una tarea de sesión; si Windows rechaza crearla, puede utilizar entrada de respaldo en el registro del usuario. El instalador registra además información de desinstalación.
 
 | Ruta | Contenido |
 | --- | --- |
@@ -222,7 +222,4 @@ Se queda íntegramente en el perfil de usuario. El registro solo se lee, nunca s
 | `%LOCALAPPDATA%\Programs\GamesDock` | Ejecutable y desinstalador cuando se usa el asistente |
 | Tarea `GamesDock-<SID del usuario>` | Inicio directo al entrar en Windows, sin VBS; ver [inicio con Windows](INICIO-WINDOWS.md) |
 
-Borrar `%APPDATA%\GamesDock` deja la aplicación como recién instalada; lo único que puede quedar es
-el acceso de `%STARTUP%` si activaste el arranque con Windows. El único sitio fuera de esa carpeta que
-toca la barra es `%TEMP%`, y solo durante una actualización: el `.cmd` que hace el cambio, que se borra a
-sí mismo en cuanto lo hace.
+Para reiniciar ajustes, cierra GamesDock y borra `%APPDATA%\GamesDock`. Si activaste inicio automático, desactívalo antes desde Ajustes o usa el desinstalador: borrar los datos no retira la tarea de Windows. El asistente instala programa en `%LOCALAPPDATA%\Programs\GamesDock` y accesos en menú Inicio y, opcionalmente, escritorio. Las actualizaciones utilizan `%TEMP%` para un guion transitorio. Ver [instalación e inicio](INICIO-WINDOWS.md).

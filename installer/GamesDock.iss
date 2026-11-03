@@ -46,6 +46,7 @@ Name: "startup"; Description: "{cm:Startup}"
 Name: "desktopicon"; Description: "{cm:Desktop}"; Flags: unchecked
 
 [Files]
+Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\app\GamesDock.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
@@ -56,6 +57,18 @@ Name: "{autodesktop}\GamesDock"; Filename: "{app}\GamesDock.exe"; WorkingDir: "{
 Filename: "{app}\GamesDock.exe"; Description: "{cm:Launch}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+function InitializeSetup: Boolean;
+var
+  FrameworkRelease: Cardinal;
+begin
+  Result := RegQueryDWordValue(HKLM32,
+    'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full', 'Release', FrameworkRelease);
+  if Result then Result := FrameworkRelease >= 528040;
+  if not Result then
+    MsgBox('GamesDock requiere / requires .NET Framework 4.8. https://dotnet.microsoft.com/download/dotnet-framework/net48',
+      mbError, MB_OK);
+end;
+
 procedure InitializeWizard;
 var
   Config: AnsiString;

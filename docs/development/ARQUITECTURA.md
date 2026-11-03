@@ -64,6 +64,6 @@ PerformanceProbe y PreviewProbe son mediciones adicionales. Las pruebas fuera de
 
 Se conserva el esquema de configuración y MIT. Opacidad heredada normalizada al 100 %; formas válidas conservadas. No publicar config.json, claves, cachés ni registros.
 
-Tag v1.9; título GamesDock v1.9. Debe existir un asset GamesDock.exe para el actualizador. La lógica compara publicación con última escritura del ejecutable, con cinco minutos de margen; los metadatos 1.9.0 no cambian este criterio. El ZIP portable conserva la fecha del ejecutable.
+Versión actual: tag v1.9.5, título GamesDock v1.9.5. Se publican GamesDock.exe y GamesDock-Setup-1.9.5.exe por separado. Actualizador selecciona exclusivamente GamesDock.exe y compara tag numérico con versión del ensamblaje; tags históricos no numéricos conservan criterio de fechas con cinco minutos de margen. Instalador e inicio con Windows se describen en [INICIO-WINDOWS.md](../INICIO-WINDOWS.md).
 
 SHA256SUMS.txt permite comprobar las descargas. No es una firma digital.
