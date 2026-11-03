@@ -2,13 +2,17 @@
   <img src="docs/logo.png" width="128" height="128" alt="GamesDock">
 </p>
 
-# GamesDock v1.9
+# GamesDock v1.9.1
 
 Dock de juegos y aplicaciones para **Windows 10/11 x64**. Un solo ejecutable, sin instalador. Detecta juegos, organiza accesos y permanece al nivel del escritorio.
 
-[Descargar v1.9](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9) · [English](README.en.md) · [Cambios](CHANGELOG.md) · [Guía de uso](docs/USO.md)
+[Descargar v1.9.1](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.1) · [English](README.en.md) · [Cambios](CHANGELOG.md) · [Guía de uso](docs/USO.md)
 
-![Ajustes de GamesDock v1.9, con todos los controles visibles](docs/screenshots/v1.9/ajustes-es.png)
+![Ajustes de GamesDock v1.9, con todos los controles visibles](docs/screenshots/v1.9.1/ajustes-es.png)
+
+## Novedades de v1.9.1
+
+Botón **«invítame a un café»** junto a la estrella de GitHub en Ajustes → Ayuda y proyecto. Abre PayPal en el navegador; también disponible en inglés.
 
 ## Novedades de v1.9
 
@@ -23,7 +27,7 @@ Dock de juegos y aplicaciones para **Windows 10/11 x64**. Un solo ejecutable, si
 
 ## Descargar y usar
 
-1. Descarga **GamesDock.exe** desde la [release v1.9](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9).
+1. Descarga **GamesDock.exe** desde la [release v1.9.1](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.1).
 2. Guarda el archivo en una carpeta permanente y ejecútalo. Requiere .NET Framework 4.8.
 3. Clic derecho en una zona vacía de la barra → **Ajustes**. Prueba temas y combinaciones en la muestra; sus iconos no abren programas.
 
@@ -103,6 +107,10 @@ La aplicación consulta GitHub para actualizarse, Steam para las fichas y SteamG
 - [Arquitectura y validación](docs/development/ARQUITECTURA.md)
 - [Notas de la release](docs/releases/v1.9.md)
 - [Contribuir](CONTRIBUTING.md)
+
+## Donaciones
+
+Si GamesDock te resulta útil y quieres apoyar su desarrollo, puedes [invitarme a un café en PayPal](https://www.paypal.com/paypalme/sadriprods). Gracias por el apoyo.
 
 ## Licencia
 

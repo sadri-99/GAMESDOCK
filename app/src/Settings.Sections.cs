@@ -149,9 +149,16 @@ namespace GamesDock
                 "Arrastra un icono para ordenar la barra; soltarlo fuera del cristal lo quita y vuelve con " +
                 "\"Restaurar ocultos\" del clic derecho. Clic derecho en un icono: fijar, renombrar u ocultar. Clic central: favorito."), 10.5, "PanelSub");
             gestures.TextWrapping = TextWrapping.Wrap; gestures.Margin = new Thickness(0, 0, 0, 10); panel.Children.Add(gestures);
-            var invitation = Res.Label(Lang.T("¿Te gusta la barra? Deja una estrella: es nuestra única señal de que la usas."), 10.5, "PanelSub");
+            var invitation = Res.Label(Lang.T("¿Te gusta la barra? Apoya el proyecto con una estrella o un café."), 10.5, "PanelSub");
             invitation.TextWrapping = TextWrapping.Wrap; panel.Children.Add(invitation);
-            panel.Children.Add(Pill(Lang.T("Estrella en GitHub"), () => Launcher.OpenUrl(Update.PaginaRepo)));
+            var support = new Grid();
+            support.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            support.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            var star = Pill(Lang.T("Estrella en GitHub"), () => Launcher.OpenUrl(Update.PaginaRepo));
+            var coffee = Pill(Lang.T("invítame a un café"), () => Launcher.OpenUrl(Update.PaginaDonacion));
+            coffee.ToolTip = Update.PaginaDonacion;
+            support.Children.Add(star); Grid.SetColumn(coffee, 1); support.Children.Add(coffee);
+            panel.Children.Add(support);
             return panel;
         }
     }

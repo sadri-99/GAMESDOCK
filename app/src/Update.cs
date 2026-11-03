@@ -65,6 +65,7 @@ namespace GamesDock
         // Ajustes, y el enlace que hay que abrir para dejarla. El API de arriba es el mismo repo, pero
         // en su cara de maquina.
         public const string PaginaRepo = "https://github.com/sadri-99/GAMESDOCK";
+        public const string PaginaDonacion = "https://www.paypal.com/paypalme/sadriprods";
 
         // GAMESDOCK_UPD_BASE lo pisa unicamente el arnes (_dev/cs-upd.ps1 levanta un servidor local con
         // la misma forma de respuesta); en la barra normal siempre es el repositorio de verdad.

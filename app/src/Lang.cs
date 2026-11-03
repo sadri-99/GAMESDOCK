@@ -222,9 +222,10 @@ namespace GamesDock
                  "Create a free account at steamgriddb.com and get the key at Profile > Preferences > API. Right-clicking an icon then offers \"Community icons\": the artwork people upload, instead of the official icon.");
             Put(d, "Arrastra un .lnk, .exe o un enlace steam:// sobre la barra para fijarlo. Arrastra un icono para ordenar la barra; soltarlo fuera del cristal lo quita y vuelve con \"Restaurar ocultos\" del clic derecho. Clic derecho en un icono: fijar, renombrar u ocultar. Clic central: favorito.",
                  "Drop a .lnk, .exe or steam:// link on the bar to pin it. Drag an icon to reorder the bar; dropping it outside the glass hides it, and it comes back from \"Restore hidden\". Right-click an icon to pin, rename or hide it. Middle click: favorite.");
-            Put(d, "¿Te gusta la barra? Deja una estrella: es nuestra única señal de que la usas.",
-                 "Like the bar? Leave a star: it is our only signal that you use it.");
+            Put(d, "¿Te gusta la barra? Apoya el proyecto con una estrella o un café.",
+                 "Like the bar? Support the project with a star or a coffee.");
             Put(d, "Estrella en GitHub", "Star on GitHub");
+            Put(d, "invítame a un café", "Buy me a coffee");
 
             // ------------------------------------------------------------ actualizaciones
             Put(d, "Buscar actualizaciones", "Check for updates");

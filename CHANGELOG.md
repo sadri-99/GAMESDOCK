@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.1] — 2026-11-03
+
+- Botón «invítame a un café» junto a «Estrella en GitHub» en Ajustes, con traducción «Buy me a coffee».
+- Enlace directo a https://www.paypal.com/paypalme/sadriprods; se abre en el navegador.
+- Apartado de donaciones en README español e inglés y enlace de patrocinio en .github/FUNDING.yml.
+- Capturas actualizadas de Ajustes en ambos idiomas y metadatos de producto 1.9.1.
+- 332 comprobaciones de Ajustes superadas; ambos botones visibles en la misma fila, sin scroll.
+
 ## [1.9] — 2026-11-03
 
 ### Temas y animaciones
@@ -48,3 +56,5 @@
 - Comparación adicional de 180 escenas: mismos píxeles tras optimizar el renderizador.
 
 [1.9]: https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9
+
+[1.9.1]: https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.1

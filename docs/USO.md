@@ -202,6 +202,10 @@ pedir fichas: con la palanca abajo no hay ninguna salida a internet por ese lado
 momento, sin reiniciar.
 
 
+## Apoyar el proyecto
+
+En Ajustes → Ayuda y proyecto, «invítame a un café» está junto a «Estrella en GitHub». Abre [PayPal](https://www.paypal.com/paypalme/sadriprods) en el navegador. En inglés se llama «Buy me a coffee».
+
 ## Dónde guarda sus cosas
 
 Se queda íntegramente en el perfil de usuario. El registro solo se lee, nunca se escribe.
