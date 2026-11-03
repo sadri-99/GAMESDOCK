@@ -39,3 +39,4 @@ desktop.ini
 
 # Release packages
 dist/
+!docs/screenshots/**/*.gif

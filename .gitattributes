@@ -16,6 +16,7 @@
 *.ico binary
 *.exe binary
 *.png binary
+*.gif binary
 *.jpg binary
 
 # Los ficheros sin extension tambien son texto del repositorio.

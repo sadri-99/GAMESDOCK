@@ -24,7 +24,9 @@ vectoriales y las transiciones tienen un objetivo de 60 fotogramas por segundo.
 Los acabados giran con la barra en sus cuatro posiciones y siguen el contorno al ampliar iconos.
 Los temas también se aplican a menús y ajustes; nombres traducidos al inglés.
 
-![Enfoque coordinado con cada material](screenshots/v1.9/enfoque.png)
+![Los seis temas animados: acercamiento, enfoque y lanzamiento; captura de 1680 × 2040](screenshots/v1.9.5/temas-animados-hd.gif)
+
+[Recorrido animado por los 15 temas, a 1920 × 540](screenshots/v1.9.5/dock-15-temas-hd.gif)
 
 ## Acercamiento adaptado al tema
 

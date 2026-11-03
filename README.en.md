@@ -37,7 +37,9 @@ Detects Steam, Epic Games, GOG, Start menu and desktop shortcuts. Drag files or 
 
 Position the dock on any screen edge or freely. Lock position and icons, move shortcuts from the desktop and restore them later. Toggle visibility with `Ctrl` + `Alt` + `D` or the tray. Spanish and English interfaces, optional Windows startup and update checks with installation confirmation are included.
 
-![All themes rendered by GamesDock](docs/screenshots/v1.9/temas.png)
+![All 15 dock themes in motion, captured at 1920 × 540](docs/screenshots/v1.9.5/dock-15-temas-hd.gif)
+
+[View all six animated themes at 1680 × 2040](docs/screenshots/v1.9.5/temas-animados-hd.gif)
 
 ## Performance and privacy
 

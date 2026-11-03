@@ -61,7 +61,9 @@ El ejecutable no está firmado digitalmente. Windows puede mostrar su aviso habi
 
 ## Temas
 
-![Quince materiales renderizados por GamesDock](docs/screenshots/v1.9/temas.png)
+![Los 15 temas del dock en movimiento, captura de 1920 × 540](docs/screenshots/v1.9.5/dock-15-temas-hd.gif)
+
+[Ver los seis temas animados a 1680 × 2040](docs/screenshots/v1.9.5/temas-animados-hd.gif)
 
 | Animado | Referencia | Detalles |
 | --- | --- | --- |
