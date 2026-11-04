@@ -28,6 +28,6 @@ Referencias de Windows: [MonitorFromWindow](https://learn.microsoft.com/en-us/wi
 
 ## Validación
 
-La suite suma **15.969 comprobaciones**. Las 1.626 comprobaciones de monitores incluyen 500 combinaciones de pantalla, posición y escala, guardado y lectura de configuración, cambio de numeración, desconexión/reconexión, ventanas auxiliares y creación de una nueva ventana con la preferencia guardada.
+La suite suma **23.065 comprobaciones**. Las 1.626 comprobaciones de monitores incluyen 500 combinaciones de pantalla, posición y escala, guardado y lectura de configuración, cambio de numeración, desconexión/reconexión, ventanas auxiliares y creación de una nueva ventana con la preferencia guardada.
 
 Se simulan cinco pantallas con escalas del 100, 125, 150 y 200 %. La integración nativa se ha probado con la única pantalla real disponible en esta sesión. No se ha realizado un arrastre físico entre dos monitores reales durante esta validación.

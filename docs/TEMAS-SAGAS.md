@@ -53,3 +53,5 @@ Los nombres identifican sus sagas y GamesDock no está afiliado a sus titulares.
 
 
 ThemeTweaksValidation verifica selección limpia de PlayStation y Diablo, extremos y gotas de Death Stranding, reloj lento de Cyberpunk y ausencia de temas retirados.
+
+[Resultado completo de v2.00: 23.065 comprobaciones y validación del instalador](development/VALIDACION-v2.00.md).

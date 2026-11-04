@@ -29,7 +29,7 @@ Buscar de nuevo, elegir otra coincidencia o cerrar cancela el trabajo anterior. 
 
 191 comprobaciones específicas con un servidor local de prueba: coincidencias múltiples, búsqueda alternativa, `Enter`, desplegable, cierre tras scroll, clave inválida, imágenes dañadas, caché, respuestas tardías, cancelación de consultas y de miniaturas, y selección de la URL original. Español e inglés revisados. No se utilizan claves reales en estas pruebas.
 
-La revisión completa suma **16.160 comprobaciones**. Las capturas siguientes son del selector real con datos de prueba; no representan resultados en vivo de SteamGridDB.
+La revisión completa suma **23.065 comprobaciones**. Las capturas siguientes son del selector real con datos de prueba; no representan resultados en vivo de SteamGridDB.
 
 ![Selector con búsqueda](screenshots/v2.00/Iconos-comunidad-es.png)
 
