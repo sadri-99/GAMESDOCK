@@ -8,7 +8,7 @@ namespace GamesDock
 {
     public static class Paths
     {
-        public static readonly string Root    = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GamesDock");
+        public static readonly string Root    = DataRoot();
         public static readonly string IconDir = Path.Combine(Root, "icons");
         // los iconos elegidos por el usuario se copian aqui; la carpeta es el marcador de "personalizado",
         // porque el cache de extraccion vive justo al lado y no hay que confundirlo
@@ -20,6 +20,14 @@ namespace GamesDock
         public static readonly string UpdateDir = Path.Combine(Root, "update");
         public static readonly string CfgFile = Path.Combine(Root, "config.json");
         public static readonly string LogFile = Path.Combine(Root, "dock.log");
+
+        static string DataRoot()
+        {
+            string isolated = Environment.GetEnvironmentVariable("GAMESDOCK_DATA_DIR");
+            return string.IsNullOrWhiteSpace(isolated)
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GamesDock")
+                : Path.GetFullPath(isolated);
+        }
 
         public static void Ensure()
         {

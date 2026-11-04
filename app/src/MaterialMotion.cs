@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -120,7 +120,7 @@ namespace GamesDock
         {
             _eventPosition = position; _launchEvent = launch;
             int generation = ++_eventGeneration;
-            double seconds = launch ? ThemeMotionProfile.For(_theme.Material).LaunchTime : 1.85;
+            double seconds = launch ? ThemeMotionProfile.For(_theme.Material).LaunchTime : (_theme.Material == "cyberware" ? 3.7 : 1.85);
             var sequence = Clock(0, 1, seconds);
             sequence.Completed += delegate
             {
@@ -142,206 +142,16 @@ namespace GamesDock
             double activity = Clamp(InteractionLevel);
             if (activity < 0.001 && eventProgress < 0) return;
             double phase = eventProgress >= 0 ? Clamp(eventProgress) : AmbientPhase;
-            double energy = eventProgress >= 0 ? Envelope(phase) * (_launchEvent ? 1 : 0.75) : activity * 0.48;
+            double energy = eventProgress >= 0 ? Envelope(phase) : activity * .82;
             if (energy < 0.001) return;
             double position = _marker >= 0 ? _marker : _length / 2;
             if (eventProgress >= 0) position = _eventPosition;
             position = Math.Max(start, Math.Min(end, position));
             dc.PushOpacity(energy);
-            dc.PushOpacity(.32);
-            dc.DrawEllipse(_focusGlow, null, new Point(position, _center), _half * 1.8, _half * 1.1);
+            if (Themes.SagaHint(_theme.Material) == null)
+                DrawLegacyMotion(dc, start, end, top, bottom, position, phase, eventProgress >= 0 && _launchEvent);
+            else DrawNewSagaMotion(dc, start, end, top, bottom, position, phase, eventProgress >= 0 && _launchEvent);
             dc.Pop();
-            switch (_theme.Material)
-            {
-                case "industrial": DrawTracker(dc, start, end, top, bottom, position, phase, eventProgress >= 0); break;
-                case "shrine": DrawBonfire(dc, start, end, top, bottom, position, phase); break;
-                case "portal": DrawPortals(dc, start, end, top, bottom, position, phase, eventProgress >= 0); break;
-                case "memory": DrawMemory(dc, start, end, top, bottom, phase); break;
-                case "orbit": DrawMassField(dc, start, end, top, bottom, position, phase, eventProgress >= 0); break;
-                case "terminal": DrawCode(dc, start, end, top, bottom, position, phase, eventProgress >= 0); break;
-            }
-            dc.Pop();
-        }
-
-        // Alien: a motion-tracker sweep, phosphor persistence and sequenced airlock lamps.
-        void DrawTracker(DrawingContext dc, double start, double end, double top, double bottom,
-                         double position, double phase, bool triggered)
-        {
-            double scan = Between(start, end, phase);
-            dc.PushOpacity(Envelope(phase));
-            for (int i = 0; i < 9; i++)
-            {
-                double x = scan - i * 5;
-                if (x < start) continue;
-                dc.PushOpacity((1 - i / 9.0) * 0.7);
-                Line(dc, Stroke(Radar, i == 0 ? 2 : 1), x, bottom - 8, x, bottom - 2);
-                dc.Pop();
-            }
-            dc.Pop();
-            for (int i = 0; i < 5; i++)
-            {
-                dc.PushOpacity(i <= Math.Floor(phase * 5) ? 0.9 : 0.16);
-                dc.DrawRectangle(_accent, null, new Rect(start + i * 9, top + 2, 6, 2)); dc.Pop();
-            }
-            double ping = 3 + Unit(phase * 2) * 13;
-            dc.PushOpacity(0.7 * (1 - Unit(phase * 2)));
-            dc.DrawEllipse(null, Stroke(Radar, 1), new Point(position, bottom - 5), ping, ping * 0.6);
-            dc.Pop();
-            if (triggered)
-            {
-                dc.PushOpacity(0.09);
-                dc.DrawRectangle(Radar, null, new Rect(scan - 2, top, 4, bottom - top));
-                dc.Pop();
-            }
-        }
-
-        // Dark Souls: embers rise from a kindled bonfire; a broken seal grows around the chosen slot.
-        void DrawBonfire(DrawingContext dc, double start, double end, double top, double bottom,
-                         double position, double phase)
-        {
-            double heat = 0.7 + 0.3 * Math.Sin(phase * Math.PI * 6);
-            Line(dc, Stroke(Ember, 1.5), position - 12 * heat, bottom - 2.5, position + 12 * heat, bottom - 2.5);
-            for (int i = 0; i < 11; i++)
-            {
-                double age = Unit(phase * 2 + i * 0.137);
-                double x = position + Math.Sin(i * 2.4 + age * 3) * (10 + age * 23);
-                double y = bottom - 3 - age * (bottom - top - 5);
-                dc.PushOpacity((1 - age) * 0.8);
-                dc.DrawEllipse(i % 3 == 0 ? _accent : Ember, null, new Point(x, y), 0.7, 1.1 + age);
-                dc.Pop();
-            }
-            double radius = Math.Min(30, _half - 5);
-            dc.PushOpacity(0.6);
-            Arc(dc, Stroke(_accent, 1), position, _center, radius, radius,
-                -Math.PI * 0.8, Math.PI * (0.6 + 0.4 * Math.Sin(phase * Math.PI)));
-            dc.Pop();
-        }
-
-        // Portal: paired mouths exchange energy; launch opens a local aperture and transfers charge.
-        void DrawPortals(DrawingContext dc, double start, double end, double top, double bottom,
-                         double position, double phase, bool triggered)
-        {
-            double charge = 0.5 + 0.5 * Math.Sin(phase * Math.PI);
-            for (int side = 0; side < 2; side++)
-            {
-                Brush color = side == 0 ? Blue : Orange;
-                double x = side == 0 ? 8 : _length - 8;
-                for (int ring = 0; ring < 3; ring++)
-                {
-                    dc.PushOpacity(0.65 - ring * 0.19);
-                    dc.DrawEllipse(null, Stroke(color, 1), new Point(x, _center),
-                        2 + ring * 1.8 + charge, _half * 0.48 + ring * 2); dc.Pop();
-                }
-            }
-            for (int i = 0; i < 7; i++)
-            {
-                double travel = Unit(phase * 2 + i / 7.0);
-                double x = Between(start, end, travel);
-                double y = bottom - 4 - Math.Sin(travel * Math.PI) * 2;
-                dc.PushOpacity(0.8 - i * 0.06);
-                Line(dc, Stroke(travel < 0.5 ? Blue : Orange, 1.5), x - 3, y, x + 1, y); dc.Pop();
-            }
-            if (triggered)
-            {
-                double opening = Math.Sin(phase * Math.PI);
-                dc.DrawEllipse(null, Stroke(phase < 0.5 ? Blue : Orange, 1.5),
-                    new Point(position, _center), Math.Max(1, opening * (_half - 4)), _half - 3);
-            }
-        }
-
-        // PlayStation memory hardware: discrete address packets, a write LED and the four boot glyphs.
-        void DrawMemory(DrawingContext dc, double start, double end, double top, double bottom, double phase)
-        {
-            int step = (int)(phase * 28);
-            double track = Math.Max(1, end - start - 42);
-            for (int i = 0; i < 6; i++)
-            {
-                double x = start + Unit((step - i) / 28.0) * track;
-                dc.PushOpacity(0.8 - i * 0.11);
-                dc.DrawRectangle(_accent, null, new Rect(x, bottom - 7, 4, 3)); dc.Pop();
-            }
-            dc.PushOpacity(step % 3 == 0 ? 0.2 : 1);
-            dc.DrawEllipse(_accent, null, new Point(9, _center - 10), 2, 2); dc.Pop();
-            for (int i = 0; i < 4; i++)
-            {
-                dc.PushOpacity(0.3 + 0.7 * Clamp((phase * 4 - i) * 3));
-                DrawBootGlyph(dc, i, end - 32 + i * 10, top + 5); dc.Pop();
-            }
-        }
-
-        void DrawBootGlyph(DrawingContext dc, int glyph, double x, double y)
-        {
-            var pen = Stroke(_accent, 0.9);
-            if (glyph == 0)
-            {
-                Line(dc, pen, x, y + 4, x + 2, y); Line(dc, pen, x + 2, y, x + 4, y + 4);
-                Line(dc, pen, x + 4, y + 4, x, y + 4);
-            }
-            else if (glyph == 1) dc.DrawEllipse(null, pen, new Point(x + 2, y + 2), 2, 2);
-            else if (glyph == 2)
-            {
-                Line(dc, pen, x, y, x + 4, y + 4); Line(dc, pen, x + 4, y, x, y + 4);
-            }
-            else dc.DrawRectangle(null, pen, new Rect(x, y, 4, 4));
-        }
-
-        // Mass-effect field: a slow orbital lens becomes an expanding launch wave around the slot.
-        void DrawMassField(DrawingContext dc, double start, double end, double top, double bottom,
-                           double position, double phase, bool triggered)
-        {
-            double satellite = Between(start, end, phase);
-            double pathY = bottom - 5 + 3 * Math.Sin(phase * Math.PI);
-            dc.PushOpacity(Envelope(phase));
-            dc.DrawEllipse(MassField, null, new Point(satellite, pathY), 2, 1.3);
-            for (int i = 0; i < 8; i++)
-            {
-                double x = satellite - i * 4;
-                if (x < start) continue;
-                dc.PushOpacity((1 - i / 8.0) * 0.35);
-                Line(dc, Stroke(MassField, 1), x - 2, pathY, x + 1, pathY); dc.Pop();
-            }
-            dc.Pop();
-            for (int ring = 0; ring < 3; ring++)
-            {
-                double expansion = Unit(phase - ring * 0.17);
-                double rx = (_half - 4) + expansion * (triggered ? 105 : 26);
-                double ry = _half - 4 + expansion * 8;
-                dc.PushOpacity((1 - expansion) * 0.6);
-                Arc(dc, Stroke(MassField, 1), position, _center, rx, ry, Math.PI * 0.08, Math.PI * 0.84);
-                Arc(dc, Stroke(_accent, 0.8), position, _center, rx, ry, Math.PI * 1.08, Math.PI * 0.84);
-                dc.Pop();
-            }
-        }
-
-        // Matrix: deterministic phosphor columns with bright heads and a stepped decode rail.
-        void DrawCode(DrawingContext dc, double start, double end, double top, double bottom,
-                      double position, double phase, bool triggered)
-        {
-            int columns = Math.Max(3, Math.Min(14, (int)(_length / 52)));
-            for (int column = 0; column < columns; column++)
-            {
-                double x = Between(start, end, (column + 0.5) / columns);
-                double fall = Unit(phase * (column % 2 == 0 ? 1.0 : 2.0) + column * 0.271);
-                double headY = top + fall * (bottom - top + 25);
-                for (int digit = 0; digit < 5; digit++)
-                {
-                    double y = headY - digit * 6;
-                    if (y < top + 2 || y > bottom - 6) continue;
-                    dc.PushOpacity((digit == 0 ? 0.7 : 0.23 * (1 - digit / 5.0)) * (triggered ? 1 : 0.65));
-                    Brush color = digit == 0 ? Head : Phosphor;
-                    var pen = Stroke(color, 0.8);
-                    if ((column + digit + (int)(phase * 16)) % 3 == 0)
-                        dc.DrawRectangle(null, pen, new Rect(x, y, 2.5, 4));
-                    else Line(dc, pen, x + 1, y, x + 1, y + 4);
-                    dc.Pop();
-                }
-            }
-            int count = triggered ? 10 : 5;
-            for (int i = 0; i < count; i++)
-            {
-                dc.PushOpacity(i / (double)count < Unit(phase * 2) ? 0.85 : 0.16);
-                dc.DrawRectangle(Phosphor, null, new Rect(position - count * 3 + i * 6, bottom - 5, 3, 2)); dc.Pop();
-            }
         }
 
         static void Arc(DrawingContext dc, Pen pen, double x, double y, double rx, double ry,

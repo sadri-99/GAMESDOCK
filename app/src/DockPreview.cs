@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
@@ -37,7 +37,7 @@ namespace GamesDock
         Geometry _geometry;
         string _shape;
         bool _inside, _subscribed, _frameActive, _batch, _sceneDirty;
-        double _size, _pitch, _length, _lastTime;
+        double _size, _pitch, _length, _lastTime, _inset = 14;
         double _geoCenter, _geoHalf, _geoUniform, _geoAmplitude, _geoPointer;
         public double Progress { get { return (double)GetValue(ProgressProperty); } set { SetValue(ProgressProperty, value); } }
         public double Pointer { get { return (double)GetValue(PointerProperty); } set { SetValue(PointerProperty, value); } }
@@ -64,7 +64,7 @@ namespace GamesDock
                 {
                     if (!_dock.Cfg.Motion) return;
                     SagaTileMotion.Launch(_tiles[selected], Themes.Get(_dock.Cfg.Theme).Material, false);
-                    _material.Launch(14 + selected * _pitch + _size / 2);
+                    _material.Launch(_inset + selected * _pitch + _size / 2);
                 };
                 _tiles.Add(tile); _scene.Children.Add(tile);
             }
@@ -95,6 +95,7 @@ namespace GamesDock
             var cfg = _dock.Cfg; var theme = Themes.Get(cfg.Theme);
             double size = Math.Min(48, Math.Max(28, cfg.IconSize));
             bool changed = _theme != theme, resized = size != _size, reshaped = _shape != cfg.IconShape;
+            _inset = 14;
             _size = size; _pitch = _size + 14; _length = _pitch * 5 + 14; _scene.Width = _length;
             if (changed)
             {
@@ -134,7 +135,7 @@ namespace GamesDock
                     if (changed) letter.Foreground = _letterBrush;
                     art.Child = letter;
                 }
-                Canvas.SetLeft(_tiles[i], 14 + i * _pitch);
+                Canvas.SetLeft(_tiles[i], _inset + i * _pitch);
             }
             if (resized) _geometry = null;
             if (!cfg.Magnify)
@@ -220,7 +221,7 @@ namespace GamesDock
             int nearest = 0; double distance = double.MaxValue;
             for (int i = 0; i < _tiles.Count; i++)
             {
-                var tile = _tiles[i]; double x = 14 + i * _pitch, tileCenter = x + _size / 2;
+                var tile = _tiles[i]; double x = _inset + i * _pitch, tileCenter = x + _size / 2;
                 double weight = profile.Influence(Pointer - tileCenter, _pitch * profile.Radius) * level;
                 double scale = 1 + (profile.Peak - 1) * weight;
                 ((ScaleTransform)tile.RenderTransform).ScaleX = scale; ((ScaleTransform)tile.RenderTransform).ScaleY = scale;
@@ -231,7 +232,7 @@ namespace GamesDock
             }
             if (_inside)
             {
-                double x = 14 + nearest * _pitch;
+                double x = _inset + nearest * _pitch;
                 double weight = profile.Influence(Pointer - x - _size / 2, _pitch * profile.Radius) * level;
                 double scale = 1 + (profile.Peak - 1) * weight;
                 double lift = cfg.Motion ? profile.Lift * Math.Min(1, _size / 64) * weight : 0;

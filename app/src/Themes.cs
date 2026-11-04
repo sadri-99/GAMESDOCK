@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Windows.Media;
 
@@ -18,19 +18,18 @@ namespace GamesDock
                 switch (Material)
                 {
                     case "industrial": return "Alien: detector de movimiento, fósforo y secuencia de esclusa.";
-                    case "shrine": return "Dark Souls: avivar la hoguera, brasas y sello de invocación.";
                     case "portal": return "Portal: carga azul/naranja, apertura y transferencia entre portales.";
                     case "memory": return "PlayStation: arranque por pasos, paquetes de memoria y LED de escritura.";
                     case "orbit": return "Mass Effect: lente orbital, compresión gravitatoria y onda de campo.";
                     case "terminal": return "Matrix: lluvia de código, decodificación y breve fallo de señal.";
-                    default: return null;
+                    default: return Themes.SagaHint(Material);
                 }
             }
         }
         public Dictionary<string, string> C = new Dictionary<string, string>();
     }
 
-    public static class Themes
+    public static partial class Themes
     {
         static ThemeDef T(string label, params string[] kv)
         {
@@ -54,7 +53,7 @@ namespace GamesDock
             return t;
         }
 
-        public static readonly Dictionary<string, ThemeDef> All = new Dictionary<string, ThemeDef>
+        static Dictionary<string, ThemeDef> Existing = new Dictionary<string, ThemeDef>
         {
             { "noche", T("Noche",
                 "glass", "#660A1018", "glassBot", "#7A060A10", "edge", "#42FFFFFF",
@@ -116,19 +115,19 @@ namespace GamesDock
                 "hover", "#8C39D97A", "press", "#A6F5E663", "badge", "#33A8FF6A", "letter", "#FFEAFFE8",
                 "tipBg", "#F0051409", "tipFg", "#FFEAFFE8", "tipEdge", "#66A8FF6A",
                 "fieldBg", "#F0051409", "fieldFg", "#FF89C99B", "accent", "#FFF5E663") },
-            { "nostromo", M("Nostromo", "industrial", 0.18,
+            { "nostromo", M("Alien", "industrial", 0.18,
                 "#F0D6D6CB", "#E8A6ACA5", "#C0EDF0DC", "#FFDC8145", "#FF222A29", "#FFF1F0E5", "#FFB9C4BA") },
-            { "santuario", M("Santuario", "shrine", 1.0,
-                "#EB22221F", "#EB101310", "#99625844", "#FFDAB875", "#FF1B1C18", "#FFF1E6D0", "#FFC1B398") },
-            { "camara", M("Cámara de pruebas", "portal", 0.44,
+            { "camara", M("Portal", "portal", 0.44,
                 "#F5F6F6F2", "#EED7DCDD", "#DDFFFFFF", "#FF169BC3", "#FFF0F3F3", "#FF24343E", "#FF536772") },
-            { "memory", M("Memory Card", "memory", 0.16,
+            { "memory", M("PlayStation", "memory", 0.16,
                 "#F0ADABB8", "#EE85848F", "#CCD0CBD6", "#FF8EEDC8", "#FF292735", "#FFF0EDF8", "#FFC0B9D0") },
-            { "horizonte", M("Horizonte", "orbit", 1.0,
+            { "horizonte", M("Mass Effect", "orbit", 1.0,
                 "#E026333F", "#EE0A1119", "#666E8B9B", "#FFB5E1EC", "#FF101D29", "#FFE2F1F5", "#FFA0BAC8") },
-            { "terminal", M("Terminal fantasma", "terminal", 0.10,
+            { "terminal", M("Matrix", "terminal", 0.10,
                 "#E8142923", "#ED10231F", "#884D836E", "#FF93D9B8", "#FF11231D", "#FFDBF1E4", "#FF9CC6AF") }
         };
+
+        public static readonly Dictionary<string, ThemeDef> All = AddSagas(Existing);
 
         public const string Fallback = "noche";
         public static readonly string[] GroupIds = { "classic", "animated" };

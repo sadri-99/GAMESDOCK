@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -33,7 +33,11 @@ namespace GamesDock
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2.2, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(18) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            var themes = new StackPanel(); themes.Children.Add(SecHead("Elige un tema")); themes.Children.Add(ThemeGroups(dock));
+            var themes = new StackPanel(); themes.Children.Add(SecHead("Elige un tema")); var gallery = new ScrollViewer { Content = ThemeGroups(dock), Height = 192, Tag = "theme-gallery",
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Focusable = false, PanningMode = PanningMode.VerticalOnly };
+            gallery.Resources.Add(typeof(System.Windows.Controls.Primitives.ScrollBar), Res.Style("IconGalleryScrollBar"));
+            themes.Children.Add(gallery);
             grid.Children.Add(themes);
             var combinations = new StackPanel(); Grid.SetColumn(combinations, 2); grid.Children.Add(combinations);
             combinations.Children.Add(SecHead("Prueba combinaciones"));
@@ -41,7 +45,7 @@ namespace GamesDock
             magnify.Margin = new Thickness(0, 0, 0, 6); combinations.Children.Add(magnify);
             var motion = Switch(Lang.T("Animaciones de los temas"), cfg.Motion, dock.SetThemeMotion);
             motion.Margin = new Thickness(0, 0, 0, 5); motion.ToolTip = PerformanceInfo.ToolTip(); combinations.Children.Add(motion);
-            var usageLabel = Res.Label(Lang.T("CPU al animar · RAM extra baja en prueba"), 10.5, "MenuAccent"); usageLabel.TextWrapping = TextWrapping.Wrap;
+            var usageLabel = Res.Label(Lang.T("CPU al animar · RAM según tema"), 10.5, "MenuAccent"); usageLabel.TextWrapping = TextWrapping.Wrap;
             var usage = new Button { Style = Res.Style("InfoLink"), Content = usageLabel, HorizontalAlignment = HorizontalAlignment.Stretch,
                 Margin = new Thickness(45, -3, 0, 4), ToolTip = PerformanceInfo.ToolTip(), Tag = "animation-cost" };
             usage.Click += delegate { Aviso(PerformanceInfo.Description); }; combinations.Children.Add(usage);

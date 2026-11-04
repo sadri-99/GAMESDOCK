@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -101,11 +101,12 @@ static class MotionValidation
         var arts = new List<MaterialArt>(); var tiles = new List<Button>();
         var source = new BitmapImage(new Uri(Path.GetFullPath(args[1])));
         int[] cropX = { 68, 152, 236, 320, 404, 488, 572, 656 };
-        var hints = new[] { "Alien · detector de movimiento / esclusa", "Dark Souls · hoguera / sello",
-            "Portal · aperturas / transferencia", "PlayStation · arranque / memoria", "Mass Effect · campo gravitatorio", "Matrix · código / decodificación" };
+        var hints = new[] { "Alien · detector de movimiento / esclusa", "Portal · aperturas / transferencia",
+            "PlayStation · arranque / memoria", "Mass Effect · campo gravitatorio", "Matrix · código / decodificación", "Cyberpunk · quickhack" };
         int row = 0;
         foreach (var entry in Themes.InGroup("animated"))
         {
+            if (row == 6) break; // Existing six-theme animation reel; new sagas have their own coverage.
             var label = new TextBlock { Text = entry.Value.Label + "   —   " + hints[row], FontSize = 13,
                 Foreground = Themes.Br("#FFDDE5E6"), FontFamily = new FontFamily("Segoe UI") };
             Canvas.SetLeft(label, 30); Canvas.SetTop(label, 17 + row * 144); root.Children.Add(label);
@@ -127,7 +128,7 @@ static class MotionValidation
                     Padding = new Thickness(0), BorderThickness = new Thickness(0), Background = Brushes.Transparent,
                     Template = new ControlTemplate(typeof(Button)) { VisualTree = new FrameworkElementFactory(typeof(ContentPresenter)) },
                     RenderTransform = new ScaleTransform(1, 1) };
-                Canvas.SetLeft(tile, 34 + i * 93); Canvas.SetTop(tile, 18); panel.Children.Add(tile);
+                Canvas.SetLeft(tile, 50 + i * 93); Canvas.SetTop(tile, 18); panel.Children.Add(tile);
                 if (i == 4) tiles.Add(tile);
             }
             row++;
@@ -163,7 +164,11 @@ static class MotionValidation
             Pump(150);
             foreach (var art in arts) Check(art.AmbientPhase > 0 && art.InteractionLevel > 0, "Hover animation advances");
             foreach (var art in arts) art.SetInteraction(false);
-            Pump(350);
+            // Off-screen WPF composition may delay the first fade tick; assert the terminal state,
+            // with a deadline, instead of assuming 350 ms of wall time equals animation-clock time.
+            var stopDeadline = System.Diagnostics.Stopwatch.StartNew();
+            while (!arts.TrueForAll(art => !art.HasAnimatedProperties && art.InteractionLevel == 0)
+                && stopDeadline.ElapsedMilliseconds < 1500) Pump(25);
             foreach (var art in arts) Check(!art.HasAnimatedProperties && art.InteractionLevel == 0, "Hover clocks stop on leave");
             for (int i = 0; i < arts.Count; i++)
             {
@@ -174,7 +179,12 @@ static class MotionValidation
             }
             Pump(120);
             foreach (var art in arts) Check(art.EventPhase > 0, "Launch animation advances");
-            Pump(1700);
+            double longestLaunch = 0;
+            foreach (string id in ThemesIds) longestLaunch = Math.Max(longestLaunch, ThemeMotionProfile.For(Themes.Get(id).Material).LaunchTime);
+            var launchDeadline = System.Diagnostics.Stopwatch.StartNew();
+            while (!arts.TrueForAll(art => !art.HasAnimatedProperties && art.EventPhase < 0)
+                && launchDeadline.ElapsedMilliseconds < longestLaunch * 1000 + 500) Pump(25);
+            Pump(40);
             foreach (var art in arts) Check(!art.HasAnimatedProperties && art.EventPhase < 0, "Launch clocks finish");
             foreach (var tile in tiles)
             {
@@ -235,5 +245,5 @@ static class MotionValidation
         window.Close(); app.Shutdown();
         Console.WriteLine("PASS: " + _checks + " motion checks; distinct animated frames, clock lifecycle, Classic isolation, icon recovery; live WPF GIF exported.");
     }
-    static readonly string[] ThemesIds = { "nostromo", "santuario", "camara", "memory", "horizonte", "terminal" };
+    static readonly string[] ThemesIds = { "nostromo", "camara", "memory", "horizonte", "terminal", "nightcity" };
 }

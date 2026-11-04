@@ -1,4 +1,4 @@
-﻿#define AppVersion "1.9.5"
+#define AppVersion "2.00"
 [Setup]
 AppId={{D2DE7436-86BE-4C32-A06E-D1BFDAC14635}
 AppName=GamesDock
@@ -25,7 +25,7 @@ DisableWelcomePage=no
 CloseApplications=yes
 RestartApplications=no
 AppMutex=GamesDock_Single_Instance
-VersionInfoVersion={#AppVersion}.0
+VersionInfoVersion=2.0.0.0
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"

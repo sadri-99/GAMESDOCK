@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
@@ -38,10 +38,12 @@ namespace GamesDock
         public StackPanel Body;
         public TextBlock Tit;
         bool _veilo;
+        public bool CloseOnOutsideClick { get; set; }
 
         public GlassPanel(string titleTxt, double width,
                           string subTxt = null)
         {
+            if (Dock.Activa != null) width = Math.Min(width, Math.Max(280, Dock.Activa.MonitorWorkArea.Width - 28));
             // el valor por defecto no puede ser la cadena traducida: un parametro opcional ha de ser
             // constante en tiempo de compilacion
             if (subTxt == null) subTxt = Lang.T("clic derecho en la barra vacía - Esc para cerrar");
@@ -61,6 +63,17 @@ namespace GamesDock
                 // es un emergente modal: mientras este abierto nada de atras se puede tocar, asi que
                 // tampoco tiene sentido que una ventana normal lo tape
                 Topmost = true
+            };
+            Win.PreviewMouseDown += (s, e) =>
+            {
+                if (!CloseOnOutsideClick) return;
+                var frame = Win.Content as FrameworkElement;
+                if (frame == null) return;
+                Point point = e.GetPosition(frame);
+                // The transparent shadow margin belongs to the outside, too.
+                if (point.X >= 0 && point.Y >= 0 &&
+                    point.X < frame.ActualWidth && point.Y < frame.ActualHeight) return;
+                e.Handled = true; Win.Close();
             };
             Win.KeyUp += (s, e) => { if (e.Key == System.Windows.Input.Key.Escape) try { Win.Close(); } catch { } };
             Win.Closed += delegate { if (_veilo) { _veilo = false; Veil.Pop(); } };
@@ -152,7 +165,7 @@ namespace GamesDock
         // a proposito, o sea que esa fila era invisible e inalcanzable a la vista.
         static double BodyHeight()
         {
-            double h = SystemParameters.WorkArea.Height - 70;
+            double h = (Dock.Activa != null ? Dock.Activa.MonitorWorkArea.Height : SystemParameters.WorkArea.Height) - 70;
             if (h < 420) h = 420;
             if (h > 760) h = 760;
             return h;
@@ -182,7 +195,11 @@ namespace GamesDock
         public void ShowModal()
         {
             _veilo = true;
-            Veil.Push();
+            Veil.Push(CloseOnOutsideClick ? new Action(() => Win.Close()) : null);
+            var display = Dock.Activa != null ? Dock.Activa.CurrentDisplay : Displays.ForWindow(Win);
+            Win.WindowStartupLocation = WindowStartupLocation.Manual;
+            Win.SourceInitialized += delegate { Displays.CenterWindow(Win, display); };
+            Win.ContentRendered += delegate { Displays.CenterWindow(Win, display); };
             PlayIn();
             Win.ShowDialog();
         }
@@ -249,8 +266,9 @@ namespace GamesDock
 
         static GlassPanel BuildPanel(Dock dock)
         {
-            double width = Math.Min(1240, Math.Max(320, SystemParameters.WorkArea.Width - 24));
-            var panel = new GlassPanel(Lang.T("Ajustes de GamesDock"), width);
+            var area = dock.MonitorWorkArea;
+            double width = Math.Min(1240, Math.Max(320, area.Width - 24));
+            var panel = new GlassPanel(Lang.T("Ajustes de GamesDock"), width, Lang.T("Cambios al instante · Clic fuera o Esc para cerrar")) { CloseOnOutsideClick = true };
             Steppers.Clear();
             var shell = (Border)panel.Win.Content;
             var oldScroll = (ScrollViewer)shell.Child;
@@ -262,7 +280,7 @@ namespace GamesDock
             panel.Body.Children.Add(CustomizationPanel(dock));
             panel.Body.Children.Add(SecondarySections(dock));
             shell.Child = new Viewbox { Child = panel.Body, Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly,
-                MaxHeight = Math.Max(200, SystemParameters.WorkArea.Height - 36), HorizontalAlignment = HorizontalAlignment.Center };
+                MaxHeight = Math.Max(200, area.Height - 36), HorizontalAlignment = HorizontalAlignment.Center };
             return panel;
         }
 
@@ -381,9 +399,9 @@ namespace GamesDock
         static Grid ThemeGroups(Dock dock)
         {
             var groups = new Grid();
-            groups.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            groups.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(.9, GridUnitType.Star) });
             groups.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(14) });
-            groups.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            groups.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2.1, GridUnitType.Star) });
             int column = 0;
             foreach (string groupId in Themes.GroupIds)
             {
@@ -405,7 +423,7 @@ namespace GamesDock
                 Style = Res.Style("ThemeChip"),
                 GroupName = "tema",
                 Tag = id,
-                Width = 50,
+                Width = 62,
                 Margin = new Thickness(0, 0, 8, 7)
             };
             rb.IsChecked = on;
@@ -417,7 +435,7 @@ namespace GamesDock
             var sp = new StackPanel();
             var sw = new Border
             {
-                Width = 50,
+                Width = 62,
                 Height = 31,
                 CornerRadius = new CornerRadius(9),
                 Background = Themes.Grad(t.C["glass"], t.C["glassBot"]),
@@ -447,12 +465,14 @@ namespace GamesDock
             {
                 sw.CornerRadius = new CornerRadius(15 * t.CornerRatio);
                 var preview = new Grid { IsHitTestVisible = false };
-                var art = new MaterialArt { IsHitTestVisible = false };
-                var geometry = PillGeometry.Build(50, 15.5, 15, 0, 0, 25, 15,
+                var art = new MaterialArt { IsHitTestVisible = false, ShowIdentity = false };
+                var geometry = PillGeometry.Build(62, 15.5, 15, 0, 0, 25, 15,
                     1.55, false, 0, 0, t.CornerRatio);
-                art.Update(t, geometry, 50, 15.5, 15, false, -1);
+                art.Update(t, geometry, 62, 15.5, 15, false, -1);
                 preview.Children.Add(art);
-                preview.Children.Add(dots);
+                var emblem = new DrawingImage(SagaIdentity.For(t.Material)); emblem.Freeze();
+                preview.Children.Add(new Image { Source = emblem, Width = 24, Height = 25, Stretch = Stretch.Uniform,
+                    HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center });
                 sw.Child = preview;
             }
             sp.Children.Add(sw);
@@ -460,13 +480,14 @@ namespace GamesDock
             var lb = Res.Label(Lang.T(t.Label), 10, "PanelSub");
             lb.Margin = new Thickness(0, 4, 0, 0);
             lb.HorizontalAlignment = HorizontalAlignment.Center;
-            lb.Width = 50;
+            lb.Width = 62;
             lb.TextAlignment = TextAlignment.Center;
             lb.TextWrapping = TextWrapping.Wrap;
-            if (t.Material != null) lb.Height = 42;
+            if (t.Material != null) lb.Height = 40;
             sp.Children.Add(lb);
 
             rb.Content = sp;
+            if (on) rb.Loaded += delegate { rb.BringIntoView(); };
             rb.Checked += delegate { dock.SetTheme(id); };
             return rb;
         }

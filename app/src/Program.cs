@@ -11,6 +11,7 @@ namespace GamesDock
         [STAThread]
         static int Main(string[] args)
         {
+            Displays.EnableDpiScaling();
             if (args.Length == 1 && args[0] == "--shutdown")
             {
                 EventWaitHandle signal;

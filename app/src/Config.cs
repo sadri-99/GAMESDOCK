@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
@@ -50,6 +50,10 @@ namespace GamesDock
         [DataMember(Name = "position")] public string Position = "bottom";
         [DataMember(Name = "left")] public double? Left;
         [DataMember(Name = "top")] public double? Top;
+        [DataMember(Name = "monitorId")] public string MonitorId;
+        [DataMember(Name = "monitorDevice")] public string MonitorDevice;
+        [DataMember(Name = "monitorFreeX")] public double? MonitorFreeX;
+        [DataMember(Name = "monitorFreeY")] public double? MonitorFreeY;
         [DataMember(Name = "iconSize")] public int IconSize = 46;
         // como se recorta el icono dentro de su hueco: "defecto" (el cuadrado de siempre), "ios" o
         // "esfera". No cambia el png, solo el recorte con el que se pinta.
@@ -66,6 +70,8 @@ namespace GamesDock
         // maquinas que ya tienen GamesDock. Sin valor = encendida.
         [DataMember(Name = "hoverCard")] public bool? HoverCard;
         public bool Ficha { get { return !HoverCard.HasValue || HoverCard.Value; } }
+        [DataMember(Name = "hoverCardLarge")] public bool HoverCardLarge;
+        [DataMember(Name = "steamPersonalData")] public bool SteamPersonalData;
         [DataMember(Name = "idleOpacity")] public int IdleOpacity = 100;
         [DataMember(Name = "hotkey")] public bool Hotkey = true;
         [DataMember(Name = "desktopLevel")] public bool DesktopLevel = true;
@@ -75,6 +81,9 @@ namespace GamesDock
         [DataMember(Name = "locked")] public bool Locked = false;
         [DataMember(Name = "autostart")] public bool Autostart = false;
         [DataMember(Name = "section")] public string Section = "games";
+        [DataMember(Name = "pages")] public List<PageDto> Pages = new List<PageDto>();
+        [DataMember(Name = "pagesInitialized")] public bool PagesInitialized;
+        [DataMember(Name = "knownPageItems")] public List<string> KnownPageItems = new List<string>();
         // "auto" toma la cultura de interfaz de Windows; "es" y "en" fuerzan el idioma
         [DataMember(Name = "language")] public string Language = "auto";
         // la clave de SteamGridDB para el "Icono automatico". Vive aqui y nunca en el codigo: el
@@ -122,6 +131,7 @@ namespace GamesDock
             if (cfg.DesktopMoved == null) cfg.DesktopMoved = new Dictionary<string, string>();
             if (cfg.SteamGridKey == null) cfg.SteamGridKey = "";
             NormalizeAppearance(cfg);
+            PageStore.Normalize(cfg);
             int fus = MergePins(cfg);
             Log.Write(string.Format("Config leida: {0} fijados, {1} usos, {2} grupos{3}", cfg.Pins.Count, cfg.Usage.Count,
                 cfg.Groups.Count, fus > 0 ? ", " + fus + " duplicados fusionados" : "."));
@@ -131,6 +141,7 @@ namespace GamesDock
         static void NormalizeAppearance(Config cfg)
         {
             cfg.IdleOpacity = 100;
+            if (!Themes.All.ContainsKey(cfg.Theme ?? string.Empty)) cfg.Theme = Themes.Fallback;
             // Explicit existing shapes remain valid; new or missing preferences use iOS.
             if (cfg.IconShape != "ios" && cfg.IconShape != "esfera" && cfg.IconShape != "defecto") cfg.IconShape = "ios";
         }

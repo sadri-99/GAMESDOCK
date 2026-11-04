@@ -30,8 +30,8 @@ namespace GamesDock
             get
             {
                 return Lang.T("Las animaciones tienen un coste medible mientras se mueven: usan CPU y GPU. En reposo no mantienen un bucle de efectos.") + "\n\n" +
-                    Lang.T("Prueba simplificada fuera del área visible, con ocho accesos de 64 px y 12 procesadores lógicos: al mover el cursor por los seis temas, aproximadamente 2–3,4 % de CPU total. Es una referencia, no un monitor en directo.") + "\n\n" +
-                    Lang.T("En la prueba local, activar efectos con el cursor quieto añadió aproximadamente 1–4 MB de memoria privada y hasta 1,2 MB de memoria física. La memoria total de GamesDock también incluye Windows, iconos, catálogo y fichas; no corresponde solo a las animaciones.") + "\n\n" +
+                    Lang.T("Referencia local de los 11 temas animados conservados, con ocho accesos de 64 px y 12 procesadores lógicos: al mover el cursor, aproximadamente 2,6–5,3 % de CPU total. Ventana fuera del área visible; no es un monitor en directo.") + "\n\n" +
+                    Lang.T("La RAM varía con el tema y las cachés. En la medición anterior de los seis temas originales, activar efectos añadió aproximadamente 1–4 MB de memoria privada y hasta 1,2 MB de memoria física. Ese incremento no se ha medido por separado para los doce nuevos. El total también incluye Windows, iconos, catálogo y fichas.") + "\n\n" +
                     Lang.T("El consumo cambia con el equipo, el tema, la resolución y la interacción. No se ha medido la GPU ni el impacto en los FPS de juegos. Puedes desactivar los efectos; el agrandado es independiente.");
             }
         }

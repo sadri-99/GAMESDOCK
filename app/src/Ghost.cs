@@ -100,12 +100,11 @@ namespace GamesDock
             _win.Height = iconSize + 2 * Pad;
         }
 
-        // PointToScreen devuelve pixeles fisicos y Window.Left/Top quieren DIP
+        // Keep the drag ghost in physical desktop pixels across mixed-DPI screens.
         public void MoveTo(Window owner, Point pInGrid, double margin, double dip)
         {
             var sp = owner.PointToScreen(new Point(pInGrid.X + margin, pInGrid.Y + margin));
-            _win.Left = (sp.X / dip) - _win.Width / 2.0;
-            _win.Top = (sp.Y / dip) - _win.Height / 2.0;
+            Displays.MoveWindow(_win, new Point(sp.X - _win.Width * dip / 2.0, sp.Y - _win.Height * dip / 2.0));
         }
 
         public Border Box { get { return _box; } }

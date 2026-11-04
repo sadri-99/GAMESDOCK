@@ -13,7 +13,7 @@ namespace GamesDock
         {
             public FrameworkElement Art;
             public readonly ScaleTransform HoverScale = new ScaleTransform(1, 1), LaunchScale = new ScaleTransform(1, 1);
-            public readonly RotateTransform HoverRotate = new RotateTransform();
+            public readonly RotateTransform HoverRotate = new RotateTransform(), LaunchRotate = new RotateTransform();
             public readonly TranslateTransform HoverMove = new TranslateTransform(), LaunchMove = new TranslateTransform();
         }
         static readonly DependencyProperty PoseProperty = DependencyProperty.RegisterAttached("Pose", typeof(Pose), typeof(SagaTileMotion));
@@ -26,7 +26,7 @@ namespace GamesDock
             pose = new Pose { Art = art };
             var transforms = new TransformGroup();
             transforms.Children.Add(pose.HoverScale); transforms.Children.Add(pose.HoverRotate);
-            transforms.Children.Add(pose.HoverMove); transforms.Children.Add(pose.LaunchScale); transforms.Children.Add(pose.LaunchMove);
+            transforms.Children.Add(pose.HoverMove); transforms.Children.Add(pose.LaunchScale); transforms.Children.Add(pose.LaunchRotate); transforms.Children.Add(pose.LaunchMove);
             art.RenderTransformOrigin = new Point(.5, .5); art.RenderTransform = transforms;
             tile.SetValue(PoseProperty, pose);
             return pose;
@@ -42,6 +42,8 @@ namespace GamesDock
             pose.HoverScale.ScaleX = 1; pose.HoverScale.ScaleY = 1; pose.HoverRotate.Angle = 0;
             switch (material)
             {
+                case "crystal": pose.HoverScale.ScaleX = pose.HoverScale.ScaleY = 1 + .008 * a; break;
+                case "strand": pose.HoverScale.ScaleX = 1 - .005 * a; break;
                 case "industrial": pose.HoverScale.ScaleX = 1 + .008 * a; pose.HoverScale.ScaleY = 1 - .006 * a; break;
                 case "portal": pose.HoverScale.ScaleX = 1 - .018 * a; pose.HoverScale.ScaleY = 1 + .012 * a; break;
                 case "orbit":
@@ -66,15 +68,26 @@ namespace GamesDock
             art.Opacity = 1;
             switch (material)
             {
+                case "cyberware":
+                    Animate(move, vertical ? TranslateTransform.YProperty : TranslateTransform.XProperty, .68, true, 0, -1, 1.3, 0, 0);
+                    Animate(scale, ScaleTransform.ScaleXProperty, duration, false, 1, .97, 1.02, 1); break;
+                case "biohazard":
+                    Animate(scale, ScaleTransform.ScaleXProperty, duration, false, 1, 1.022, .996, 1.012, 1);
+                    Animate(scale, ScaleTransform.ScaleYProperty, duration, false, 1, 1.022, .996, 1.012, 1); break;
+                case "codec":
+                    Animate(art, UIElement.OpacityProperty, .42, true, 1, .86, 1, 1); break;
+                case "crystal":
+                    Animate(scale, ScaleTransform.ScaleXProperty, duration, false, 1, .93, 1.015, 1);
+                    Animate(scale, ScaleTransform.ScaleYProperty, duration, false, 1, 1.04, 1.015, 1); break;
+                case "inferno":
+                    Animate(scale, ScaleTransform.ScaleXProperty, duration, false, 1, .955, 1.035, 1);
+                    Animate(scale, ScaleTransform.ScaleYProperty, duration, false, 1, .955, 1.035, 1); break;
+                case "strand":
+                    Animate(pose.LaunchRotate, RotateTransform.AngleProperty, duration, false, 0, -.6, .6, 0);
+                    Animate(move, vertical ? TranslateTransform.XProperty : TranslateTransform.YProperty, duration, false, 0, -1.4 * outward, 0); break;
                 case "industrial":
                     Animate(scale, ScaleTransform.ScaleXProperty, duration, false, 1, 0.985, 1.012, 1);
                     Animate(scale, ScaleTransform.ScaleYProperty, duration, false, 1, 0.985, 1.012, 1);
-                    break;
-                case "shrine":
-                    Animate(scale, ScaleTransform.ScaleXProperty, duration, false, 1, 0.96, 1.035, 1);
-                    Animate(scale, ScaleTransform.ScaleYProperty, duration, false, 1, 0.96, 1.035, 1);
-                    Animate(move, vertical ? TranslateTransform.XProperty : TranslateTransform.YProperty,
-                        duration, false, 0, -outward, -3 * outward, 0);
                     break;
                 case "portal":
                     Animate(scale, ScaleTransform.ScaleXProperty, duration, false, 1, 0.84, 0.035, 0.035, 1.06, 1);
@@ -110,6 +123,8 @@ namespace GamesDock
 
         static void StopLaunch(Pose pose)
         {
+            pose.LaunchRotate.BeginAnimation(RotateTransform.AngleProperty, null);
+            pose.LaunchRotate.Angle = 0;
             pose.LaunchScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
             pose.LaunchScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
             pose.LaunchMove.BeginAnimation(TranslateTransform.XProperty, null);

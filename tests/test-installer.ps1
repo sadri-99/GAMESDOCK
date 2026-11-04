@@ -1,6 +1,6 @@
 ﻿$ErrorActionPreference = 'Stop'
 function Assert($condition, [string]$message) { if (-not $condition) { throw $message } }
-$setup = (Resolve-Path "$PSScriptRoot\..\dist\GamesDock-Setup-1.9.5.exe").Path
+$setup = (Resolve-Path "$PSScriptRoot\..\dist\GamesDock-Setup-2.00.exe").Path
 $installDir = Join-Path $env:LOCALAPPDATA 'Programs\GamesDock'
 $log = Join-Path $env:TEMP 'GamesDock-setup-test.log'
 $process = Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=startup', "/LOG=$log" -Wait -PassThru -WindowStyle Hidden

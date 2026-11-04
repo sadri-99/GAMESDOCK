@@ -27,6 +27,6 @@ jobs:
           Get-FileHash dist/*.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $([IO.Path]::GetFileName($_.Path))" } | Set-Content dist/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: GamesDock-v1.9.5-windows-x64
+          name: GamesDock-v2.00-windows-x64
           path: dist/*
           if-no-files-found: error

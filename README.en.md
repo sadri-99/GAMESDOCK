@@ -1,79 +1,101 @@
-# GamesDock v1.9.5
+<p align="center"><img src="docs/logo.png" width="128" height="128" alt="GamesDock"></p>
 
-A desktop dock for games and applications on **Windows 10/11 x64**. Simple setup wizard and portable executable. Requires .NET Framework 4.8.
+# GamesDock v2.00
 
-[Download v1.9.5](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.5) · [Español](README.md) · [Full changelog (Spanish)](CHANGELOG.md)
+A game and application dock for **Windows 10/11 x64**. Discover games, organize independent pages and choose **SteamGridDB community icons directly inside the dock**.
 
+[Download v2.00](https://github.com/sadri-99/GAMESDOCK/releases/tag/v2.00) · [Español](README.md) · [Changelog](CHANGELOG.md) · [User guide, Spanish](docs/USO.md)
 
-## New in v1.9.5
+## Themes in motion
 
-Fixed Windows startup: launch the GUI executable directly with a per-user logon task, without VBScript or an added delay. Battery and offline use are supported. A Spanish/English setup wizard installs into `%LOCALAPPDATA%\Programs\GamesDock`, keeping the executable in a stable location. Downloaded setup files can be moved or deleted safely. Updates only select the exact `GamesDock.exe` asset.
+**20 themes: nine Classic and 11 Animated**, with individual contours, hover responses and launch sequences. Theme motion and magnification can be toggled separately. Compact original margins; emblems in the picker, without a logo beneath the focused icon.
 
-## New in v1.9.1
+![Alien, Portal, PlayStation, Mass Effect, Matrix and Cyberpunk 2077](docs/screenshots/v2.00/Sagas-1.gif)
 
-A **Buy me a coffee** button sits beside the GitHub star in Settings → Help and project, opening PayPal in your browser. Spanish and English included.
+![Resident Evil, Metal Gear Solid, Final Fantasy, Diablo and Death Stranding](docs/screenshots/v2.00/Sagas-2.gif)
 
-## New in v1.9
+[PNG: 1680 × 2080](docs/screenshots/v2.00/Sagas-1.png) · [PNG: 1680 × 1740](docs/screenshots/v2.00/Sagas-2.png) · [Theme details](docs/TEMAS-SAGAS.md)
 
-- Nine original themes under **Classic**, plus six **Animated** themes inspired by Alien, Dark Souls, Portal, PlayStation, Mass Effect and Matrix.
-- Theme-specific presentation, hover, focus and launch effects. Magnification follows each material and dock contour, including rectangular themes.
-- A live preview, aligned theme thumbnails and all settings visible without scrolling. Animation and magnification toggles sit beside the theme selector.
-- Five persistent preview controls. A local configuration-refresh test measured **97.2% fewer temporary allocations**; this does not mean the same reduction in total RAM.
-- Window opacity fixed at 100%; iOS shape for new installations. Existing shape choices are preserved.
-- Fixed corner clipping when entering the dock with magnification disabled.
+PNGs are rendered from WPF at 192 DPI. GIFs use reduced temporal sampling for sharing; they are not application FPS measurements. Franchise names and symbols describe visual inspiration. GamesDock is not affiliated with their owners.
 
-## Start
+### Settings with Horizon
 
-Download **GamesDock-Setup-1.9.5.exe** from the [v1.9.5 release](https://github.com/sadri-99/GAMESDOCK/releases/tag/v1.9.5) and follow the wizard. Choose optional Windows startup and desktop shortcut. No administrator rights required. Close any older copy before installing; settings, folders, and favorites remain in `%APPDATA%\GamesDock`.
+![GamesDock v2.00 settings with Horizon](docs/screenshots/v2.00/ajustes-horizonte-en.png)
 
-The portable **GamesDock.exe** is also available. If moved, open it once at its new location to repair enabled startup. Windows cannot discover a moved executable before it runs again. The installer avoids that problem through a stable installation directory.
+Themes, animation, magnification and the interactive preview sit together. Other settings remain visible; only theme thumbnails scroll. Clicking outside, Esc or the close button saves and closes settings.
 
-The executable is unsigned. Windows may show its normal warning for downloaded applications.
+## New in v2.00
 
-## Features
+- **Independent pages:** Favorites, Games and Applications, plus up to five custom pages. Each keeps its own members, order and folders. Adding an app to a page does not add it to Favorites.
+- **Multiple monitors:** drag the dock to another display; it remembers that monitor and position on startup. Visible recovery if the preferred display disconnects.
+- **SteamGridDB search:** try an alternative name, choose the matching game or edition and replace an icon inside the dock. Larger cards and a fixed search/close header.
+- **Game cards:** rounded banner corners, more text spacing and optional 115% size. Optional personal Steam playtime and last-played information from the active local account, disabled by default.
+- **Simpler menus:** highlighted lock without a checkmark gutter; consistent text padding.
+- **Animated themes reviewed:** cleaner PlayStation selection, slower Cyberpunk, Diablo without the tracking ring or static central runes, and sliding droplets for Death Stranding.
+- **Less repeated work:** reusable preview controls, cached Matrix columns and clocks that stop when finished, preserving effects and movement.
 
-Detects Steam, Epic Games, GOG, Start menu and desktop shortcuts. Drag files or Steam links onto the dock; search, filter, reorder, favorite or group entries into folders. Use your own artwork or SteamGridDB community icons with a personal API key. Hover cards show artwork and Steam details.
+[Full changes since v1.9.5](CHANGELOG.md) · [v2.00 release notes](docs/releases/v2.00.md)
 
-Position the dock on any screen edge or freely. Lock position and icons, move shortcuts from the desktop and restore them later. Toggle visibility with `Ctrl` + `Alt` + `D` or the tray. Spanish and English interfaces, optional Windows startup and update checks with installation confirmation are included.
+### Community icons inside the dock
 
-![All 15 dock themes in motion, captured at 1920 × 540](docs/screenshots/v1.9.5/dock-15-temas-hd.gif)
+Add your free personal SteamGridDB key in Settings. Use the community icon search when the detected name does not match the website.
 
-[View all six animated themes at 1680 × 2040](docs/screenshots/v1.9.5/temas-animados-hd.gif)
+![Alternative-name search and community icon cards](docs/screenshots/v2.00/Iconos-comunidad-en.png)
 
-### Settings with the Horizon theme
+Only the gallery scrolls; search and close stay accessible. [SteamGridDB guide](docs/ICONOS-COMUNIDAD.md).
 
-![All settings with the Horizon theme](docs/screenshots/v1.9.5/ajustes-horizonte-en.png)
+## Download and use
+
+1. Download **GamesDock-Setup-2.00.exe** from the [v2.00 release](https://github.com/sadri-99/GAMESDOCK/releases/tag/v2.00).
+2. Follow the Spanish/English wizard. Requires .NET Framework 4.8; no administrator privileges needed.
+3. Open GamesDock from Start. Right-click the dock → **Settings**.
+
+**GamesDock.exe** and a portable ZIP are also available. Setup uses `%LOCALAPPDATA%\Programs\GamesDock` and preserves `%APPDATA%\GamesDock` data and startup preferences. Exit the previous copy from the tray before upgrading. Pages migrate on first launch. Removed themes fall back to Night.
+
+If you move the portable executable, open it from its new location to repair startup. The executable is not digitally signed. [Installation and startup](docs/INICIO-WINDOWS.md).
+
+## Included
+
+- Steam, Epic Games, GOG, Start menu and desktop shortcut detection.
+- Drag `.exe`, `.lnk`, `.url` files or `steam://` links into the dock.
+- Pages, manual Favorites and drag-to-create folders.
+- Local icons, SteamGridDB artwork and Steam store information cards.
+- Top, bottom, left, right or free placement; lock and multiple monitors.
+- Show/hide with `Ctrl` + `Alt` + `D` or the tray menu.
+- Move desktop shortcuts into the dock and restore their original locations.
+- Spanish/English UI, optional Windows startup and confirmed GitHub updates.
+- iOS icon shape for new profiles; 100% window opacity.
 
 ## Performance and privacy
 
-Animation costs resources while active. Settings includes a CPU/memory notice and measurement limits. Effects and the 60 Hz target are preserved. More frequent preview updates can increase CPU in some themes; no universal CPU or game-FPS improvement is claimed. GPU, battery and game FPS were not measured.
+Animations use CPU and memory while moving. Settings includes a resource label and explanation. Local reference: about **2.6–5.3% total CPU** with eight 64 px shortcuts and 12 logical processors, in an off-screen window. Short runs do not measure GPU, battery or game FPS. [Method and limits](docs/development/SAGAS-RENDIMIENTO.md).
 
-Data and caches stay in `%APPDATA%\GamesDock`. GitHub handles update checks; Steam and SteamGridDB provide game details and artwork using a game identifier or name. Your SteamGridDB key stays in local `config.json`; do not share that file. No custom telemetry is included.
+Configuration and caches live in `%APPDATA%\GamesDock`. No personal settings, keys or logs are shipped. The SteamGridDB key is stored locally; never share `config.json`. Personal Steam activity is optional and read locally. The app queries GitHub for updates, Steam for cards and SteamGridDB for artwork. No first-party telemetry.
 
 ## Build and validate
 
-Use Windows x64, .NET Framework 4.8 and Visual Studio Build Tools 2022 or later with Roslyn. No .NET SDK required.
+Windows x64, .NET Framework 4.8 and Visual Studio Build Tools 2022 or later with Roslyn. No NuGet or .NET SDK required.
 
 ```powershell
 ./app/build.ps1
-```
-
-Creates `app/GamesDock.exe`. Supply an older executable as a reference for validation:
-
-```powershell
 ./app/tests/validate.ps1 -Executable "$PWD/app/GamesDock.exe" `
-  -Baseline 'C:/path/previous/GamesDock.exe' `
+  -Baseline 'C:/path/to/previous/GamesDock.exe' `
   -OutputDirectory "$PWD/artifacts/validation"
+./tests/test-startup.ps1
 ```
 
-The v1.9 suite passed **14,121 checks** covering themes, geometry, animation, magnification, both translations and preview lifecycle. Another 180 main-dock fixtures retained identical pixels across renderer optimizations.
+Use `-OutputPath "$PWD/artifacts/GamesDock.exe"` to preserve the published executable. Setup requires Inno Setup 6.7 or later: `./installer/build.ps1`.
 
-Detailed [architecture](docs/development/ARQUITECTURA.md), [theme guide](docs/TEMAS.md), [dock performance](docs/development/RENDIMIENTO.md) and [preview measurements](docs/development/RENDIMIENTO-MUESTRA.md) are available in Spanish.
+[Validation](docs/development/VALIDACION-v2.00.md) · [Architecture](docs/development/ARQUITECTURA.md) · [Contributing](CONTRIBUTING.md)
+
+## Documentation
+
+[Guide](docs/USO.md) · [Themes](docs/TEMAS-SAGAS.md) · [Settings](docs/AJUSTES.md) · [SteamGridDB](docs/ICONOS-COMUNIDAD.md) · [Cards and personal Steam activity](docs/FICHAS.md) · [Monitors](docs/MULTIPANTALLA.md) · [Changelog](CHANGELOG.md)
 
 ## Donations
 
-If GamesDock is useful to you and you want to support development, [buy me a coffee on PayPal](https://www.paypal.com/paypalme/sadriprods). Thank you for your support.
+If GamesDock is useful to you, you can [buy me a coffee on PayPal](https://www.paypal.com/paypalme/sadriprods).
 
 ## License
 
-[MIT](LICENSE). Artwork shown in screenshots belongs to its respective owners. Franchise names identify visual inspiration; GamesDock is not affiliated with their owners.
+[MIT](LICENSE). Artwork shown in screenshots belongs to its owners and illustrates customization.

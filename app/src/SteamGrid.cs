@@ -120,25 +120,33 @@ namespace GamesDock
         // Recibe el nombre del juego tal y como lo muestra la barra, lo limpia de la basura que arrastra
         // un acceso de Windows y saca el primer "id" del json. El autocomplete de SteamGridDB ordena por
         // coincidencia, asi que el primero es el que quiere el usuario en casi todos los casos.
+        public static async Task<SgdRespuesta<List<SgdJuego>>> BuscarJuegosAsync(string nombre, string clave, CancellationToken ct)
+        {
+            string query = (nombre ?? string.Empty).Trim();
+            if (query.Length == 0) return SgdRespuesta<List<SgdJuego>>.Mal(SgdEstado.NoEncontrado, "nombre vacio");
+            var response = await PedirAsync("/search/autocomplete/" + Uri.EscapeDataString(query), clave, ct);
+            if (!response.EsOk) return SgdRespuesta<List<SgdJuego>>.Mal(response.Estado, response.Error);
+            SgdLista<SgdJuego> list;
+            try { list = Leer<SgdLista<SgdJuego>>(response.Datos); }
+            catch (Exception ex) { return SgdRespuesta<List<SgdJuego>>.Mal(SgdEstado.ApiError, ex.Message); }
+            if (list == null || !list.Success || list.Data == null)
+                return SgdRespuesta<List<SgdJuego>>.Mal(SgdEstado.NoEncontrado, query);
+            var games = new List<SgdJuego>(); var seen = new HashSet<int>();
+            foreach (var game in list.Data)
+            {
+                if (game == null || game.Id <= 0 || string.IsNullOrWhiteSpace(game.Name) || !seen.Add(game.Id)) continue;
+                games.Add(game);
+                if (games.Count == 20) break;
+            }
+            return games.Count == 0 ? SgdRespuesta<List<SgdJuego>>.Mal(SgdEstado.NoEncontrado, query)
+                : SgdRespuesta<List<SgdJuego>>.Bien(games);
+        }
+
         public static async Task<SgdRespuesta<int>> BuscarJuegoIdAsync(string nombre, string clave, CancellationToken ct)
         {
-            string limpio = LimpiarNombre(nombre);
-            if (limpio.Length == 0) return SgdRespuesta<int>.Mal(SgdEstado.NoEncontrado, "nombre vacio");
-
-            var bruto = await PedirAsync("/search/autocomplete/" + Uri.EscapeDataString(limpio), clave, ct);
-            if (!bruto.EsOk) return SgdRespuesta<int>.Mal(bruto.Estado, bruto.Error);
-
-            SgdLista<SgdJuego> lista;
-            try { lista = Leer<SgdLista<SgdJuego>>(bruto.Datos); }
-            catch (Exception ex) { return SgdRespuesta<int>.Mal(SgdEstado.ApiError, ex.Message); }
-
-            if (lista == null || !lista.Success || lista.Data == null || lista.Data.Count == 0)
-                return SgdRespuesta<int>.Mal(SgdEstado.NoEncontrado, limpio);
-
-            int id = lista.Data[0].Id;
-            if (id <= 0) return SgdRespuesta<int>.Mal(SgdEstado.NoEncontrado, limpio);
-            Log.Write(string.Format("SteamGridDB: \"{0}\" -> juego {1} ({2})", limpio, id, lista.Data[0].Name));
-            return SgdRespuesta<int>.Bien(id);
+            var games = await BuscarJuegosAsync(LimpiarNombre(nombre), clave, ct);
+            return games.EsOk ? SgdRespuesta<int>.Bien(games.Datos[0].Id)
+                : SgdRespuesta<int>.Mal(games.Estado, games.Error);
         }
 
         // ---------------------------------------------------------------- paso 2: id -> lista de iconos

@@ -121,6 +121,6 @@ static class HoverRegression
             dock.ResetProximity(); dock.SetPillHover(false);
         }
         window.Close(); app.Shutdown();
-        Console.WriteLine("PASS: " + _checks + " hover regression checks; disabled contour remains rounded and within the window across 15 themes, 4 positions and 3 sizes.");
+        Console.WriteLine("PASS: " + _checks + " hover regression checks; disabled contour remains rounded and within the window across 20 themes, 4 positions and 3 sizes.");
     }
 }

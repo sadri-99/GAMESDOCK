@@ -102,6 +102,12 @@ static class ProMotionValidation
                     var tile = dock.Tiles[selected]; var content = (FrameworkElement)tile.Content;
                     Rect icon = content.TransformToAncestor(dock.Win).TransformBounds(new Rect(content.RenderSize));
                     Check(Inside(icon, dock.Win.ActualWidth, dock.Win.ActualHeight), "Enlarged artwork clips window");
+                    if (selected == 0)
+                    {
+                        var original = new Layout(new Config { IconSize = size, Theme = "noche" }) { Scale = dock.Lay.Scale };
+                        Check(Math.Abs(dock.Lay.RowInset - original.RowInset) < .001,
+                            "Theme adds lateral padding: " + entry.Key + "/" + size + "/" + position);
+                    }
                     Matrix before = content.RenderTransform.Value;
                     SagaTileMotion.Launch(tile, entry.Value.Material, dock.Lay.Vert, dock.Lay.Outward);
                     Matrix after = content.RenderTransform.Value;
@@ -115,7 +121,7 @@ static class ProMotionValidation
                 }
             }
         }
-        Check(peaks.Count == 6, "All themes share the same magnification profile");
+        Check(peaks.Count == 11, "All themes share the same magnification profile");
         dock.Win.Close(); Anim.Stop();
 
         // Actual docks, actual spring integrator, actual overlay and launch transforms; no separate mock renderer.
@@ -186,6 +192,6 @@ static class ProMotionValidation
         exporter.Invoke(null, new object[] { gif, Path.Combine(args[0], "Animaciones-Pro.gif") });
         foreach (var demo in demos) { Art(demo).StopMotion(); demo.Win.Close(); }
         Anim.Stop(); app.Shutdown();
-        Console.WriteLine("PASS: " + _checks + " coordinated hover checks; 6 profiles, continuous falloff, corner clearance, launch composition and reset; real-dock preview exported.");
+        Console.WriteLine("PASS: " + _checks + " coordinated hover checks; 11 profiles, continuous falloff, corner clearance, launch composition and reset; real-dock preview exported.");
     }
 }

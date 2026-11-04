@@ -4,6 +4,10 @@
     [Parameter(Mandatory=$true)][string]$OutputDirectory
 )
 $ErrorActionPreference = 'Stop'
+$previousDataRoot = $env:GAMESDOCK_DATA_DIR
+$env:GAMESDOCK_DATA_DIR = [IO.Path]::GetFullPath((Join-Path $OutputDirectory 'test-profile'))
+New-Item -ItemType Directory -Path $env:GAMESDOCK_DATA_DIR -Force | Out-Null
+try {
 $compilerCandidates = foreach ($programRoot in @(${env:ProgramFiles}, ${env:ProgramFiles(x86)})) {
     if (-not $programRoot) { continue }
     foreach ($version in @('18', '2022')) {
@@ -65,3 +69,81 @@ $performanceArguments += Join-Path $PSScriptRoot 'PerformanceRegression.cs'
 if ($LASTEXITCODE -ne 0) { throw 'Performance regression build failed.' }
 & $performanceHarness
 if ($LASTEXITCODE -ne 0) { throw 'Performance regression failed.' }
+
+$pagesHarness = Join-Path (Split-Path $Executable) 'PagesValidation.exe'
+$pagesArguments = @($arguments | Where-Object { $_ -notlike '-out:*' -and $_ -notlike '*ThemeValidation.cs' })
+$pagesArguments += "-out:$pagesHarness"
+$pagesArguments += Join-Path $PSScriptRoot 'PagesValidation.cs'
+& $csc $pagesArguments
+if ($LASTEXITCODE -ne 0) { throw 'Pages validation build failed.' }
+& $pagesHarness $OutputDirectory
+if ($LASTEXITCODE -ne 0) { throw 'Pages validation failed.' }
+
+$monitorHarness = Join-Path (Split-Path $Executable) 'MonitorValidation.exe'
+$monitorArguments = @($arguments | Where-Object { $_ -notlike '-out:*' -and $_ -notlike '*ThemeValidation.cs' })
+$monitorArguments += "-out:$monitorHarness"
+$monitorArguments += "-win32manifest:$PSScriptRoot/../app.manifest"
+$monitorArguments += Join-Path $PSScriptRoot 'MonitorValidation.cs'
+& $csc $monitorArguments
+if ($LASTEXITCODE -ne 0) { throw 'Monitor validation build failed.' }
+& $monitorHarness $OutputDirectory
+if ($LASTEXITCODE -ne 0) { throw 'Monitor validation failed.' }
+
+$pickerHarness = Join-Path (Split-Path $Executable) 'IconPickerValidation.exe'
+$pickerArguments = @($arguments | Where-Object { $_ -notlike '-out:*' -and $_ -notlike '*ThemeValidation.cs' })
+$pickerArguments += "-out:$pickerHarness"
+$pickerArguments += "-win32manifest:$PSScriptRoot/../app.manifest"
+$pickerArguments += Join-Path $PSScriptRoot 'IconPickerValidation.cs'
+& $csc $pickerArguments
+if ($LASTEXITCODE -ne 0) { throw 'Icon picker validation build failed.' }
+& $pickerHarness $OutputDirectory (Join-Path $PSScriptRoot '../../docs/screenshots/iconos-barra.png')
+if ($LASTEXITCODE -ne 0) { throw 'Icon picker validation failed.' }
+
+$cardHarness = Join-Path (Split-Path $Executable) 'CardValidation.exe'
+$cardArguments = @($arguments | Where-Object { $_ -notlike '-out:*' -and $_ -notlike '*ThemeValidation.cs' })
+$cardArguments += "-out:$cardHarness"
+$cardArguments += Join-Path $PSScriptRoot 'CardValidation.cs'
+& $csc $cardArguments
+if ($LASTEXITCODE -ne 0) { throw 'Card validation build failed.' }
+& $cardHarness (Join-Path $OutputDirectory 'cards')
+if ($LASTEXITCODE -ne 0) { throw 'Card validation failed.' }
+
+$dismissHarness = Join-Path (Split-Path $Executable) 'SettingsDismissValidation.exe'
+$dismissArguments = @($arguments | Where-Object { $_ -notlike '-out:*' -and $_ -notlike '*ThemeValidation.cs' })
+$dismissArguments += "-out:$dismissHarness"
+$dismissArguments += Join-Path $PSScriptRoot 'SettingsDismissValidation.cs'
+& $csc $dismissArguments
+if ($LASTEXITCODE -ne 0) { throw 'Settings dismissal validation build failed.' }
+& $dismissHarness
+if ($LASTEXITCODE -ne 0) { throw 'Settings dismissal validation failed.' }
+
+$sagaHarness = Join-Path (Split-Path $Executable) 'SagaValidation.exe'
+$sagaArguments = @($arguments | Where-Object { $_ -notlike '-out:*' -and $_ -notlike '*ThemeValidation.cs' })
+$sagaArguments += "-out:$sagaHarness"
+$sagaArguments += Join-Path $PSScriptRoot 'SagaValidation.cs'
+& $csc $sagaArguments
+if ($LASTEXITCODE -ne 0) { throw 'Saga validation build failed.' }
+& $sagaHarness (Join-Path $OutputDirectory 'sagas') (Join-Path $PSScriptRoot '../../docs/screenshots/iconos-barra.png')
+if ($LASTEXITCODE -ne 0) { throw 'Saga validation failed.' }
+
+$compactHarness = Join-Path (Split-Path $Executable) 'CompactMarginValidation.exe'
+$compactArguments = @($arguments | Where-Object { $_ -notlike '-out:*' -and $_ -notlike '*ThemeValidation.cs' })
+$compactArguments += "-out:$compactHarness"
+$compactArguments += Join-Path $PSScriptRoot 'CompactMarginValidation.cs'
+& $csc $compactArguments
+if ($LASTEXITCODE -ne 0) { throw 'Compact margin validation build failed.' }
+& $compactHarness $Baseline
+if ($LASTEXITCODE -ne 0) { throw 'Compact margin validation failed.' }
+
+$tweaksHarness = Join-Path (Split-Path $Executable) 'ThemeTweaksValidation.exe'
+$tweaksArguments = @($arguments | Where-Object { $_ -notlike '-out:*' -and $_ -notlike '*ThemeValidation.cs' })
+$tweaksArguments += "-out:$tweaksHarness"
+$tweaksArguments += Join-Path $PSScriptRoot 'ThemeTweaksValidation.cs'
+& $csc $tweaksArguments
+if ($LASTEXITCODE -ne 0) { throw 'Theme tweaks validation build failed.' }
+& $tweaksHarness
+if ($LASTEXITCODE -ne 0) { throw 'Theme tweaks validation failed.' }
+
+} finally {
+    $env:GAMESDOCK_DATA_DIR = $previousDataRoot
+}

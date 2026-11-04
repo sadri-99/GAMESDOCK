@@ -343,9 +343,9 @@ namespace GamesDock
             foreach (var t in Tiles) { var it = t.Tag as ItemSpec; if (it != null) keys.Add(it.Key ?? string.Empty); }
             if (keys.Count == 0) return;
             var rest = new List<string>();
-            foreach (var k in Cfg.Order) if (!keys.Contains(k)) rest.Add(k);
-            Cfg.Order = keys;
-            foreach (var k in rest) Cfg.Order.Add(k);
+            foreach (var k in ActiveOrder) if (!keys.Contains(k)) rest.Add(k);
+            ActiveOrder = keys;
+            foreach (var k in rest) ActiveOrder.Add(k);
             Log.Write("orden guardado: " + keys.Count);
             Cfg.Save();
         }
@@ -357,7 +357,7 @@ namespace GamesDock
             // soltar una carpeta fuera saca de la barra todo lo que hay dentro
             if (Groups.IsGroup(it)) { HideGroup(it); return; }
             string k = it.Key ?? string.Empty;
-            Cfg.Order.RemoveAll(x => k == x);
+            ActiveOrder.RemoveAll(x => k == x);
             Log.Write("sacado del dock: " + it.Name);
             HideFromDock(it);
         }
@@ -398,18 +398,16 @@ namespace GamesDock
             // una carpeta no se fija ni se des fija: lo que cuenta son sus miembros
             if (Groups.IsGroup(it)) return;
             var p = EnsurePin(it);
-            p.Fav = !p.Fav;
-            it.Fav = p.Fav;
+            if (PageStore.IsFavorite(Cfg, it.Key)) PageStore.Remove(Cfg, "fav", it.Key);
+            else PageStore.Add(Cfg, "fav", it.Key);
+            it.Fav = PageStore.IsFavorite(Cfg, it.Key);
             Cfg.Save();
             Refresh(false);
-            if (it.Fav) SetSection("fav");
         }
 
         public void HideFromDock(ItemSpec it)
         {
-            var p = EnsurePin(it);
-            p.Hidden = true;
-            p.Fav = false;
+            PageStore.Remove(Cfg, Cfg.Section, it.Key);
             Cfg.Save();
             Refresh(false);
         }
@@ -423,9 +421,13 @@ namespace GamesDock
 
         public void SetSection(string id)
         {
+            if (PageStore.Find(Cfg, id) == null) return;
+            GroupPanel.Cerrar();
             Cfg.Section = id;
+            SearchBox.Text = Lang.Search;
             Refresh(false);
             Cfg.Save();
+            NotifyPagesChanged();
         }
 
         public void RegisterUse(ItemSpec it)
@@ -434,7 +436,7 @@ namespace GamesDock
             UsageDto u;
             if (Cfg.Usage.TryGetValue(k, out u) && u != null) { u.N = u.N + 1; u.D = DateTime.Now.ToString("o"); }
             else Cfg.Usage[k] = new UsageDto { N = 1, D = DateTime.Now.ToString("o") };
-            it.Fav = it.Pin != null && it.Pin.Fav;
+            it.Fav = PageStore.IsFavorite(Cfg, it.Key);
             Cfg.Save();
         }
 
@@ -595,10 +597,18 @@ namespace GamesDock
 
                 PinDto cur = null;
                 foreach (var p in Cfg.Pins) if (p.Key == key) { cur = p; break; }
-                if (cur != null && cur.Fav)
+                if (cur == null && Cat != null)
                 {
-                    Log.Write("ya fijado: " + name);
-                    return null;
+                    var detected = Cat.Find(key);
+                    if (detected != null) cur = EnsurePin(detected);
+                }
+                if (cur != null)
+                {
+                    if (!PageStore.Add(Cfg, Cfg.Section, key)) return null;
+                    cur.Hidden = false;
+                    Cfg.Save();
+                    if (!Batch) Rebuild();
+                    return key;
                 }
 
                 string kind = (target.StartsWith("steam:") || Catalog.IsGameDir(target)) ? "game" : "app";
@@ -610,7 +620,7 @@ namespace GamesDock
                 // se reescribe la entrada existente: la clave ya estaba y estaba oculta, el arrastre
                 // nuevo la reaviva en vez de dejar dos fijados para el mismo juego
                 cur.Name = name;
-                cur.Fav = true;
+                cur.Fav = Cfg.Section == "fav";
                 cur.Hidden = false;
                 cur.Link = link;
                 cur.Target = target;
@@ -620,13 +630,7 @@ namespace GamesDock
                 cur.Kind = kind;
                 cur.Icon = hint;
                 cur.Added = DateTime.Now.ToString("o");
-                // un fijado explicito tiene que verse: si la seccion activa lo filtra, salta a Favoritos,
-                // la unica donde lo fijado a mano esta siempre
-                if ((Cfg.Section == "games" && kind != "game") || (Cfg.Section == "apps" && kind != "app"))
-                {
-                    Cfg.Section = "fav";
-                    Log.Write("seccion cambiada: fav");
-                }
+                PageStore.Add(Cfg, Cfg.Section, key);
                 Cfg.Save();
                 if (!Batch) Rebuild();
                 Log.Write("fijado: " + name + " (" + key + ") " + kind);
@@ -663,7 +667,7 @@ namespace GamesDock
 
         // ------------------------------------------------------------------ menus
         ContextMenu _dockMenu, _itemMenu;
-        MenuItem _verMenu, _temaMenu, _ocultosMenu, _lockMenu;
+        MenuItem _verMenu, _temaMenu, _lockMenu;
 
         public ContextMenu DockMenu
         {
@@ -671,21 +675,10 @@ namespace GamesDock
             {
                 if (_dockMenu != null) return _dockMenu;
                 _dockMenu = new ContextMenu();
-                _dockMenu.Items.Add(MenuRow(Lang.T("Buscar..."), delegate { OpenSearch(); }));
                 _dockMenu.Items.Add(MenuRow(Lang.T("Añadir app o juego..."), delegate { ShowAddDialog(); }));
 
-                _verMenu = new MenuItem { Header = Lang.T("Qué se ve") };
-                foreach (var s in new[]
-                {
-                    new[] { "fav", "Favoritos" }, new[] { "games", "Juegos detectados" },
-                    new[] { "apps", "Aplicaciones" }, new[] { "all", "Todo" }
-                })
-                {
-                    string id = s[0];
-                    var mi = new MenuItem { Header = Lang.T(s[1]), Tag = id, IsCheckable = true };
-                    mi.Click += (a, e) => SetSection(id);
-                    _verMenu.Items.Add(mi);
-                }
+                _verMenu = new MenuItem { Header = Lang.T("Páginas") };
+                UpdatePagesMenu();
                 _dockMenu.Items.Add(_verMenu);
 
                 _temaMenu = new MenuItem { Header = Lang.T("Tema") };
@@ -704,13 +697,7 @@ namespace GamesDock
                 }
                 _dockMenu.Items.Add(_temaMenu);
 
-                // lo que se sacó arrastrando fuera (o con "quitar del dock") vuelve a entrar por aqui
-                _ocultosMenu = new MenuItem { Header = Lang.T("Restaurar ocultos") };
-                _dockMenu.Items.Add(_ocultosMenu);
-
-                // el candado va marcado en vez de cambiar de texto: la fila dice lo que protege y la
-                // palomita dice si ya esta protegido, que es como se leen las demas filas del menu
-                _lockMenu = new MenuItem { Header = Lang.T("Bloquear posición e iconos"), IsCheckable = true };
+                _lockMenu = new MenuItem { Header = Lang.T("Bloquear posición e iconos"), Tag = "dock-lock", IsChecked = Cfg.Locked };
                 _lockMenu.Click += delegate { ToggleLock(); };
                 _dockMenu.Items.Add(_lockMenu);
 
@@ -726,14 +713,9 @@ namespace GamesDock
 
                 _dockMenu.Opened += (a, e) =>
                 {
-                    foreach (var o in _verMenu.Items)
-                    {
-                        var mi = (MenuItem)o;
-                        mi.IsChecked = Cfg.Section == Convert.ToString(mi.Tag);
-                    }
+                    UpdatePagesMenu();
                     UpdateThemeChecks();
                     _lockMenu.IsChecked = Cfg.Locked;
-                    UpdateOcultosMenu();
                 };
                 MenuGuard.Watch(_dockMenu);
                 return _dockMenu;
@@ -754,7 +736,6 @@ namespace GamesDock
             _dockMenu = null;
             _verMenu = null;
             _temaMenu = null;
-            _ocultosMenu = null;
             _lockMenu = null;
         }
 
@@ -776,28 +757,6 @@ namespace GamesDock
                                  : "desbloqueado: arrastrar vuelve a funcionar");
         }
 
-        void UpdateOcultosMenu()
-        {
-            _ocultosMenu.Items.Clear();
-            var ocultos = new List<PinDto>();
-            foreach (var p in Cfg.Pins) if (p.Hidden) ocultos.Add(p);
-            if (ocultos.Count == 0)
-            {
-                _ocultosMenu.Items.Add(new MenuItem { Header = Lang.T("(nada oculto)"), IsEnabled = false });
-                _ocultosMenu.IsEnabled = false;
-                return;
-            }
-            _ocultosMenu.IsEnabled = true;
-            ocultos.Sort((a, b) => string.Compare(a.Name ?? string.Empty, b.Name ?? string.Empty, StringComparison.OrdinalIgnoreCase));
-            foreach (var p in ocultos)
-            {
-                string k = p.Key;
-                var mi = new MenuItem { Header = p.Name, Tag = k };
-                mi.Click += (a, e) => UnhidePin(k);
-                _ocultosMenu.Items.Add(mi);
-            }
-        }
-
         public void ShowItemMenu(ItemSpec it, Button owner)
         {
             if (it == null) return;
@@ -808,20 +767,17 @@ namespace GamesDock
             var acciones = new List<MenuItem>
             {
                 MenuRow(it.Fav ? Lang.T("Quitar de favoritos") : Lang.T("Fijar en favoritos"), delegate { ToggleFav(it); }),
-                MenuRow(Lang.T("Lanzar ahora"), delegate { StartEntry(it, "menu"); }),
                 MenuRow(Lang.T("Abrir carpeta del juego"), delegate { OpenFolderOf(it); }),
                 MenuRow(Lang.T("Renombrar"), delegate { Rename(it); }),
-                MenuRow(Lang.T("Cambiar icono..."), delegate { ChangeIcon(it); }),
                 MenuRow(Lang.T("Iconos de la comunidad"), delegate { IconosComunidad(it); })
             };
             // la opcion de deshacer solo tiene sentido mientras el fijado guarde un icono propio
             if (it.Pin != null && Icons.IsCustom(it.Pin.Icon))
                 acciones.Add(MenuRow(Lang.T("Quitar icono personalizado"), delegate { RestoreIcon(it); }));
-            var destructiva = MenuRow(it.Origin == "custom" ? Lang.T("Quitar del dock") : Lang.T("Ocultar del dock"),
-                                      delegate { HideFromDock(it); });
-            foreach (var a in acciones) _itemMenu.Items.Add(a);
-            _itemMenu.Items.Add(new Separator());   // la accion destructiva, aparte
-            _itemMenu.Items.Add(destructiva);
+            foreach (var action in acciones) _itemMenu.Items.Add(action);
+            _itemMenu.Items.Add(AddToPageMenu(it));
+            _itemMenu.Items.Add(new Separator());
+            _itemMenu.Items.Add(MenuRow(Lang.T("Quitar de esta página"), delegate { HideFromDock(it); }));
             _itemMenu.PlacementTarget = owner;
             MenuGuard.Watch(_itemMenu);
             _itemMenu.IsOpen = true;
@@ -836,7 +792,7 @@ namespace GamesDock
             _itemMenu.Items.Add(MenuRow(Lang.T("Renombrar"), delegate { RenameGroup(it); }));
             _itemMenu.Items.Add(MenuRow(Lang.T("Desagrupar"), delegate { UnGroup(GroupOfSpec(it)); }));
             _itemMenu.Items.Add(new Separator());
-            _itemMenu.Items.Add(MenuRow(Lang.T("Ocultar del dock"), delegate { HideGroup(it); }));
+            _itemMenu.Items.Add(MenuRow(Lang.T("Quitar de esta página"), delegate { HideGroup(it); }));
             _itemMenu.PlacementTarget = owner;
             MenuGuard.Watch(_itemMenu);
             _itemMenu.IsOpen = true;
@@ -906,11 +862,8 @@ namespace GamesDock
         // mismo tile escribirian en el mismo png
         bool _sgdOcupada;
 
-        // El boton 100 % automatico. La barra ya sabe como se llama el juego -y si salio de Steam, su
-        // app id-, asi que el usuario no escribe nada: se pulsa, salen las miniaturas, se elige una y el
-        // tile cambia. Nada de cuadros de guardado: el png va a la carpeta de la app, que ya existe
-        // desde el primer arranque (%APPDATA%\GamesDock\icons\custom). Lo unico que se pide una vez es
-        // la clave, y se pone en Ajustes.
+        // The selector opens before lookup so an unmatched title can be searched under another name.
+        // Only the chosen original image is installed; searching never renames or repins the entry.
         async void IconosComunidad(ItemSpec it)
         {
             if (it == null || _sgdOcupada) return;
@@ -920,10 +873,7 @@ namespace GamesDock
                 string clave = ClaveSgd();
                 if (string.IsNullOrEmpty(clave)) { AvisoSinClave(); return; }
 
-                var lista = await IconosDeSgdAsync(it, clave);
-                if (!lista.EsOk) { AvisoSgd(lista.Estado, lista.Error); return; }
-
-                string url = IconPicker.Seleccionar(this, it.Name, lista.Datos);
+                string url = IconPicker.Seleccionar(this, it);
                 if (string.IsNullOrEmpty(url)) return;   // cerrado sin elegir: el icono de siempre sigue igual
 
                 string destino = Icons.RutaPropia(it.Key, ".png");
@@ -944,32 +894,6 @@ namespace GamesDock
                 Settings.Aviso(Lang.T("No se ha podido cambiar el icono."));
             }
             finally { _sgdOcupada = false; }
-        }
-
-        // Los dos caminos posibles: si el fijado tiene app id de Steam se pide directo (coincidencia
-        // exacta, sin adivinar por el nombre) y si no, o si SteamGridDB no conoce ese juego, se busca el
-        // nombre del tile en el autocomplete.
-        async Task<SgdRespuesta<List<SgdIcono>>> IconosDeSgdAsync(ItemSpec it, string clave)
-        {
-            var ct = CancellationToken.None;
-            int steam = AppIdSteam(it);
-            if (steam > 0)
-            {
-                var r = await SteamGrid.IconosDeSteamAsync(steam, clave, ct);
-                // "no esta ese juego" no es un fallo: es el motivo de continuar con la busqueda por nombre
-                if (r.EsOk || r.Estado != SgdEstado.NoEncontrado) return r;
-            }
-            var b = await SteamGrid.BuscarJuegoIdAsync(it.Name, clave, ct);
-            if (!b.EsOk) return SgdRespuesta<List<SgdIcono>>.Mal(b.Estado, b.Error);
-            return await SteamGrid.IconosDeJuegoAsync(b.Datos, clave, ct);
-        }
-
-        // el app id solo vale si es numero: es lo que SteamGridDB entiende por id de Steam
-        static int AppIdSteam(ItemSpec it)
-        {
-            if (it == null || string.IsNullOrEmpty(it.AppId)) return 0;
-            int n;
-            return int.TryParse(it.AppId, out n) && n > 0 ? n : 0;
         }
 
         // La clave no va escrita dentro del programa: la pega el usuario en Ajustes y se queda en su

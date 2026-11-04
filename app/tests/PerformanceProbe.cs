@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -62,6 +62,7 @@ static class PerformanceProbe
         var rows = new List<string> { "theme,phase,seconds,cpu_one_core_percent,cpu_machine_percent,working_mib,private_mib,managed_mib,allocated_mib_per_second,gen0,gen1,gen2" };
         foreach (var theme in Themes.InGroup("animated"))
         {
+            if (args.Length > 2 && theme.Key != args[2]) continue;
             dock.ResetProximity(); dock.SetPillHover(false); dock.ApplyTheme(theme.Key); dock.ApplyLayout();
             win.Left = win.Top = -10000; Pump(2100); Art(dock).StopMotion(); Anim.Stop();
             if (args[0] == "sweep")

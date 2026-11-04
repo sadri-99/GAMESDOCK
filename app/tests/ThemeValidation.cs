@@ -34,8 +34,8 @@ static class ThemeValidation
         string output = args[0]; Directory.CreateDirectory(output);
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
         app.Resources.MergedDictionaries.Add(XamlAssets.LoadDictionary("styles"));
-        Check(Themes.All.Count == 15, "Expected 9 existing and 6 new themes");
-        var baseline = Assembly.LoadFrom(args[1]).GetType("GamesDock.PillGeometry").GetMethod("Build");
+        Check(Themes.All.Count == 20, "Expected 9 classic and 11 animated themes");
+        var baseline = Assembly.LoadFile(Path.GetFullPath(args[1])).GetType("GamesDock.PillGeometry").GetMethod("Build");
         foreach (var entry in Themes.All)
         {
             foreach (var color in entry.Value.C) Check(Themes.Br(color.Value).IsFrozen, entry.Key + " palette");
@@ -53,8 +53,14 @@ static class ThemeValidation
                 Check(geometry.FillContains(vertical ? new Point(center, pointer) : new Point(pointer, center)), "Solid center");
                 if (entry.Value.Material == null)
                 {
-                    var old = (Geometry)baseline.Invoke(null, new object[] {length, center, half, uniform,
-                        amplitude, pointer, (double)size + 16, 1.55, vertical, growth * 12, growth * 12});
+                    var originalArguments = new object[] {length, center, half, uniform,
+                        amplitude, pointer, (double)size + 16, 1.55, vertical, growth * 12, growth * 12};
+                    var parameters = baseline.GetParameters();
+                    var baselineArguments = new object[parameters.Length];
+                    Array.Copy(originalArguments, baselineArguments, originalArguments.Length);
+                    for (int parameter = originalArguments.Length; parameter < parameters.Length; parameter++)
+                        baselineArguments[parameter] = parameters[parameter].DefaultValue;
+                    var old = (Geometry)baseline.Invoke(null, baselineArguments);
                     Check(old.ToString(CultureInfo.InvariantCulture) == geometry.ToString(CultureInfo.InvariantCulture),
                         "Original contour changed: " + entry.Key);
                 }
@@ -96,8 +102,13 @@ static class ThemeValidation
             Lang.Apply(language);
             dock.InvalidateMenus();
             var menu = dock.DockMenu;
-            var themeMenu = (MenuItem)menu.Items[3];
-            Check(themeMenu.Items.Count == 2, "Exactly two theme submenus");
+            MenuItem themeMenu = null;
+            foreach (object row in menu.Items)
+            {
+                var item = row as MenuItem;
+                if (item != null && Convert.ToString(item.Header) == Lang.T("Tema")) themeMenu = item;
+            }
+            Check(themeMenu != null && themeMenu.Items.Count == 2, "Exactly two theme submenus");
             var found = new System.Collections.Generic.HashSet<string>();
             int groupIndex = 0;
             foreach (MenuItem group in themeMenu.Items)
@@ -106,14 +117,14 @@ static class ThemeValidation
                 string label = language == "en" ? (groupId == "classic" ? "Classic" : "Animated")
                     : (groupId == "classic" ? "Clásicos" : "Animados");
                 Check((string)group.Header == label, "Translated submenu title");
-                Check(group.Items.Count == (groupId == "classic" ? 9 : 6), "Theme category size");
+                Check(group.Items.Count == (groupId == "classic" ? 9 : 11), "Theme category size");
                 foreach (MenuItem item in group.Items)
                 {
                     string id = (string)item.Tag;
                     Check(found.Add(id) && Themes.Get(id).Group == groupId, "Unique theme in correct menu");
                 }
             }
-            Check(found.Count == 15, "All themes reachable");
+            Check(found.Count == 20, "All themes reachable");
             foreach (string selected in Themes.All.Keys)
             {
                 config.Theme = selected;
@@ -135,7 +146,7 @@ static class ThemeValidation
                     Check(((TextBlock)group.Children[0]).Text == Lang.T(Themes.GroupLabel(groupId)), "Translated settings title");
                     Check(group.Visibility == Visibility.Visible, "Theme family is hidden");
                     var choices = (WrapPanel)group.Children[1];
-                    Check(choices.Children.Count == (groupId == "classic" ? 9 : 6), "Settings category size");
+                    Check(choices.Children.Count == (groupId == "classic" ? 9 : 11), "Settings category size");
                     foreach (RadioButton chip in choices.Children)
                     {
                         Check(Themes.Get((string)chip.Tag).Group == groupId, "Correct settings category");
@@ -157,7 +168,7 @@ static class ThemeValidation
         var sheet = new DrawingVisual();
         using (var dc = sheet.RenderOpen())
         {
-            dc.DrawRectangle(Themes.Br("#FF11171B"), null, new Rect(0, 0, 840, 1010));
+            dc.DrawRectangle(Themes.Br("#FF11171B"), null, new Rect(0, 0, 840, 2970));
             int row = 0;
             foreach (var entry in Themes.All)
             {
@@ -178,7 +189,7 @@ static class ThemeValidation
                 {
                     var image = new Image { Source = new CroppedBitmap(source, new Int32Rect(cropX[i], 22, 62, 62)),
                         Width = 62, Height = 62, Clip = new RectangleGeometry(new Rect(0, 0, 62, 62), 13, 13) };
-                    Canvas.SetLeft(image, 34 + i * 93); Canvas.SetTop(image, 21); panel.Children.Add(image);
+                    Canvas.SetLeft(image, 50 + i * 93); Canvas.SetTop(image, 21); panel.Children.Add(image);
                 }
                 panel.Measure(new Size(780, 105)); panel.Arrange(new Rect(0, 0, 780, 105)); panel.UpdateLayout();
                 dc.PushTransform(new TranslateTransform(30, y + 31));
@@ -186,9 +197,9 @@ static class ThemeValidation
                 dc.Pop(); row++;
             }
         }
-        Save(sheet, 840, 1010, Path.Combine(output, "Temas-GamesDock.png"));
+        Save(sheet, 840, 2970, Path.Combine(output, "Temas-GamesDock.png"));
         window.Close();
-        Console.WriteLine("PASS: " + _checks + " checks; 15 themes, legacy contours, 540 material states, 60 live layouts; grouped menus/settings in ES and EN.");
+        Console.WriteLine("PASS: " + _checks + " checks; 20 themes, legacy contours and expanded material/layout coverage; grouped menus/settings in ES and EN.");
         app.Shutdown();
     }
 }

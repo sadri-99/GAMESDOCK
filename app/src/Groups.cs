@@ -21,15 +21,15 @@ namespace GamesDock
     {
         public GroupDto GroupById(string id)
         {
-            if (string.IsNullOrEmpty(id) || Cfg.Groups == null) return null;
-            foreach (var g in Cfg.Groups) if (g != null && g.Id == id) return g;
+            if (string.IsNullOrEmpty(id) || ActiveGroups == null) return null;
+            foreach (var g in ActiveGroups) if (g != null && g.Id == id) return g;
             return null;
         }
 
         public GroupDto GroupOfKey(string key)
         {
-            if (string.IsNullOrEmpty(key) || Cfg.Groups == null) return null;
-            foreach (var g in Cfg.Groups)
+            if (string.IsNullOrEmpty(key) || ActiveGroups == null) return null;
+            foreach (var g in ActiveGroups)
                 if (g != null && g.Members != null && g.Members.Contains(key)) return g;
             return null;
         }
@@ -87,13 +87,13 @@ namespace GamesDock
             if (g == null)
             {
                 g = new GroupDto { Id = Groups.NewId(), Members = new List<string>() };
-                Cfg.Groups.Add(g);
+                ActiveGroups.Add(g);
             }
             else if (ga != null && gb != null && !ReferenceEquals(ga, gb))
             {
                 foreach (var k in gb.Members) if (!g.Members.Contains(k)) g.Members.Add(k);
-                Cfg.Groups.Remove(gb);
-                Cfg.Order.Remove(Groups.Key(gb.Id));
+                ActiveGroups.Remove(gb);
+                ActiveOrder.Remove(Groups.Key(gb.Id));
             }
 
             // el orden del mosaico: primero lo que ya estaba en el hueco, luego lo que llega arrastrando
@@ -120,8 +120,8 @@ namespace GamesDock
         public void UnGroup(GroupDto g)
         {
             if (g == null) return;
-            Cfg.Groups.Remove(g);
-            Cfg.Order.Remove(Groups.Key(g.Id));
+            ActiveGroups.Remove(g);
+            ActiveOrder.Remove(Groups.Key(g.Id));
             Log.Write("desagrupado: " + (g.Name ?? g.Id));
             Cfg.Save();
             Refresh(false);
@@ -143,18 +143,8 @@ namespace GamesDock
         // sacar una carpeta del dock de un golpe es sacar todo lo que hay dentro
         public void HideGroup(ItemSpec it)
         {
-            foreach (var m in GroupMembers(it))
-            {
-                var p = EnsurePin(m);
-                p.Hidden = true;
-                p.Fav = false;
-            }
-            var g = GroupOfSpec(it);
-            if (g != null)
-            {
-                Cfg.Groups.Remove(g);
-                Cfg.Order.Remove(Groups.Key(g.Id));
-            }
+            var members = new List<ItemSpec>(GroupMembers(it));
+            foreach (var member in members) PageStore.Remove(Cfg, Cfg.Section, member.Key);
             Cfg.Save();
             Refresh(false);
             GroupPanel.Cerrar();

@@ -60,12 +60,13 @@
     <Setter Property="OverridesDefaultStyle" Value="True"/>
     <Setter Property="Foreground" Value="{DynamicResource MenuFg}"/>
     <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="Padding" Value="10,0"/>
     <Setter Property="SnapsToDevicePixels" Value="True"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="MenuItem">
           <Border x:Name="Bd" CornerRadius="9" Margin="0,1" Background="Transparent" SnapsToDevicePixels="True">
-            <Grid>
+            <Grid Margin="{TemplateBinding Padding}">
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -108,6 +109,16 @@
             <Trigger Property="IsChecked" Value="True">
               <Setter TargetName="Tick" Property="Visibility" Value="Visible"/>
             </Trigger>
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="Tag" Value="dock-lock"/>
+                <Condition Property="IsChecked" Value="True"/>
+              </MultiTrigger.Conditions>
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource MenuHi}"/>
+              <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource MenuAccent}"/>
+              <Setter TargetName="Bd" Property="BorderThickness" Value="1"/>
+              <Setter Property="Foreground" Value="{DynamicResource MenuHiFg}"/>
+            </MultiTrigger>
             <Trigger Property="Role" Value="SubmenuHeader">
               <Setter TargetName="Arr" Property="Visibility" Value="Visible"/>
             </Trigger>
@@ -173,6 +184,128 @@
   </Style>
 
   <!-- .......................................... controles de los ajustes -->
+  <Style x:Key="IconGalleryScrollBar" TargetType="ScrollBar">
+    <Setter Property="Width" Value="12"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ScrollBar">
+          <Grid Background="Transparent" Margin="1,2">
+            <Track x:Name="PART_Track" Orientation="Vertical" IsDirectionReversed="True"
+                   Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                   ViewportSize="{TemplateBinding ViewportSize}"
+                   Value="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+              <Track.DecreaseRepeatButton>
+                <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}" Focusable="False" Opacity="0"/>
+              </Track.DecreaseRepeatButton>
+              <Track.Thumb>
+                <Thumb MinHeight="28">
+                  <Thumb.Template>
+                    <ControlTemplate TargetType="Thumb">
+                      <Border x:Name="Handle" CornerRadius="4" Margin="2,0" Background="{DynamicResource MenuAccent}" Opacity="0.45"/>
+                      <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Handle" Property="Opacity" Value="0.8"/></Trigger>
+                        <Trigger Property="IsDragging" Value="True"><Setter TargetName="Handle" Property="Opacity" Value="1"/></Trigger>
+                      </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                  </Thumb.Template>
+                </Thumb>
+              </Track.Thumb>
+              <Track.IncreaseRepeatButton>
+                <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}" Focusable="False" Opacity="0"/>
+              </Track.IncreaseRepeatButton>
+            </Track>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="IconCard" TargetType="RadioButton">
+    <Setter Property="Foreground" Value="{DynamicResource PanelFg}"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Border x:Name="Card" Margin="4" Padding="8" CornerRadius="12" Background="{DynamicResource CtlBg}"
+                  BorderBrush="{DynamicResource CtlEdge}" BorderThickness="1" SnapsToDevicePixels="True">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource MenuAccent}"/>
+              <Setter TargetName="Card" Property="Background" Value="{DynamicResource CtlHi}"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource MenuAccent}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="PickerGameItem" TargetType="ComboBoxItem">
+    <Setter Property="Foreground" Value="{DynamicResource MenuFg}"/>
+    <Setter Property="Padding" Value="10,7"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ComboBoxItem">
+          <Border x:Name="Row" Padding="{TemplateBinding Padding}" Background="Transparent" CornerRadius="6">
+            <ContentPresenter/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsHighlighted" Value="True">
+              <Setter TargetName="Row" Property="Background" Value="{DynamicResource MenuHi}"/>
+              <Setter Property="Foreground" Value="{DynamicResource MenuHiFg}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="PickerGames" TargetType="ComboBox">
+    <Setter Property="Foreground" Value="{DynamicResource PanelFg}"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ComboBox">
+          <Grid>
+            <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+              <ToggleButton.Template>
+                <ControlTemplate TargetType="ToggleButton">
+                  <Border Background="{DynamicResource CtlBg}" BorderBrush="{DynamicResource CtlEdge}" BorderThickness="1" CornerRadius="9">
+                    <Path Data="M 0,0 L 4,4 L 8,0" Stroke="{DynamicResource PanelSub}" StrokeThickness="1.5"
+                          HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,11,0"/>
+                  </Border>
+                </ControlTemplate>
+              </ToggleButton.Template>
+            </ToggleButton>
+            <ContentPresenter Margin="11,7,30,7" VerticalAlignment="Center" IsHitTestVisible="False" ClipToBounds="True"
+                              Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
+            <Popup x:Name="PART_Popup" Placement="Bottom" AllowsTransparency="True" Focusable="False"
+                   IsOpen="{TemplateBinding IsDropDownOpen}">
+              <Border Padding="5" Margin="0,4,0,0" CornerRadius="10" Background="{DynamicResource MenuBg}"
+                      BorderBrush="{DynamicResource MenuEdge}" BorderThickness="1"
+                      MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                <ScrollViewer MaxHeight="240" CanContentScroll="True" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                  <ScrollViewer.Resources>
+                    <Style TargetType="ScrollBar" BasedOn="{StaticResource IconGalleryScrollBar}"/>
+                  </ScrollViewer.Resources>
+                  <ItemsPresenter/>
+                </ScrollViewer>
+              </Border>
+            </Popup>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.65"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style x:Key="PillBtn" TargetType="Button">
     <Setter Property="Foreground" Value="{DynamicResource MenuFg}"/>
     <Setter Property="Background" Value="{DynamicResource CtlBg}"/>

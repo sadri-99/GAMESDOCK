@@ -1,5 +1,57 @@
 # Changelog
 
+## v2.00 — 2026-11-04
+
+Cambios desde la última subida, `e77f08b`, posterior a v1.9.5. Esta lista describe el resultado publicado; los diseños descartados durante las pruebas no forman parte de la versión.
+
+### Organización y menús
+
+- «Páginas» sustituye a «Qué se ve»: Favoritos, Juegos y Aplicaciones, más hasta cinco páginas personalizadas. Se retira Todo y «detectados» del nombre Juegos.
+- Contenido, orden y carpetas independientes. Añadir accesos a una página no añade favoritos; Favoritos permanece fija y se edita manualmente. Crear, renombrar, eliminar y copiar accesos a otras páginas desde el menú.
+- Migración compatible de favoritos, accesos, orden y carpetas. Reescanear respeta las bajas manuales de cada página.
+- Menús de iconos sin Ocultar del dock, Cambiar icono ni Lanzar ahora; menú de fondo sin Buscar ni Restaurar ocultos. Bloqueo con resalte temático, sin tick ni hueco reservado.
+- Márgenes interiores uniformes para los textos de menús contextuales y bandeja.
+
+### Varias pantallas
+
+- Arrastrar a otra pantalla guarda monitor y posición para el siguiente inicio.
+- Anclaje, posición libre y límite de tamaño relativos a la pantalla elegida, con coordenadas negativas y escalas distintas.
+- Recuperación visible al desconectar una pantalla, conservando la preferida para reconexión. Carpetas, fichas, ajustes y arrastre siguen al dock.
+- Actualización por eventos de Windows, sin sondeo continuo.
+
+### SteamGridDB y fichas
+
+- Buscador de nombres alternativos en el selector de iconos de comunidad y elección de juego o edición coincidente.
+- El selector abre aunque no haya resultado automático, muestra errores y permite reintentar. Cabecera, búsqueda, estado y cierre fijos; scroll solo en la galería.
+- Tarjetas mayores, fondo para transparencias y resolución/puntuación en descripción emergente. Cancelación de búsquedas anteriores, respuestas tardías descartadas, cuatro trabajadores y caché de 64 miniaturas.
+- Banner de ficha recortado realmente por arriba, texto más espaciado y márgenes naturales. Tamaño opcional del 115 %.
+- Actividad personal Steam opcional, desactivada por defecto: horas jugadas, última partida y período reciente cuando está disponible localmente. Lectura asíncrona cancelable y caché; cuenta activa sin mezclar usuarios, sin clave adicional ni consultas personales por red.
+
+### Ajustes
+
+- Personalización prioritaria: tema, animación, aumento y muestra juntos. Resto distribuido en bloques compactos, sin pestañas, desplegables de sección ni scroll general.
+- Scroll exclusivamente en las miniaturas de temas, alineadas y con selección visible. Controles en español e inglés.
+- Clic fuera cierra y guarda igual que la cruz o Esc; respeta diálogos secundarios y consume el clic exterior.
+- Muestra reutilizable y relojes detenidos al asentarse; se conserva calidad de dibujo y movimiento. El aviso de consumo explica las mediciones y sus límites.
+
+### Temas y acabado
+
+- **20 temas: nueve clásicos y 11 animados**. Alien, Portal, PlayStation, Mass Effect, Matrix, Cyberpunk 2077, Resident Evil, Metal Gear Solid, Final Fantasy, Diablo y Death Stranding.
+- Superficies, paletas, contornos, enfoque, aumento y secuencias de lanzamiento propios. Emblemas vectoriales reconocibles en el selector; gestos de esclusa, cubo/portal, Memory Card, relé, descifrado, quickhack, puerta, caja, cristales, invocación y enlace quiral.
+- Márgenes laterales compactos originales restaurados. Sin ampliar extremos ni añadir sellos o logotipos al pie del icono activo.
+- PlayStation sin símbolos redundantes bajo el icono seleccionado. Cyberpunk al doble de duración: ciclo 7,6 s, entrada 3,7 s y lanzamiento 1,9 s.
+- Diablo sin círculo de seguimiento ni runas estáticas centrales; conserva runas móviles, brasas y lanzamiento.
+- Death Stranding sin indicadores fijos azules/ámbar de extremos; 16–34 gotas que se acumulan y resbalan con aceleración, estela y reflejo.
+- Retirados Dark Souls, Dragon Ball, Hollow Knight, Unturned, Kingdom Hearts, GTA VI y Pokémon. Si uno estaba seleccionado se cambia a Noche; se conservan los demás ajustes.
+- Matrix reutiliza columnas vectoriales congeladas: menor asignación sin recortar canales ni colas. Sin temporizadores nuevos ni animación permanente en reposo.
+
+### Distribución y documentación
+
+- Metadatos de aplicación, instalador y pruebas actualizados a v2.00; AppId y ubicación del instalador conservados para actualizar.
+- README español/inglés renovados, guías de funciones, arquitectura final, metodología y resultados de validación.
+- PNG a 192 DPI y GIF de los 11 temas desde WPF real. Ajustes con Horizonte después de las muestras animadas.
+- Suite aislada de datos personales, regresiones de páginas, monitores, iconos, fichas, ajustes, geometría, movimiento y temas retirados. [Evidencia de v2.00](docs/development/VALIDACION-v2.00.md).
+
 ## v1.9.5 — 2026-11-03
 
 - Reemplazado VBScript de inicio por tarea de sesión por usuario, ejecutable directo, sin elevación, sin demora añadida y compatible con batería y sin red.

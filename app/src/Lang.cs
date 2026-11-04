@@ -53,7 +53,80 @@ namespace GamesDock
         static Dictionary<string, string> Build(string id)
         {
             var d = new Dictionary<string, string>();
+            Put(d, "CPU al animar · RAM según tema", "CPU while animating · RAM varies by theme");
+            Put(d, "Referencia local de los 11 temas animados conservados, con ocho accesos de 64 px y 12 procesadores lógicos: al mover el cursor, aproximadamente 2,6–5,3 % de CPU total. Ventana fuera del área visible; no es un monitor en directo.", "Local reference for the 11 retained animated themes with eight 64 px shortcuts and 12 logical processors: cursor movement used about 2.6–5.3% total CPU. Window outside the visible desktop; this is not a live monitor.");
+            Put(d, "La RAM varía con el tema y las cachés. En la medición anterior de los seis temas originales, activar efectos añadió aproximadamente 1–4 MB de memoria privada y hasta 1,2 MB de memoria física. Ese incremento no se ha medido por separado para los doce nuevos. El total también incluye Windows, iconos, catálogo y fichas.", "RAM varies with the theme and caches. In the earlier test of the six original themes, effects added about 1–4 MB private memory and up to 1.2 MB physical memory. That increment has not been measured separately for the twelve new themes. Total memory also includes Windows, icons, catalog and cards.");
+            Put(d, "Cyberpunk 2077: circuitos, amarillo ácido, enlace cian y glitch de implantes.", "Cyberpunk 2077: circuits, acid yellow, cyan uplink and implant glitch.");
+            Put(d, "Resident Evil: monitor clínico, pulso de estado, vial y marcas de cuarentena.", "Resident Evil: clinical monitor, status pulse, vial and quarantine marks.");
+
+
+            Put(d, "Metal Gear Solid: enlace Codec, señal táctica, radar y alerta de infiltración.", "Metal Gear Solid: Codec link, tactical signal, radar and infiltration alert.");
+
+            Put(d, "Final Fantasy: cristal facetado, flujo de éter y estela de meteoro.", "Final Fantasy: faceted crystal, aether flow and meteor trail.");
+            Put(d, "Diablo: orbes de sangre, círculo de invocación, runas y brasas.", "Diablo: blood orbs, summoning circle, runes and embers.");
+
+            Put(d, "Death Stranding: lluvia de declive, Odradek, enlace quiral y hilos de conexión.", "Death Stranding: timefall, Odradek, chiral link and connection strands.");
+
+            Put(d, "Mostrar ficha del juego al pasar el ratón", "Show game card on hover");
+            Put(d, "Mantener el dock al nivel del escritorio", "Keep dock at desktop level");
+            Put(d, "Cambios al instante · Clic fuera o Esc para cerrar", "Changes apply instantly · Click outside or Esc to close");
+            Put(d, "Clave gratuita: Perfil → Preferencias → API en SteamGridDB. Cambia el arte desde «Iconos de la comunidad» en el menú de cada icono.", "Free key: Profile → Preferences → API on SteamGridDB. Change artwork using Community icons in each icon's menu.");
+            Put(d, "{0} aperturas desde GamesDock", "{0} launches from GamesDock");
+            Put(d, "sin aperturas desde GamesDock", "no launches from GamesDock");
+            Put(d, "Ficha un 15 % más grande", "15% larger card");
+            Put(d, "Mostrar mi actividad de Steam", "Show my Steam activity");
+            Put(d, "Horas jugadas y última partida de la cuenta activa, desde los datos locales de Steam.", "Playtime and last played for the active account, from local Steam data.");
+            Put(d, "Tu actividad en Steam", "Your Steam activity");
+            Put(d, "Consultando datos locales...", "Reading local data...");
+            Put(d, "Sin datos locales para este juego.", "No local data for this game.");
+            Put(d, "Tiempo jugado: {0}", "Playtime: {0}");
+            Put(d, "Última partida: {0}", "Last played: {0}");
+            Put(d, "Últimas 2 semanas: {0}", "Last 2 weeks: {0}");
             if (id != "en") return d;
+
+            Put(d, "Páginas", "Pages");
+            Put(d, "+ Añadir página", "+ Add page");
+            Put(d, "Nueva página", "New page");
+            Put(d, "Nombre de la página", "Page name");
+            Put(d, "Renombrar página", "Rename page");
+            Put(d, "Eliminar página", "Delete page");
+            Put(d, "Añadir a página", "Add to page");
+            Put(d, "Quitar de esta página", "Remove from this page");
+            Put(d, "Puedes crear hasta 5 páginas personalizadas.", "You can create up to 5 custom pages.");
+            Put(d, "Elige un nombre de hasta 40 caracteres.", "Choose a name up to 40 characters long.");
+            Put(d, "Escribe un nombre distinto, de 1 a 40 caracteres.", "Enter a unique name between 1 and 40 characters.");
+            Put(d, "¿Eliminar la página «{0}»? Las demás páginas conservarán sus accesos.", "Delete the page “{0}”? Other pages will keep their shortcuts.");
+            Put(d, "Arrastra un .lnk, .exe o un enlace steam:// sobre la barra para fijarlo. Arrastra un icono para ordenar esta página; suéltalo fuera para quitarlo solo de aquí. Clic derecho: favoritos, renombrar, iconos de la comunidad o añadir a otra página. Clic central: favorito.",
+                "Drop a .lnk, .exe or steam:// link on the bar to add it. Drag an icon to reorder this page; drop it outside to remove it only from here. Right-click for favorites, renaming, community icons or adding to another page. Middle click: favorite.");
+
+            Put(d, "Prueba otro nombre y elige el juego correcto.", "Try another name and choose the right game.");
+            Put(d, "Buscar por otro nombre en SteamGridDB", "Search SteamGridDB using another name");
+            Put(d, "Buscar", "Search");
+            Put(d, "Juego encontrado", "Matching game");
+            Put(d, "Fondo claro", "Light background");
+            Put(d, "Buscando iconos...", "Searching for icons...");
+            Put(d, "Busca iconos para tu juego", "Find icons for your game");
+            Put(d, "Prueba con el título original, otra edición o una abreviatura.", "Try the original title, another edition or an abbreviation.");
+            Put(d, "Elige un icono para aplicarlo · Esc para cerrar", "Choose an icon to apply it · Esc to close");
+            Put(d, "{0} × {1} · Puntuación de la comunidad: {2}", "{0} × {1} · Community score: {2}");
+            Put(d, "Icono de {0} × {1}", "{0} × {1} icon");
+            Put(d, "Puedes probar otro nombre mientras carga.", "You can try another name while it loads.");
+            Put(d, "Elige otra coincidencia si no es el juego que buscas.", "Choose another match if this is not the game you want.");
+            Put(d, "Escribe el nombre de un juego.", "Enter a game name.");
+            Put(d, "Buscando juegos...", "Searching for games...");
+            Put(d, "Sin coincidencias", "No matches");
+            Put(d, "Cargando iconos de {0}...", "Loading icons for {0}...");
+            Put(d, "{0} iconos · {1}", "{0} icons · {1}");
+            Put(d, "No se han encontrado iconos", "No icons found");
+            Put(d, "No se pudieron cargar los iconos", "Could not load icons");
+            Put(d, "Elige otra coincidencia o prueba con otro nombre.", "Choose another match or try another name.");
+            Put(d, "Añade tu clave de SteamGridDB en Ajustes → Iconos de la comunidad.", "Add your SteamGridDB key in Settings → Community icons.");
+            Put(d, "SteamGridDB no acepta la clave. Revísala en Ajustes → Iconos de la comunidad.", "SteamGridDB did not accept the key. Check it in Settings → Community icons.");
+            Put(d, "No hay conexión con SteamGridDB. Puedes volver a buscar para reintentarlo.", "Cannot connect to SteamGridDB. Search again to retry.");
+            Put(d, "SteamGridDB no pudo completar la búsqueda. Inténtalo de nuevo.", "SteamGridDB could not complete the search. Please try again.");
+            Put(d, "Vista previa no disponible. Vuelve a buscar para reintentar.", "Preview unavailable. Search again to retry.");
+            Put(d, "Miniaturas: {0}/{1} · Esc para cerrar", "Previews: {0}/{1} · Esc to close");
+            Put(d, "Algunas vistas previas no se cargaron. Vuelve a buscar para reintentar.", "Some previews could not load. Search again to retry.");
 
             // ------------------------------------------------------------ bandeja y menus
             Put(d, "Mostrar / ocultar   (Ctrl+Alt+D)", "Show / hide   (Ctrl+Alt+D)");
@@ -74,8 +147,7 @@ namespace GamesDock
             Put(d, "Animaciones de los temas", "Theme animations");
             Put(d, "Alien: detector de movimiento, fósforo y secuencia de esclusa.",
                 "Alien: motion tracker, phosphor persistence and airlock sequence.");
-            Put(d, "Dark Souls: avivar la hoguera, brasas y sello de invocación.",
-                "Dark Souls: kindling, embers and a summoning seal.");
+
             Put(d, "Portal: carga azul/naranja, apertura y transferencia entre portales.",
                 "Portal: blue/orange charge, aperture opening and portal transfer.");
             Put(d, "PlayStation: arranque por pasos, paquetes de memoria y LED de escritura.",

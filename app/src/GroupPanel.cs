@@ -129,38 +129,19 @@ namespace GamesDock
         // tile del grupo
         void Colocar()
         {
-            var w = _par.Win;
-            double alto = w.ActualHeight > 2 ? w.ActualHeight : 260;
-            double ancho = w.Width;
-            double left = w.Left, top = w.Top;
+            var window = _par.Win;
+            double scale = Dock.DipScale(_dock.Win);
+            double height = window.ActualHeight > 2 ? window.ActualHeight : 260;
+            Rect anchor = Displays.WindowBounds(_dock.Win);
             if (_origen != null && _origen.IsVisible)
             {
-                double dip = Escala(w);
-                Point a = _origen.PointToScreen(new Point(0, 0));
-                Point b = _origen.PointToScreen(new Point(_origen.ActualWidth, _origen.ActualHeight));
-                double i = a.X / dip, d = a.Y / dip, c = b.X / dip, p = b.Y / dip;
-                switch (_dock.Cfg.Position)
-                {
-                    case "top": left = (i + c) / 2 - ancho / 2; top = d + 12; break;
-                    case "left": left = c + 12; top = (d + p) / 2 - alto / 2; break;
-                    case "right": left = i - 12 - ancho; top = (d + p) / 2 - alto / 2; break;
-                    default: left = (i + c) / 2 - ancho / 2; top = d - 12 - alto; break;
-                }
+                var a = _origen.PointToScreen(new Point());
+                var b = _origen.PointToScreen(new Point(_origen.ActualWidth, _origen.ActualHeight));
+                anchor = new Rect(a, b);
             }
-            var wa = SystemParameters.WorkArea;
-            w.Left = Math.Max(wa.Left + 6, Math.Min(left, wa.Right - ancho - 6));
-            w.Top = Math.Max(wa.Top + 6, Math.Min(top, wa.Bottom - alto - 6));
-        }
-
-        static double Escala(Visual v)
-        {
-            try
-            {
-                var ps = PresentationSource.FromVisual(v);
-                if (ps != null) return ps.CompositionTarget.TransformToDevice.M11;
-            }
-            catch { }
-            return 1.0;
+            var bounds = MonitorPlacement.PopupBounds(anchor, new Size(window.Width * scale, height * scale),
+                _dock.CurrentDisplay.WorkArea, _dock.Cfg.Position, 12 * scale, 6 * scale);
+            Displays.MoveWindow(window, bounds.TopLeft);
         }
 
         void Rellenar()
@@ -229,11 +210,6 @@ namespace GamesDock
         void MenuMiembro(ItemSpec m, Button owner)
         {
             var cm = new ContextMenu { PlacementTarget = owner, Placement = PlacementMode.Bottom };
-            cm.Items.Add(Fila(Lang.T("Lanzar ahora"), delegate
-            {
-                Cerrar();
-                _dock.StartEntry(m, "grupo menu");
-            }));
             cm.Items.Add(Fila(Lang.T("Renombrar"), delegate { _dock.Rename(m); Recargar(); }));
             cm.Items.Add(new Separator());
             cm.Items.Add(Fila(Lang.T("Quitar del grupo"), delegate { _dock.RemoveFromGroup(m.Key); Recargar(); }));

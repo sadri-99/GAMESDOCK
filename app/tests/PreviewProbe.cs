@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -52,7 +52,7 @@ static class PreviewProbe
         var progress = typeof(DockPreview).GetMethod("AnimateProgress", Private);
         var inside = typeof(DockPreview).GetField("_inside", Private);
         var material = (MaterialArt)typeof(DockPreview).GetField("_material", Private).GetValue(sample);
-        foreach (string theme in new[] { "terminal", "santuario" })
+        foreach (string theme in new[] { "terminal", "nostromo" })
         {
             dock.ApplyTheme(theme); sample.Refresh(); window.UpdateLayout(); Pump(400);
             inside.SetValue(sample, true); progress.Invoke(sample, new object[] { 1.0 }); material.SetInteraction(true);

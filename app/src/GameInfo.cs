@@ -113,9 +113,13 @@ namespace GamesDock
         // ------------------------------------------------------------------ como se identifica
         public static int AppIdDe(ItemSpec it)
         {
-            if (it == null || string.IsNullOrEmpty(it.AppId)) return 0;
-            int n;
-            return int.TryParse(it.AppId, out n) && n > 0 ? n : 0;
+            if (it == null) return 0;
+            int id;
+            if (int.TryParse(it.AppId, out id) && id > 0) return id;
+            if (!string.IsNullOrEmpty(it.Key) && it.Key.StartsWith("steam:", StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(it.Key.Substring(6), out id) && id > 0) return id;
+            var match = System.Text.RegularExpressions.Regex.Match(it.Target ?? it.Link ?? string.Empty, @"(?i)^steam://(?:rungameid|run)/(\d+)");
+            return match.Success && int.TryParse(match.Groups[1].Value, out id) && id > 0 ? id : 0;
         }
 
         // El appid cuando la barra ya lo tiene (los detectados en Steam lo traen) y si no el nombre

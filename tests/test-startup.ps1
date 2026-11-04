@@ -32,7 +32,7 @@ $release = [Activator]::CreateInstance($releaseType)
 $listType = [System.Collections.Generic.List``1].MakeGenericType($assetType)
 $release.Assets = [Activator]::CreateInstance($listType)
 $setup = [Activator]::CreateInstance($assetType)
-$setup.Name = 'GamesDock-Setup-1.9.5.exe'
+$setup.Name = 'GamesDock-Setup-2.00.exe'
 $release.Assets.Add($setup)
 $choose = $assembly.GetType('GamesDock.Update').GetMethod('Elegir', $flags)
 Assert ($null -eq $choose.Invoke($null, @($release))) 'Updater must never replace dock with setup wizard.'
@@ -40,7 +40,7 @@ $binary = [Activator]::CreateInstance($assetType)
 $binary.Name = 'GamesDock.exe'
 $release.Assets.Add($binary)
 Assert ([object]::ReferenceEquals($binary, $choose.Invoke($null, @($release)))) 'Updater must select exact GamesDock.exe asset.'
-Assert ($assembly.GetName().Version.ToString() -eq '1.9.5.0') 'Incorrect assembly version.'
+Assert ($assembly.GetName().Version.ToString() -eq '2.0.0.0') 'Incorrect assembly version.'
 if ($Integration) {
     function Configure([string]$mode) {
         $process = Start-Process -FilePath $exe -ArgumentList '--configure-startup', $mode -WindowStyle Hidden -Wait -PassThru

@@ -1,3 +1,5 @@
+> Documento histórico de v1.9. Para el catálogo actual de 20 temas y sus muestras, consulta [Temas de v2.00](TEMAS-SAGAS.md).
+
 # Temas y personalización · v1.9
 
 Incluye los nueve temas originales y seis materiales nuevos:

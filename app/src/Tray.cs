@@ -67,6 +67,7 @@ namespace GamesDock
         void Row(Forms.ContextMenuStrip menu, string text, Action accion)
         {
             var item = menu.Items.Add(text);
+            item.Padding = new Forms.Padding(8, 3, 8, 3);
             item.Click += delegate { OnUi(accion); };
         }
 

@@ -135,7 +135,7 @@ namespace GamesDock
                 var s = byKey[k];
                 PinDto p;
                 bool hay = pins.TryGetValue(k, out p);
-                if (hay && p.Hidden) continue;
+                // Legacy hidden entries remain available for explicit page selection.
                 s.Pin = hay ? p : null;
                 s.Fav = hay && p.Fav;
                 if (hay && !string.IsNullOrEmpty(p.Name)) s.Name = p.Name;
@@ -150,9 +150,8 @@ namespace GamesDock
             {
                 if (string.IsNullOrEmpty(p.Key) || byKey.ContainsKey(p.Key)) continue;
                 orden++;
-                if (p.Hidden) continue;
                 bool hayArchivo = (!string.IsNullOrEmpty(p.Link) && File.Exists(p.Link))
-                               || (!string.IsNullOrEmpty(p.Target) && File.Exists(p.Target));
+                               || (!string.IsNullOrEmpty(p.Target) && (File.Exists(p.Target) || Regex.IsMatch(p.Target, @"^\w+://")));
                 if (!hayArchivo) continue;
                 var it = ItemSpec.FromPin(p);
                 it.Orden = orden;
@@ -160,6 +159,7 @@ namespace GamesDock
             }
 
             Items = items;
+            if (PageStore.Synchronize(_cfg, Items)) _cfg.Save();
             sw.Stop();
             Log.Write(string.Format("Indice construido: {0} elementos en {1} ms", items.Count, sw.ElapsedMilliseconds));
         }
@@ -184,25 +184,17 @@ namespace GamesDock
         // disco entero, y al soltar fuera hace falta que el tile desaparezca al instante
         public List<ItemSpec> Visible(string section, string query)
         {
+            PageStore.Synchronize(_cfg, Items);
+            var page = PageStore.Find(_cfg, section) ?? PageStore.Active(_cfg);
+            var members = new HashSet<string>(page.Members, StringComparer.Ordinal);
             var pool = new List<ItemSpec>();
             var pins = PinIndex();
             foreach (var it in Items)
             {
-                bool oculto;
-                PinDto p;
-                if (pins.TryGetValue(it.Key ?? string.Empty, out p)) { it.Pin = p; it.Fav = p.Fav; oculto = p.Hidden; }
-                else oculto = false;
-                if (oculto) continue;
-
-                bool pasa;
-                switch (section)
-                {
-                    case "fav": pasa = it.Fav; break;
-                    case "games": pasa = it.Kind == "game"; break;
-                    case "apps": pasa = it.Kind == "app"; break;
-                    default: pasa = true; break;
-                }
-                if (!pasa) continue;
+                PinDto pin;
+                if (pins.TryGetValue(it.Key ?? string.Empty, out pin)) it.Pin = pin;
+                it.Fav = PageStore.IsFavorite(_cfg, it.Key);
+                if (!members.Contains(it.Key ?? string.Empty)) continue;
                 if (!string.IsNullOrEmpty(query) &&
                     (it.Name ?? string.Empty).IndexOf(query, StringComparison.OrdinalIgnoreCase) < 0) continue;
                 pool.Add(it);
@@ -210,14 +202,15 @@ namespace GamesDock
 
             var rank = new Dictionary<string, int>();
             int oi = 0;
-            foreach (var k in _cfg.Order)
+            foreach (var k in page.Order)
             {
-                if (string.IsNullOrEmpty(k) || !rank.ContainsKey(k)) { rank[k] = oi; oi++; }
+                if (string.IsNullOrEmpty(k) || rank.ContainsKey(k)) continue;
+                rank[k] = oi++;
             }
 
             // buscando no se agrupa: quien escribe "witcher" quiere ver ese icono, no tener que abrir
             // la carpeta donde lo metio
-            if (string.IsNullOrEmpty(query)) Agrupar(pool, rank);
+            if (string.IsNullOrEmpty(query)) Agrupar(pool, rank, page.Groups);
 
             // el orden que eligio el usuario arrastrando manda sobre el resto; lo que no esta en la
             // lista (recien detectados) se coloca detras, por numero de usos y nombre
@@ -228,9 +221,9 @@ namespace GamesDock
         // Los grupos se montan sobre la lista ya filtrada: la carpeta entra en el hueco del miembro que
         // iba primero y los miembros salen de la fila. Si con la seccion elegida quedan menos de dos, el
         // grupo no se dibuja y el config no se toca, que es un estado temporal.
-        void Agrupar(List<ItemSpec> pool, Dictionary<string, int> rank)
+        void Agrupar(List<ItemSpec> pool, Dictionary<string, int> rank, List<GroupDto> groups)
         {
-            if (_cfg.Groups == null || _cfg.Groups.Count == 0) return;
+            if (groups == null || groups.Count == 0) return;
             var porClave = new Dictionary<string, ItemSpec>();
             foreach (var it in pool)
             {
@@ -240,7 +233,7 @@ namespace GamesDock
 
             var fuera = new HashSet<string>();
             var nuevos = new List<ItemSpec>();
-            foreach (var g in _cfg.Groups)
+            foreach (var g in groups)
             {
                 if (g == null || string.IsNullOrEmpty(g.Id) || g.Members == null) continue;
                 var ms = new List<ItemSpec>();

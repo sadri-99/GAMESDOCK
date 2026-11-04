@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -39,6 +39,7 @@ namespace GamesDock
         static Window _win;
         static IntPtr _hwnd;
         static int _depth;
+        static readonly Dictionary<int, Action> OutsideActions = new Dictionary<int, Action>();
         static DispatcherTimer _remonte;
         static int _intentos;
         static readonly List<IntPtr> Subidas = new List<IntPtr>();
@@ -50,9 +51,10 @@ namespace GamesDock
         // solo, porque al abrir el cuadro de renombrar la ventana del contenedor pierde la activacion
         public static bool HayVelo { get { return _depth > 0; } }
 
-        public static void Push()
+        public static void Push(Action outsideClick = null)
         {
             _depth++;
+            if (outsideClick != null) OutsideActions[_depth] = outsideClick;
             try
             {
                 if (_win == null) Crear();
@@ -79,6 +81,7 @@ namespace GamesDock
 
         public static void Pop()
         {
+            OutsideActions.Remove(_depth);
             if (_depth > 0) _depth--;
             if (_depth > 0) return;
             try
@@ -143,9 +146,15 @@ namespace GamesDock
                 }
                 catch (Exception ex) { Log.Write("velo estilo: " + ex.Message); }
             };
-            // pinchar el velo no hace nada: ni pasa el clic a lo de atras ni cierra el emergente. Si
-            // aun asi el dialogo se quedo debajo, aqui es donde se vuelve a subir.
-            _win.PreviewMouseDown += (s, e) => { e.Handled = true; Remontar(); };
+            // Only the topmost modal scope may handle an outside click. Nested prompts keep
+            // their original behavior; the click never reaches another desktop application.
+            _win.PreviewMouseDown += (s, e) =>
+            {
+                e.Handled = true;
+                Action close;
+                if (OutsideActions.TryGetValue(_depth, out close)) close();
+                else Remontar();
+            };
             _win.PreviewMouseUp += (s, e) => { e.Handled = true; };
             _win.PreviewMouseWheel += (s, e) => { e.Handled = true; };
         }

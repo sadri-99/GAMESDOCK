@@ -29,10 +29,16 @@ static class SettingsValidation
     }
     static void Save(FrameworkElement element, string path)
     {
-        var bitmap = new RenderTargetBitmap((int)Math.Ceiling(element.ActualWidth + 30), (int)Math.Ceiling(element.ActualHeight + 30), 96, 96, PixelFormats.Pbgra32);
+        var bitmap = new RenderTargetBitmap((int)Math.Ceiling((element.ActualWidth + 30) * 2), (int)Math.Ceiling((element.ActualHeight + 30) * 2), 192, 192, PixelFormats.Pbgra32);
         bitmap.Render(element);
         var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
         using (var stream = File.Create(path)) encoder.Save(stream);
+    }
+    static void ValidateSection(Border section, HashSet<string> sectionIds)
+    {
+        string id = Convert.ToString(section.Tag);
+        Check(sectionIds.Add(id), "Duplicated secondary category");
+        Check(section.IsVisible && section.Child != null, "A category is hidden on entry");
     }
     [STAThread]
     static int Main(string[] args)
@@ -46,6 +52,12 @@ static class SettingsValidation
         Check(new Config().IconShape == "ios", "First-run icon shape is not iOS");
         Check(new Config().IdleOpacity == 100, "First-run opacity is not 100%");
         var normalize = typeof(Config).GetMethod("NormalizeAppearance", BindingFlags.Static | BindingFlags.NonPublic);
+        foreach (string removed in new[] { "santuario", "ki", "hallownest", "survivor", "vice", "hearts", "pokeball" })
+        {
+            var previous = new Config { Theme = removed };
+            normalize.Invoke(null, new object[] { previous });
+            Check(!Themes.All.ContainsKey(removed) && previous.Theme == Themes.Fallback, "Removed theme not migrated: " + removed);
+        }
         foreach (string shape in new[] { "ios", "defecto", "esfera", null, "unknown" })
         {
             var fixture = new Config { IconShape = shape, IdleOpacity = 20 };
@@ -54,7 +66,7 @@ static class SettingsValidation
             Check(fixture.IconShape == (shape == null || shape == "unknown" ? "ios" : shape), "Existing icon preference was lost");
         }
         var dockWindow = XamlAssets.Load<Window>("window"); dockWindow.Opacity = 0; dockWindow.ShowActivated = false;
-        var dock = new GamesDock.Dock(dockWindow, new Config { Theme = "terminal", IconSize = 46, IdleOpacity = 100 });
+        var dock = new GamesDock.Dock(dockWindow, new Config { Theme = "horizonte", IconSize = 46, IdleOpacity = 100 });
         dockWindow.Show();
         for (int i = 0; i < 5; i++) dock.Items.Add(new ItemSpec { Key = "settings-test-" + i, Name = "Game " + i, Kind = "game" });
         dock.RebuildStrip(false); dock.ApplyLayout(); dockWindow.Left = dockWindow.Top = -10000;
@@ -86,11 +98,15 @@ static class SettingsValidation
             foreach (var sample in Find<DockPreview>(hero)) preview = sample;
             Check(preview != null, "Missing interactive theme preview");
             foreach (var grid in Find<Grid>(panel.Win.Content as DependencyObject)) if (grid.Name == "AllSettings") all = grid;
-            Check(all != null && all.Children.Count == 6, "All settings are not visible on entry");
-            int scrollers = 0, expanders = 0;
-            foreach (var unused in Find<ScrollViewer>(panel.Win.Content as DependencyObject)) scrollers++;
+            Check(all != null && all.Children.Count == 2, "All settings are not visible on entry");
+            int scrollers = 0, expanders = 0, tabs = 0, dropdowns = 0;
+            foreach (var unused in Find<TabControl>(panel.Win.Content as DependencyObject)) tabs++;
+            foreach (var unused in Find<ComboBox>(panel.Win.Content as DependencyObject)) dropdowns++;
+            Check(tabs == 0 && dropdowns == 0, "Settings introduced tabs or dropdowns");
+            foreach (var scroll in Find<ScrollViewer>(panel.Win.Content as DependencyObject))
+            { scrollers++; Check(Convert.ToString(scroll.Tag) == "theme-gallery", "Scrolling escaped the theme gallery"); }
             foreach (var unused in Find<Expander>(panel.Win.Content as DependencyObject)) expanders++;
-            Check(scrollers == 0 && expanders == 0, "Settings still use scrolling or collapsed sections");
+            Check(scrollers == 1 && expanders == 0, "Only the theme gallery may scroll");
             int motion = 0, magnify = 0, shapes = 0, testButtons = 0, costLabels = 0;
             foreach (var check in Find<CheckBox>(hero))
             {
@@ -142,19 +158,42 @@ static class SettingsValidation
                 }
             }
             dock.Cfg.ThemeMotion = true; dock.Cfg.Magnify = true; dock.Cfg.IconShape = "ios";
-            dock.ApplyTheme("terminal"); dock.NotifyAppearanceChanged(); panel.Win.UpdateLayout();
+            dock.ApplyTheme("horizonte"); dock.NotifyAppearanceChanged(); panel.Win.UpdateLayout();
             Pump(350);
             foreach (var tile in Find<Button>(preview))
                 if (tile.Content is Border) Check(((Border)tile.Content).Background is ImageBrush, "Preview artwork was lost during theme changes: " + language);
+            ScrollViewer gallery = null;
+            foreach (var scroll in Find<ScrollViewer>(hero)) gallery = scroll;
+            Check(gallery != null && gallery.ExtentHeight > 0, "Theme gallery is empty");
+            Point fixedOrigin = all.TranslatePoint(new Point(), panel.Win);
+            double fixedHeight = panel.Win.ActualHeight;
+            foreach (var chip in Find<RadioButton>(gallery))
+            {
+                chip.BringIntoView(); panel.Win.UpdateLayout();
+                Rect chipBounds = chip.TransformToAncestor(gallery).TransformBounds(new Rect(chip.RenderSize));
+                Check(chipBounds.Top >= -1 && chipBounds.Bottom <= gallery.ViewportHeight + 1, "Theme cannot be reached by local scroll");
+                Check(all.TranslatePoint(new Point(), panel.Win) == fixedOrigin && panel.Win.ActualHeight == fixedHeight, "Theme scroll moved the settings window");
+            }
+            Save((FrameworkElement)panel.Win.Content, Path.Combine(args[0], "Ajustes-Temas-nuevos-" + language + ".png"));
+            gallery.ScrollToTop(); panel.Win.UpdateLayout();
             Save((FrameworkElement)panel.Win.Content, Path.Combine(args[0], "Ajustes-Personalizacion-" + language + ".png"));
             var sectionIds = new HashSet<string>();
-            foreach (Border section in all.Children)
+            foreach (Border section in Find<Border>(all))
             {
-                string id = Convert.ToString(section.Tag);
-                Check(sectionIds.Add(id), "Duplicated secondary category");
-                Check(section.IsVisible && section.Child != null, "A category is hidden on entry");
+                if (!(section.Tag is string)) continue;
+                ValidateSection(section, sectionIds);
             }
             Check(sectionIds.SetEquals(new[] { "bar", "behavior", "language", "community", "system", "help" }), "Secondary categories lost functionality");
+            foreach (string option in new[] { "Ficha un 15 % más grande", "Mostrar mi actividad de Steam" })
+            {
+                CheckBox toggle = null;
+                foreach (var box in Find<CheckBox>(all)) if (Convert.ToString(box.Content) == Lang.T(option)) toggle = box;
+                Check(toggle != null, "Missing card option: " + option);
+                toggle.IsChecked = true;
+                Check(option.StartsWith("Ficha") ? dock.Cfg.HoverCardLarge : dock.Cfg.SteamPersonalData, "Card option did not enable");
+                toggle.IsChecked = false;
+                Check(option.StartsWith("Ficha") ? !dock.Cfg.HoverCardLarge : !dock.Cfg.SteamPersonalData, "Card option did not disable");
+            }
             var labels = new HashSet<string>();
             foreach (var button in Find<Button>(all)) labels.Add(Convert.ToString(button.Content));
             foreach (string action in new[] { "Guardar la clave", "Abrir la página de la clave", "Reescanear juegos", "Vaciar escritorio al dock",
@@ -164,6 +203,8 @@ static class SettingsValidation
             Check(panel.Tit.TranslatePoint(new Point(), panel.Win).Y >= 0, "Settings header scrolls out of reach");
             foreach (var control in Find<System.Windows.Controls.Primitives.ButtonBase>(panel.Win.Content as DependencyObject))
             {
+                var themeChip = control as RadioButton;
+                if (themeChip != null && themeChip.GroupName == "tema") continue;
                 Rect bounds = control.TransformToAncestor(panel.Win).TransformBounds(new Rect(control.RenderSize));
                 Check(control.IsVisible && bounds.Left >= 0 && bounds.Top >= 0 && bounds.Right <= panel.Win.ActualWidth + 1
                     && bounds.Bottom <= panel.Win.ActualHeight + 1, "A settings control is clipped or hidden: " + control);
@@ -185,6 +226,6 @@ static class SettingsValidation
             panel.Win.Close();
         }
         dockWindow.Close(); Anim.Stop(); app.Shutdown();
-        Console.WriteLine("PASS: " + _checks + " settings checks; ES/EN controls visible without scrolling, reusable preview, spring lifecycle and defaults.");
+        Console.WriteLine("PASS: " + _checks + " settings checks; ES/EN fixed controls and local theme scrolling, reusable preview, spring lifecycle and defaults.");
     }
 }

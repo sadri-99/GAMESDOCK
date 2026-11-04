@@ -20,7 +20,7 @@ namespace GamesDock
     // rectangulo se corta contra su borde. Es NOACTIVATE y click-through (WS_EX_TRANSPARENT): el cursor
     // puede pasar por encima sin dejar de estar sobre el tile, y al salir del tile la ficha se apaga
     // sola. No es un panel interactivo, es un aviso.
-    public class HoverCard
+    public partial class HoverCard
     {
         // 320 de ancho: con 12 de margen del cristal quedan 296 de texto, que es lo que ocupa una linea
         // de generos y una sinopsis corta sin partirse en cinco renglones.
@@ -61,6 +61,10 @@ namespace GamesDock
         readonly Image _img;
         readonly TextBlock _nom, _meta, _desc, _pie;
         readonly StackPanel _texto;
+        readonly Grid _content;
+        readonly ScaleTransform _cardScale;
+        readonly Border _personalFrame;
+        readonly TextBlock _personalTitle, _personal;
 
         DispatcherTimer _dwell;
         ItemSpec _apuntero;     // el tile que el cursor esta mirando ahora mismo
@@ -123,34 +127,37 @@ namespace GamesDock
             };
             // esquinas redondeadas solo arriba: el borde inferior del banner tiene que morir contra el
             // texto, no flotar
-            _cartel.CornerRadius = new CornerRadius(Radio, Radio, 0, 0);
+            _cartel.CornerRadius = new CornerRadius(Radio - 1, Radio - 1, 0, 0);
+            _cartel.SizeChanged += delegate { ClipBanner(); };
 
-            _nom = Etiqueta(14, "PanelFg", FontWeights.SemiBold);
-            _nom.TextTrimming = TextTrimming.CharacterEllipsis;
-            _meta = Etiqueta(11, "PanelSub", FontWeights.Normal);
-            _meta.TextWrapping = TextWrapping.Wrap;
-            _desc = Etiqueta(11.5, "PanelFg", FontWeights.Normal);
-            _desc.TextWrapping = TextWrapping.Wrap;
-            // cinco renglones es lo que cabe sin que la ficha se coma media pantalla; la sinopsis de
-            // Steam es larga a proposito y recortarla con puntos suspensivos es preferible a un scroll
-            _desc.MaxHeight = 76;
-            // WordEllipsis, no CharacterEllipsis: recortar por caracteres dejaba la ultima linea
-            // terminando en "solitario par…", que parece un fallo antes que un resumen
-            _desc.TextTrimming = TextTrimming.WordEllipsis;
-            _pie = Etiqueta(10, "PanelSub", FontWeights.Normal);
-            _pie.TextTrimming = TextTrimming.CharacterEllipsis;
-
-            _texto = new StackPanel { Margin = new Thickness(14, 11, 14, 13) };
-            _texto.Children.Add(_nom);
-            _texto.Children.Add(_meta);
-            _texto.Children.Add(_desc);
-            _texto.Children.Add(_pie);
-
-            var cuerpo = new StackPanel();
-            cuerpo.Children.Add(_cartel);
-            cuerpo.Children.Add(_texto);
-            _shell.Child = cuerpo;
-            _win.Content = _shell;
+            _nom = Etiqueta(16, "PanelFg", FontWeights.SemiBold);
+            _nom.TextWrapping = TextWrapping.Wrap; _nom.TextTrimming = TextTrimming.WordEllipsis;
+            _nom.LineHeight = 22; _nom.MaxHeight = 44;
+            _meta = Etiqueta(11.5, "PanelSub", FontWeights.Normal);
+            _meta.TextWrapping = TextWrapping.Wrap; _meta.TextTrimming = TextTrimming.WordEllipsis;
+            _meta.LineHeight = 16.5; _meta.MaxHeight = 49.5; _meta.Margin = new Thickness(0, 8, 0, 0);
+            _desc = Etiqueta(12, "PanelFg", FontWeights.Normal);
+            _desc.TextWrapping = TextWrapping.Wrap; _desc.TextTrimming = TextTrimming.WordEllipsis;
+            _desc.LineHeight = 18; _desc.MaxHeight = 90; _desc.Margin = new Thickness(0, 10, 0, 0);
+            _pie = Etiqueta(10.5, "PanelSub", FontWeights.Normal);
+            _pie.TextWrapping = TextWrapping.Wrap; _pie.TextTrimming = TextTrimming.WordEllipsis;
+            _pie.LineHeight = 15; _pie.MaxHeight = 30; _pie.Margin = new Thickness(0, 12, 0, 0);
+            _personalTitle = Etiqueta(11.5, "MenuAccent", FontWeights.SemiBold);
+            _personalTitle.Text = Lang.T("Tu actividad en Steam");
+            _personal = Etiqueta(11.5, "PanelFg", FontWeights.Normal);
+            _personal.TextWrapping = TextWrapping.Wrap; _personal.LineHeight = 18; _personal.Margin = new Thickness(0, 5, 0, 0);
+            var activity = new StackPanel(); activity.Children.Add(_personalTitle); activity.Children.Add(_personal);
+            _personalFrame = new Border { Margin = new Thickness(0, 12, 0, 0), Padding = new Thickness(0, 10, 0, 0),
+                BorderThickness = new Thickness(0, 1, 0, 0), Visibility = Visibility.Collapsed, Child = activity };
+            _personalFrame.SetResourceReference(Border.BorderBrushProperty, "CtlEdge");
+            _texto = new StackPanel { Margin = new Thickness(16, 14, 16, 16) };
+            _texto.Children.Add(_nom); _texto.Children.Add(_meta); _texto.Children.Add(_personalFrame);
+            _texto.Children.Add(_desc); _texto.Children.Add(_pie);
+            var body = new StackPanel(); body.Children.Add(_cartel); body.Children.Add(_texto); _shell.Child = body;
+            _cardScale = new ScaleTransform(1, 1);
+            _content = new Grid { Width = Ancho, LayoutTransform = _cardScale };
+            _content.Children.Add(_shell); _win.Content = _content;
+            _win.Closed += delegate { CancelActivity(); };
 
             // cada refresco cambia el alto (llega la ficha, aterriza un banner) y la carta va anclada por
             // su borde inferior cuando la barra esta abajo: si no se recoloca al cambiar de tamano, crece
@@ -211,6 +218,7 @@ namespace GamesDock
 
             _apuntero = it;
             _tile = tile;
+            StartActivity(it);
             _dwell.Interval = TimeSpan.FromMilliseconds(_visible ? EsperaCambio : Espera);
             _dwell.Stop();
             _dwell.Start();
@@ -224,6 +232,7 @@ namespace GamesDock
             _dwell.Stop();
             _apuntero = null;
             _tile = null;
+            CancelActivity();
             Ocultar();
         }
 
@@ -245,7 +254,7 @@ namespace GamesDock
         double Alto()
         {
             double h = _shell.ActualHeight;
-            return h > 2 ? h + 2 * Cristal : 240.0;
+            return (h > 2 ? h + 2 * Cristal : 240.0) * _cardScale.ScaleY;
         }
 
         // El marco del banner, a la medida del dibujo. El ancho utile es la carta menos los dos margenes
@@ -280,6 +289,8 @@ namespace GamesDock
             var f = GameInfo.Buscar(it);
             _clave = GameInfo.Clave(it);
 
+            double factor = _dock.Cfg.HoverCardLarge ? 1.15 : 1;
+            _cardScale.ScaleX = _cardScale.ScaleY = factor; _win.Width = Ancho * factor;
             _nom.Text = it.Name;
             string generos = f != null ? f.Generos : null;
             string autores = f != null ? f.Autores : null;
@@ -290,7 +301,7 @@ namespace GamesDock
                 if (!string.IsNullOrEmpty(generos)) linea.Add(generos);
                 if (!string.IsNullOrEmpty(autores)) linea.Add(autores);
                 if (!string.IsNullOrEmpty(f.Lanzamiento)) linea.Add(f.Lanzamiento);
-                _meta.Text = string.Join("  ·  ", linea.ToArray());
+                _meta.Text = string.Join(" · ", linea.ToArray());
                 _desc.Text = f.Sinopsis ?? string.Empty;
                 _meta.Visibility = _meta.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
             }
@@ -315,7 +326,8 @@ namespace GamesDock
                 _cartel.Visibility = Visibility.Visible;
             }
             else _cartel.Visibility = Visibility.Collapsed;
-
+            FillActivity(it);
+            FitTextHeight();
             return _nom.Text.Length > 0;
         }
 
@@ -324,45 +336,17 @@ namespace GamesDock
         // mitad de la pantalla esta y se saca la ficha hacia donde hay sitio.
         void Colocar()
         {
-            // El alto lo da el cristal, no la ventana: SizeToContent=Height cierra el tamano del HWND
-            // DESPUES del arrange, asi que en el instante en que Soltar llama a Colocar, _win.ActualHeight
-            // todavia lleva la medida anterior (la de la carta vacia, 24 DIP) y la carta sube colocada con
-            // un alto falso. La ventana mide el cristal colocado mas sus dos margenes de sombra.
-            double alto = Alto();
-            double ancho = _win.Width;
-            double left = _win.Left, top = _win.Top;
-
-            var b = _tile;
-            if (b != null && b.IsVisible)
+            double scale = Dock.DipScale(_dock.Win);
+            Rect anchor = Displays.WindowBounds(_dock.Win);
+            if (_tile != null && _tile.IsVisible)
             {
-                double dip = Dock.DipScale(_win);
-                Point a = b.PointToScreen(new Point(0, 0));
-                Point c = b.PointToScreen(new Point(b.ActualWidth, b.ActualHeight));
-                double i = a.X / dip, d = a.Y / dip, der = c.X / dip, ab = c.Y / dip;
-                string pos = _dock.Cfg.Position;
-                if (pos == "free")
-                {
-                    // sin borde elegido manda la mitad de la pantalla en la que cae el tile: se saca la
-                    // ficha hacia donde hay sitio. Se juzga por el tile y no por la ventana de la pildora
-                    // porque esta aun puede estar aparcada fuera de pantalla.
-                    var wa = SystemParameters.WorkArea;
-                    pos = ((d + ab) / 2.0 > wa.Top + wa.Height / 2.0) ? "bottom" : "top";
-                    if (_dock.Lay.Vert) pos = ((i + der) / 2.0 > wa.Left + wa.Width / 2.0) ? "right" : "left";
-                }
-                switch (pos)
-                {
-                    case "top": left = (i + der) / 2 - ancho / 2; top = ab + Hueco; break;
-                    case "left": left = der + Hueco; top = (d + ab) / 2 - alto / 2; break;
-                    case "right": left = i - Hueco - ancho; top = (d + ab) / 2 - alto / 2; break;
-                    default: left = (i + der) / 2 - ancho / 2; top = d - Hueco - alto; break;
-                }
+                var a = _tile.PointToScreen(new Point());
+                var b = _tile.PointToScreen(new Point(_tile.ActualWidth, _tile.ActualHeight));
+                anchor = new Rect(a, b);
             }
-
-            var area = SystemParameters.WorkArea;
-            // el area de trabajo esta en DIP de la pantalla primaria; WPF mueve ventanas en DIP del
-            // mismo sistema, asi que el recorte es directo
-            _win.Left = Math.Max(area.Left + 6, Math.Min(left, area.Right - ancho - 6));
-            _win.Top = Math.Max(area.Top + 6, Math.Min(top, area.Bottom - alto - 6));
+            var bounds = MonitorPlacement.PopupBounds(anchor, new Size(_win.Width * scale, Alto() * scale),
+                _dock.CurrentDisplay.WorkArea, _dock.Cfg.Position, Hueco * scale, 6 * scale);
+            Displays.MoveWindow(_win, bounds.TopLeft);
         }
 
         void Fundido()

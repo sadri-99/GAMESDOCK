@@ -1,8 +1,6 @@
-# Guía de uso
+﻿# Guía de uso
 
 [Volver al inicio](../README.md)
-
-![Menú del dock](screenshots/dock-menu.png)
 
 ![Carpetas](screenshots/carpeta-abierta.png)
 
@@ -14,14 +12,14 @@
 | --- | --- |
 | `Ctrl` + `Alt` + `D` | Mostrar / ocultar la barra |
 | Doble clic en el icono de la bandeja | Mostrar / ocultar la barra |
-| Clic derecho en el hueco libre de la píldora | Menú: Buscar…, Añadir app o juego…, Qué se ve, Tema, Restaurar ocultos, Bloquear posición e iconos, Reescanear, Ajustes, Ocultar, Salir |
-| Clic derecho sobre un icono | Favorito, Lanzar ahora, Abrir carpeta del juego, Renombrar, Cambiar icono…, Iconos de la comunidad, Quitar/Ocultar del dock |
-| Clic derecho sobre una carpeta | Abrir el grupo, Renombrar, Desagrupar, Ocultar del dock |
+| Clic derecho en el hueco libre de la píldora | Menú: Añadir app o juego…, Páginas, Tema, Bloquear posición e iconos, Reescanear, Ajustes, Ocultar, Salir |
+| Clic derecho sobre un icono | Favorito, Abrir carpeta del juego, Renombrar, Iconos de la comunidad, Añadir a página, Quitar de esta página |
+| Clic derecho sobre una carpeta | Abrir el grupo, Renombrar, Desagrupar, Quitar de esta página |
 | Clic fuera del menú desplegado | Cierra el menú sin activar lo que haya debajo |
 | Clic central sobre un icono | Marcar o desmarcar como favorito |
 | Dejar el cursor sobre un icono | Sale la **ficha del juego** por encima de la píldora —banner, géneros, autor, fecha y sinopsis—, y se apaga al sacar el cursor. Con la ficha apagada en Ajustes vuelve el globo de texto de siempre |
 | Arrastrar la píldora por su cristal —el trozo que no tiene iconos— | Al soltarla se ancla al borde más cercano: abajo, arriba, izquierda o derecha. En posición «Libre» no hay imán y se queda donde la sueltes |
-| Arrastrar un archivo hasta la píldora | Fijarlo en la barra |
+| Arrastrar un archivo hasta la píldora | Añadirlo solo a la página actual |
 | Arrastrar un icono dentro de la barra | Reordenar la fila |
 | Soltar un icono encima de otro | Crece una carpeta con los dos dentro |
 | «Bloquear posición e iconos» en el menú de la píldora | Congela los cuatro gestos de arrastre de arriba —mover la barra, reordenar un icono, fijar un archivo y crear una carpeta— sin tocar los clics: pinchar sigue lanzando |
@@ -37,7 +35,7 @@
 | «Ahora no» en ese panel | Lo cierra y apunta esa versión para no volver a sacarla al arrancar |
 | «Buscar actualizaciones» en Ajustes | Comprueba las releases en el momento, aunque la versión estuviera apuntada como rechazada |
 | «Estrella en GitHub» en Ajustes | Abre la página del repositorio en el navegador —es lo que hay si la barra te sirve y quieres que se sepa— |
-| Soltar un icono fuera del cristal | Ocultarlo; vuelve desde «Restaurar ocultos» |
+| Soltar un icono fuera del cristal | Quitar el acceso solo de esta página; las demás lo conservan |
 
 No hay cuadro de búsqueda, filtros ni engranajes a la vista: la barra es una píldora limpia y todas
 esas opciones entran por el menú del clic derecho o por la ventana de Ajustes.
@@ -68,7 +66,29 @@ sigue escribiendo— y se quita solo cuando se cierra el emergente, sea con Guar
 cruz. El contenedor de una carpeta no es modal: se cierra pinchando fuera o con `Esc`.
 
 
+## Varias pantallas
+
+Arrastra una zona vacía del dock a la pantalla deseada y suelta el botón. Si está bloqueado, desactiva primero «Bloquear posición e iconos». Se guardan la pantalla y el borde elegido; con posición Libre se recuerda la ubicación relativa. El siguiente inicio, incluido el arranque con Windows, utiliza esa pantalla.
+
+Si la pantalla se desconecta, el dock pasa a una disponible y conserva la preferencia para recuperarla cuando vuelva. [Funcionamiento y validación](MULTIPANTALLA.md).
+
+## Páginas independientes
+
+Clic derecho en una zona vacía → **Páginas**. Contiene **Favoritos**, **Juegos** y **Aplicaciones**, además de las páginas que crees. No existe la página Todo.
+
+- **+ Añadir página** crea una página vacía con nombre propio. Puedes tener cinco personalizadas a la vez, además de las tres fijas.
+- Para añadir un archivo, arrástralo al dock o usa **Añadir app o juego…**. Se guarda solo en la página que estás viendo, aunque su tipo sea distinto.
+- Para usar un acceso existente en otra página, clic derecho en su icono → **Añadir a página** → destino. El acceso se conserva en la página de origen.
+- **Favoritos** cambia únicamente al añadir o quitar favoritos expresamente, o al añadir un archivo mientras ves esa página. Añadir aplicaciones a otras páginas no las convierte en favoritas.
+- **Quitar de esta página**, soltar un icono fuera, ordenar y crear carpetas actúan solo en la página actual.
+- Con una página personalizada seleccionada, su menú ofrece **Renombrar página** y **Eliminar página**. Eliminarla libera una de las cinco plazas y conserva los accesos de las otras páginas.
+- Juegos y Aplicaciones conservan los accesos anteriores y reciben nuevas detecciones de su tipo. Reescanear no vuelve a colocar un acceso que quitaste manualmente.
+
+La selección también está en Ajustes → Barra y contenido → Páginas. Los nombres largos se abrevian en los botones; el nombre completo aparece al pasar el ratón.
+
 ## Iconos de la comunidad (SteamGridDB)
+
+El selector incorpora un buscador para usar otros nombres cuando la detección automática no acierta. Pulsa Buscar o Enter y elige el juego o edición en las coincidencias. Cabecera, buscador y X permanecen visibles durante el scroll. [Guía del selector actualizado](ICONOS-COMUNIDAD.md).
 
 [SteamGridDB](https://www.steamgriddb.com) es una biblioteca pública de arte de videojuegos hecha por la
 comunidad: para un mismo juego hay decenas de versiones subidas por la gente —logos sueltos sobre fondo
@@ -95,7 +115,7 @@ Es la única función del programa que pide una credencial. Lo que abre la red s
    la guarda en `%APPDATA%\GamesDock\icons\custom\` y repinta el tile. `Esc` o la cruz cierran el selector sin
    tocar el icono que había, y «Quitar icono personalizado» revierte al original.
 
-![El selector, con las dieciséis versiones que la comunidad puntuó para The Last of Us Part II Remastered](screenshots/iconos-selector.png)
+![Selector actualizado, con datos de prueba](screenshots/v2.00/Iconos-comunidad-es.png)
 
 Mientras se descarga, la barra sigue respondiendo: las peticiones van en `async` y el magnificado no se para.
 La lista puede tardar —SteamGridDB no siempre contesta en menos de veinte segundos, y la barra aguanta
@@ -105,7 +125,7 @@ miniaturas van apareciendo solas, cuatro a la vez, sin bloquear nada.
 ### Por qué hace falta una clave propia
 
 Porque SteamGridDB no contesta a nadie sin credencial. El API v2 exige `Authorization: Bearer <clave>` en
-**todas** sus rutas —la búsqueda por nombre, la lista de iconos y la descarga—; sin cabecera la respuesta es
+sus consultas de búsqueda y listado; sin cabecera la respuesta es
 `401` con `{"success":false,"errors":["Authentication Required"]}`, y no hay forma de que la app la salte
 por su cuenta. No hay un camino anónimo: las rutas `…/api/public/…` que se citan por ahí responden `404` con
 la web delante, y el viejo `api.steamgriddb.com` ni siquiera resuelve. Lo único público de verdad es el CDN de
@@ -223,3 +243,7 @@ Datos y programa instalado permanecen en perfil de usuario. Inicio con Windows r
 | Tarea `GamesDock-<SID del usuario>` | Inicio directo al entrar en Windows, sin VBS; ver [inicio con Windows](INICIO-WINDOWS.md) |
 
 Para reiniciar ajustes, cierra GamesDock y borra `%APPDATA%\GamesDock`. Si activaste inicio automático, desactívalo antes desde Ajustes o usa el desinstalador: borrar los datos no retira la tarea de Windows. El asistente instala programa en `%LOCALAPPDATA%\Programs\GamesDock` y accesos en menú Inicio y, opcionalmente, escritorio. Las actualizaciones utilizan `%TEMP%` para un guion transitorio. Ver [instalación e inicio](INICIO-WINDOWS.md).
+
+## Distribución de ajustes
+
+Todos los ajustes están visibles al entrar, sin pestañas ni scroll general; solo se desplazan las miniaturas de temas. Se cierran con la cruz, Esc o un clic fuera. [Distribución y cierre](AJUSTES.md).

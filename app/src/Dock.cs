@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
@@ -58,8 +58,10 @@ namespace GamesDock
         {
             Win = w;
             Cfg = cfg;
+            PageStore.Normalize(cfg);
             Activa = this;
             Lay = new Layout(cfg);
+            InitializeDisplays();
 
             RootGrid = (Grid)Win.FindName("Root");
             PillLayer = (Canvas)Win.FindName("PillLayer");
@@ -380,7 +382,7 @@ namespace GamesDock
         {
             UsageDto u;
             Cfg.Usage.TryGetValue(it.Key ?? string.Empty, out u);
-            string uso = u != null ? Lang.F("usado {0} veces", u.N) : Lang.T("sin usar todavía");
+            string uso = u != null ? Lang.F("{0} aperturas desde GamesDock", u.N) : Lang.T("sin aperturas desde GamesDock");
             return OrigenDe(it) + " · " + uso;
         }
 
@@ -729,7 +731,7 @@ namespace GamesDock
         // usa FitPill para el eje principal
         bool RowFits()
         {
-            var wa = SystemParameters.WorkArea;
+            var wa = MonitorWorkArea;
             double m = Layout.Margin;
             double avail = (Lay.Vert ? wa.Height : wa.Width) - 2 * m - 30;
             return Lay.RowLen(Tiles.Count) <= avail;
@@ -759,7 +761,9 @@ namespace GamesDock
         // La ventana mide lo que mide la fila de iconos + margen para la sombra y el agrandado.
         public void FitPill()
         {
-            var wa = SystemParameters.WorkArea;
+            if (_movingDock) return;
+            Lay.Scale = DipScale(Win);
+            var wa = MonitorWorkArea;
             bool vert = Lay.Vert;
             // la escala manda en como se cuantizan las medidas de colocacion, y tiene que estar bien
             // antes del UpdateLayout de abajo o la fila se redibuja con la cuenta vieja
@@ -863,51 +867,15 @@ namespace GamesDock
         // que guardo la config (el de otra tarde, a media pantalla o fuera de ella).
         public void AnotarPuestoActual()
         {
-            double m = Layout.Margin;
-            Cfg.Left = (int)Math.Round(Win.Left + m);
-            Cfg.Top = (int)Math.Round(Win.Top + m);
+            _display = Displays.ForWindow(Win);
+            RememberMonitorPosition();
         }
 
         public void PlaceDock()
         {
-            var wa = SystemParameters.WorkArea;
-            double m = Layout.Margin;
-            double w = Win.Width, h = Win.Height;
-            double l, t;
-            switch (Cfg.Position)
-            {
-                case "top":
-                    l = wa.X + (wa.Width - w) / 2;
-                    t = wa.Y - m + 6;
-                    break;
-                case "left":
-                    l = wa.X - m + 6;
-                    t = wa.Y + (wa.Height - h) / 2;
-                    break;
-                case "right":
-                    l = wa.Right - w + m - 6;
-                    t = wa.Y + (wa.Height - h) / 2;
-                    break;
-                case "free":
-                    if (Cfg.Left.HasValue && Cfg.Top.HasValue)
-                    {
-                        l = Cfg.Left.Value - m;
-                        t = Cfg.Top.Value - m;
-                    }
-                    else
-                    {
-                        Cfg.Position = "bottom";
-                        PlaceDock();
-                        return;
-                    }
-                    break;
-                default:
-                    l = wa.X + (wa.Width - w) / 2;
-                    t = wa.Bottom - h + m - 6;
-                    break;
-            }
-            Win.Left = l;
-            Win.Top = t;
+            if (_movingDock) return;
+            var bounds = MonitorPlacement.DockBounds(Cfg, _display, new Size(Win.Width, Win.Height), DipScale(Win));
+            Displays.MoveWindow(Win, bounds.TopLeft);
         }
 
         // ------------------------------------------------------------------ nivel de escritorio
@@ -996,12 +964,13 @@ namespace GamesDock
                     // la posición de Ajustes se apunta ANTES de arrastrar: SaveDockAfterDrag la reescribe
                     // con el imán, y la excepción de "libre" tiene que juzgarse por lo que había elegido
                     _posAntesDeArrastrar = Cfg.Position;
+                    _movingDock = true;
                     Win.DragMove();
-                    SaveDockAfterDrag();
+                    _movingDock = false;
+                    if (!Keyboard.IsKeyDown(Key.Escape)) SaveDockAfterDrag();
                 }
-                catch
-                {
-                }
+                catch (Exception ex) { Log.Write("Arrastre del dock: " + ex.Message); }
+                finally { _movingDock = false; QueueDisplayLayout(); }
             };
 
             // el buscador reescribe la fila: sin retardo cada tecla tiraria los tiles y el magnes, que
@@ -1114,55 +1083,25 @@ namespace GamesDock
 
         public void SaveDockAfterDrag()
         {
-            var wa = SystemParameters.WorkArea;
-            double m = Layout.Margin;
-            double l = Win.Left + m, t = Win.Top + m;
-
-            // las coordenadas del último soltado se guardan siempre: si no, elegir "Libre" en Ajustes
-            // después de arrastrar llevaba la barra a la posición de otra tarde en vez de a donde está
-            Cfg.Left = (int)l;
-            Cfg.Top = (int)t;
-
-            // la posición en la que estaba el mando antes de este arrastre, no la que sale de él: el
-            // propio imán la reescribe, y "libre" tiene que juzgarse por lo que puso el usuario
-            if (_posAntesDeArrastrar == "free") { Cfg.Save(); return; }
-
-            // el punto donde se levantó el botón, en DIP de pantalla: esa es la intención de la mano, y
-            // el imán juzga por ahí. Se pregunta al sistema y no a WPF porque al salir de DragMove el
-            // ratón de WPF ya no sabe donde está (devuelve 0,0, que es la esquina de arriba a la izquierda
-            // de la ventana: juzgar por ahí anclaría la barra al borde que tocara por accidente).
-            double px, py;
-            if (!PuntoDeSueltado(out px, out py))
+            Native.POINT cursor;
+            Point point;
+            if (Native.GetCursorPos(out cursor)) point = new Point(cursor.X, cursor.Y);
+            else
             {
-                px = Win.Left + Win.Width / 2.0;
-                py = Win.Top + Win.Height / 2.0;
+                var bounds = Displays.WindowBounds(Win);
+                point = new Point(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2);
             }
-
-            double arriba, abajo, izquierda, derecha;
-            string mejor = EdgeSnap.BordeMasCercano(px, py, wa.X, wa.Y, wa.Width, wa.Height,
-                out arriba, out abajo, out izquierda, out derecha);
-
-            Log.Write("borde mas cercano: " + Cfg.Position + " -> " + mejor +
-                      " (arriba " + (int)arriba + ", abajo " + (int)abajo +
-                      ", izq " + (int)izquierda + ", der " + (int)derecha + ")");
-            Cfg.Position = mejor;
+            _display = MonitorPlacement.AtPoint(point, Displays.Connected);
+            RememberMonitorPosition();
+            if (_posAntesDeArrastrar != "free")
+            {
+                var area = _display.WorkArea;
+                double top, bottom, left, right;
+                Cfg.Position = EdgeSnap.BordeMasCercano(point.X, point.Y, area.Left, area.Top, area.Width, area.Height,
+                    out top, out bottom, out left, out right);
+            }
             Cfg.Save();
             ApplyLayout();
-        }
-
-        // el cursor en DIP de pantalla: GetCursorPos devuelve pixeles fisicos absolutos y TransformFromDevice
-        // los pasa a las mismas unidades con las que Win.Left y SystemParameters.WorkArea ya hablan.
-        bool PuntoDeSueltado(out double px, out double py)
-        {
-            px = py = 0.0;
-            Native.POINT p;
-            if (!Native.GetCursorPos(out p)) return false;
-            var src = PresentationSource.FromVisual(Win);
-            if (src == null || src.CompositionTarget == null) return false;
-            var d = src.CompositionTarget.TransformFromDevice.Transform(new Point(p.X, p.Y));
-            px = d.X;
-            py = d.Y;
-            return true;
         }
     }
 }
